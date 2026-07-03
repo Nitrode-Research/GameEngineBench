@@ -1,0 +1,85 @@
+task_id: ue_task_0073
+title: Dataconfig Msgpack
+tier: hard
+
+instruction: |
+  The TargetVector project includes DataConfig's MessagePack reader, writer, and extension helpers. Implement the MessagePack codec in the task-owned files.
+
+  DataConfig must be able to read and write valid MessagePack byte streams through the existing reader and writer interfaces.
+
+  The implementation must satisfy the following DataConfig behavior:
+
+  - Decode MessagePack type bytes into the correct DataConfig entries, including nil, bools, strings, blobs, arrays, maps, signed and unsigned integers, floats, doubles, and extensions.
+  - Respect fixed-width encodings and variable-width encodings such as fixint, negative fixint, fixstr, fixarray, fixmap, str8/16/32, bin8/16/32, array16/32, and map16/32.
+  - Track reader state for root, array, and map traversal, including remaining element counts and map key/value alternation.
+  - Guard reads against end-of-buffer access and emit DataConfig diagnostics for type mismatches and invalid traversal.
+  - Convert multi-byte numeric values to and from MessagePack network byte order.
+  - Encode strings as UTF-8 and choose the smallest valid MessagePack string, blob, numeric, array, map, and extension representation.
+  - Buffer nested arrays and maps until their final element counts are known, then emit the correct container header.
+  - Copy extension payloads through the MessagePack extension handler without losing type bytes or payload data.
+
+  Do not replace the codec with JSON, hard-coded values, or no-op reader/writer methods. The solution should fit the existing DataConfig reader, writer, diagnostics, and serialization extension APIs.
+
+files_to_edit:
+  - Plugins/DataConfig/Source/DataConfigCore/Private/DataConfig/MsgPack/DcMsgPackReader.cpp
+  - Plugins/DataConfig/Source/DataConfigCore/Private/DataConfig/MsgPack/DcMsgPackWriter.cpp
+  - Plugins/DataConfig/Source/DataConfigCore/Private/DataConfig/MsgPack/DcMsgPackUtils.cpp
+  - Plugins/DataConfig/Source/DataConfigCore/Private/DataConfig/MsgPack/DcMsgPackCommon.h
+  - Plugins/DataConfig/Source/DataConfigCore/Public/DataConfig/MsgPack/DcMsgPackReader.h
+  - Plugins/DataConfig/Source/DataConfigCore/Public/DataConfig/MsgPack/DcMsgPackWriter.h
+  - Plugins/DataConfig/Source/DataConfigCore/Public/DataConfig/MsgPack/DcMsgPackUtils.h
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "TargetVector.DataConfigMsgPack"
+
+hidden_requirements:
+  R1:
+    text: The reader must classify MessagePack type bytes into DataConfig entries, including fixed and variable encodings.
+    category: protocol_decoding
+  R2:
+    text: The reader must safely read bytes from the input view, advance the index only after successful reads, and report reading-past-end diagnostics.
+    category: validation
+  R3:
+    text: The reader must track root, array, and map state, decrement array/map counts correctly, and alternate map keys and values.
+    category: traversal_state
+  R4:
+    text: The reader must decode UTF-8 strings, binary blobs, arrays, maps, nil, booleans, numeric values, and extension payloads.
+    category: protocol_decoding
+  R5:
+    text: The reader and writer must reverse multi-byte numeric values on little-endian platforms to preserve MessagePack byte order.
+    category: binary_encoding
+  R6:
+    text: The writer must validate legal write transitions for root, array, map, scalar, and end tokens.
+    category: traversal_state
+  R7:
+    text: The writer must choose compact MessagePack encodings for strings, blobs, arrays, maps, signed integers, unsigned integers, floats, doubles, nil, and booleans.
+    category: protocol_encoding
+  R8:
+    text: The writer must buffer nested arrays and maps until their final size is known, emit fix or wide container headers, and append child buffers to the parent.
+    category: traversal_state
+  R9:
+    text: Extension helpers must dispatch every fixext and ext width through the typed reader and writer APIs while preserving extension type and payload bytes.
+    category: extension_handling
+  R10:
+    text: Diagnostics must identify the last read or written MessagePack entry to help debug codec failures.
+    category: diagnostics
+
+test_requirements:
+  TargetVector.DataConfigMsgPack.reader_protocol_source:
+    - R1
+    - R2
+    - R3
+    - R4
+    - R5
+    - R10
+  TargetVector.DataConfigMsgPack.writer_protocol_source:
+    - R5
+    - R6
+    - R7
+    - R8
+    - R10
+  TargetVector.DataConfigMsgPack.extension_dispatch_source:
+    - R9

@@ -1,0 +1,128 @@
+task_id: ue_task_0078
+title: SPUD Save Archive Lifecycle
+tier: hard
+
+instruction: |
+  You are working in an Unreal Engine 5 project that uses the SPUD runtime save plugin.
+  Implement SPUD's save archive and slot lifecycle behavior in the task-owned files.
+
+  The project already contains the public API surface, build/module wiring, save archive format,
+  and surrounding SPUD save/load integration points. The implementation must preserve save-header
+  metadata, handle blocked saves, support numbered quick/auto slot semantics, and clear
+  in-progress save state after completion.
+
+  Implement the following behavior:
+
+  - Save blockers are reason-based and nestable. Any active blocker must make IsSaveBlocked report true,
+    and the reason should remain active until all nested blockers for that reason are removed.
+  - EndGame and map-transition cleanup must clear stale blockers so a destroyed actor or interrupted flow
+    cannot permanently disable saving.
+  - Save headers preserve title, timestamp, and custom metadata through SPUD's chunked archive format.
+    Header-only reads must expose that metadata without requiring a full world restore.
+  - Custom save info passed to save/state APIs must be copied into the save header, not stored as a transient
+    UObject reference and not silently discarded.
+  - Quick-save and auto-save slots must support both legacy base slots and numbered rotation slots.
+    Numbered slot parsing, latest-slot lookup, and cleanup of old numbered slots must be consistent.
+  - Save listing must read metadata from save headers, filter quick/auto saves when requested, and preserve
+    sorting by title, slot name, and most-recent timestamp.
+  - Save completion must always return the subsystem to idle, broadcast the completion result, release
+    in-progress slot/title/custom-info state, and resume deferred EndGame/NewGame requests on the game thread.
+  - Blocked save attempts and overlapping completion paths should fail or finish safely without deleting older
+    quick/auto saves or leaving stale in-progress/deferred state.
+
+  Implement this inside the existing SPUD subsystem/state/archive design. Do not replace the save archive format,
+  do not add a separate save registry, do not special-case the test slot names, and do not change project/build
+  configuration files.
+
+files_to_edit:
+  - "Plugins/SPUD/Source/SPUD/Public/SpudSubsystem.h"
+  - "Plugins/SPUD/Source/SPUD/Private/SpudSubsystem.cpp"
+  - "Plugins/SPUD/Source/SPUD/Public/SpudState.h"
+  - "Plugins/SPUD/Source/SPUD/Private/SpudState.cpp"
+  - "Plugins/SPUD/Source/SPUD/Public/SpudCustomSaveInfo.h"
+  - "Plugins/SPUD/Source/SPUD/Public/SpudData.h"
+  - "Plugins/SPUD/Source/SPUD/Private/SpudData.cpp"
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "SPUD.SaveArchiveLifecycle"
+
+hidden_requirements:
+  R1:
+    text: Save blockers must be tracked by reason with nesting counts, so any active blocker prevents saving and a reason remains active until all matching blockers are removed.
+    category: core_logic
+  R2:
+    text: EndGame and map-transition cleanup must clear stale save blockers so interrupted gameplay systems cannot permanently disable future saves.
+    category: object_lifecycle
+  R3:
+    text: Save archives must preserve title, timestamp, thumbnail payload when present, and custom save metadata inside the chunked SPUD header.
+    category: serialization
+  R4:
+    text: Header-only save-info reads must reconstruct custom metadata without performing a full world restore or depending on transient UObject identity.
+    category: serialization
+  R5:
+    text: Custom save info passed into state/subsystem save paths must be copied into persistent save data rather than retained as a temporary object reference or dropped.
+    category: object_lifecycle
+  R6:
+    text: Quick-save and auto-save rotation slots must parse both legacy base names and numbered slots using SPUD's slot-name convention.
+    category: core_logic
+  R7:
+    text: Latest quick-save and auto-save lookup must select the highest existing numbered slot when rotation is enabled and fall back to the legacy base slot only when appropriate.
+    category: core_logic
+  R8:
+    text: Save listing must read metadata from save headers, filter quick/auto slots according to caller flags, and preserve requested title, slot-name, and most-recent sorting.
+    category: runtime_integration
+  R9:
+    text: Save completion must return the subsystem to idle, broadcast completion, clear in-progress slot/title/custom-info state, and resume deferred EndGame or NewGame requests exactly once.
+    category: object_lifecycle
+  R10:
+    text: Blocked quick-save and auto-save attempts must fail safely without deleting older rotation saves before the blocked save is refused.
+    category: runtime_integration
+  R11:
+    text: The implementation must fit SPUD's existing subsystem/state/archive lifecycle rather than replacing the archive format, adding a separate save registry, or special-casing test slot names.
+    category: subsystem_architecture
+  R12:
+    text: Rewriting variable-length custom save-info fields must relocate byte ranges by data offset and preserve all following fields through header serialization.
+    category: serialization
+  R13:
+    text: Header readers must reset optional screenshot/custom-info chunks between reads so missing optional chunks cannot leave stale metadata behind.
+    category: serialization
+  R14:
+    text: Save-info archive readers must skip unknown INFO child chunks and continue reading later known chunks for forward compatibility.
+    category: serialization
+  R15:
+    text: Malformed quick-save and auto-save slot names that only resemble SPUD's rotation convention must not be treated as valid numbered slots.
+    category: core_logic
+  R16:
+    text: Save completion must tolerate repeated or late completion callbacks without re-enabling persistence or replaying already-consumed deferred EndGame/NewGame requests.
+    category: object_lifecycle
+
+test_requirements:
+  SPUD.SaveArchiveLifecycle.save_blockers_are_reason_based_and_nestable:
+    - R1
+    - R2
+  SPUD.SaveArchiveLifecycle.header_reads_custom_info_without_full_restore:
+    - R3
+    - R4
+    - R5
+  SPUD.SaveArchiveLifecycle.custom_info_variable_updates_preserve_following_fields:
+    - R5
+    - R12
+  SPUD.SaveArchiveLifecycle.header_reader_resets_missing_optional_chunks:
+    - R13
+  SPUD.SaveArchiveLifecycle.header_reader_skips_unknown_info_children:
+    - R14
+  SPUD.SaveArchiveLifecycle.numbered_quick_and_auto_slots_parse_and_select_latest:
+    - R6
+    - R7
+    - R15
+  SPUD.SaveArchiveLifecycle.blocked_rotation_saves_refuse_before_cleanup:
+    - R10
+  SPUD.SaveArchiveLifecycle.save_list_filters_special_slots_and_sorts_metadata:
+    - R3
+    - R8
+  SPUD.SaveArchiveLifecycle.save_complete_clears_deferred_state:
+    - R9
+    - R16

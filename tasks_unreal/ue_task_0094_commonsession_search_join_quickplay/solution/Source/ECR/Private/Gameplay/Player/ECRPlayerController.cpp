@@ -1,0 +1,242 @@
+// Copyleft: All rights reversed
+
+
+#include "Gameplay/Player/ECRPlayerController.h"
+
+#include "AbilitySystemGlobals.h"
+#include "Gameplay/ECRGameplayTags.h"
+#include "Gameplay/GAS/ECRAbilitySystemComponent.h"
+#include "Framework/Application/NavigationConfig.h"
+#include "GameFramework/Character.h"
+#include "Gameplay/Camera/ECRPlayerCameraManager.h"
+#include "Gameplay/Player/ECRPlayerState.h"
+#include "System/ECRNavigationConfig.h"
+
+
+AECRPlayerController::AECRPlayerController(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
+{
+	PlayerCameraManagerClass = AECRPlayerCameraManager::StaticClass();
+	bInvertCameraY = false;
+	DesiredCameraDistanceMultiplier = 1.0f;
+	CameraDistanceMultiplier = DesiredCameraDistanceMultiplier;
+	CameraDistanceInterpolationSpeed = 1.0f;
+}
+
+
+AECRPlayerState* AECRPlayerController::GetECRPlayerState() const
+{
+	return CastChecked<AECRPlayerState>(PlayerState, ECastCheckedType::NullAllowed);
+}
+
+UECRAbilitySystemComponent* AECRPlayerController::GetECRAbilitySystemComponent() const
+{
+	const AECRPlayerState* ECRPS = GetECRPlayerState();
+	if (ECRPS)
+	{
+		// Try to get the pawn ASC
+		if (APawn* MyPawn = ECRPS->GetPawn())
+		{
+			if (IAbilitySystemInterface* ASI = Cast<IAbilitySystemInterface>(MyPawn))
+			{
+				if (UECRAbilitySystemComponent* ECRASC = Cast<UECRAbilitySystemComponent>(
+					ASI->GetAbilitySystemComponent()))
+				{
+					return ECRASC;
+				}
+			}
+		}
+	}
+	return nullptr;
+}
+
+void AECRPlayerController::PreInitializeComponents()
+{
+	Super::PreInitializeComponents();
+}
+
+void AECRPlayerController::BeginPlay()
+{
+	Super::BeginPlay();
+
+	if (IsLocalPlayerController())
+	{
+		const TSharedRef<FECRNavigationConfig> Navigation = MakeShared<FECRNavigationConfig>();
+		Navigation->bKeyNavigation = true;
+		Navigation->bTabNavigation = false;
+		Navigation->bAnalogNavigation = true;
+		FSlateApplication::Get().SetNavigationConfig(Navigation);
+	}
+}
+
+
+void AECRPlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+}
+
+void AECRPlayerController::OnUnPossess()
+{
+	// Make sure the pawn that is being unpossessed doesn't remain our ASC's avatar actor
+	if (APawn* PawnBeingUnpossessed = GetPawn())
+	{
+		if (UAbilitySystemComponent* ASC = UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(PlayerState))
+		{
+			if (ASC->GetAvatarActor() == PawnBeingUnpossessed)
+			{
+				ASC->SetAvatarActor(nullptr);
+			}
+		}
+	}
+
+	Super::OnUnPossess();
+}
+
+void AECRPlayerController::PlayerTick(float DeltaTime)
+{
+	Super::PlayerTick(DeltaTime);
+
+	// If we are auto running then add some player input
+	if (GetIsAutoRunning())
+	{
+		if (APawn* CurrentPawn = GetPawn())
+		{
+			const FRotator MovementRotation(0.0f, GetControlRotation().Yaw, 0.0f);
+			const FVector MovementDirection = MovementRotation.RotateVector(FVector::ForwardVector);
+			CurrentPawn->AddMovementInput(MovementDirection, 1.0f);
+		}
+	}
+
+	// Interpolating camera distance multiplier
+	CameraDistanceMultiplier = FMath::FInterpTo(CameraDistanceMultiplier, DesiredCameraDistanceMultiplier, DeltaTime,
+	                                            CameraDistanceInterpolationSpeed);
+}
+
+void AECRPlayerController::GetPlayerViewPoint(FVector& out_Location, FRotator& out_Rotation) const
+{
+	if (IsInState(NAME_Spectating) && HasAuthority() && !IsLocalController())
+	{
+		// Server uses the synced location from clients. Important for view relevancy checks.
+		out_Location = LastSpectatorSyncLocation;
+		out_Rotation = LastSpectatorSyncRotation;
+	}
+	// There is a serious issue with relevancy while possessing non char pawns, caused by server camera not synced, so
+	// don't use camera manager on server for autonomous proxies
+	else if ((IsLocalController() || (GetPawn() && GetPawn()->IsA(ACharacter::StaticClass()))) && PlayerCameraManager != NULL && 
+		PlayerCameraManager->GetCameraCacheTime() > 0.f) // Whether camera was updated at least once)
+			{
+		PlayerCameraManager->GetCameraViewPoint(out_Location, out_Rotation);
+			}
+	else
+	{
+		AActor* TheViewTarget = GetViewTarget();
+
+		if( TheViewTarget != NULL )
+		{
+			out_Location = TheViewTarget->GetActorLocation();
+			out_Rotation = TheViewTarget->GetActorRotation();
+		}
+		else
+		{
+			Super::GetPlayerViewPoint(out_Location,out_Rotation);
+		}
+
+		out_Location.DiagnosticCheckNaN(*FString::Printf(TEXT("APlayerController::GetPlayerViewPoint: out_Location, ViewTarget=%s"), *GetNameSafe(TheViewTarget)));
+		out_Rotation.DiagnosticCheckNaN(*FString::Printf(TEXT("APlayerController::GetPlayerViewPoint: out_Rotation, ViewTarget=%s"), *GetNameSafe(TheViewTarget)));
+	}
+}
+
+void AECRPlayerController::OnPossess(APawn* InPawn)
+{
+	Super::OnPossess(InPawn);
+
+	SetIsAutoRunning(false);
+}
+
+void AECRPlayerController::SetIsAutoRunning(const bool bEnabled)
+{
+	const bool bIsAutoRunning = GetIsAutoRunning();
+	if (bEnabled != bIsAutoRunning)
+	{
+		if (!bEnabled)
+		{
+			OnEndAutoRun();
+		}
+		else
+		{
+			OnStartAutoRun();
+		}
+	}
+}
+
+bool AECRPlayerController::GetIsAutoRunning() const
+{
+	bool bIsAutoRunning = false;
+	if (const UECRAbilitySystemComponent* ECRASC = GetECRAbilitySystemComponent())
+	{
+		bIsAutoRunning = ECRASC->GetTagCount(FECRGameplayTags::Get().Status_AutoRunning) > 0;
+	}
+	return bIsAutoRunning;
+}
+
+int32 AECRPlayerController::GetInPacketLoss() const
+{
+	if (const UNetConnection* MyNetConnection = GetNetConnection())
+	{
+		return MyNetConnection->InPacketsLost;
+	}
+	return 0;
+}
+
+int32 AECRPlayerController::GetOutPacketLoss() const
+{
+	if (const UNetConnection* MyNetConnection = GetNetConnection())
+	{
+		return MyNetConnection->OutPacketsLost;
+	}
+	return 0;
+}
+
+void AECRPlayerController::PostProcessInput(const float DeltaTime, const bool bGamePaused)
+{
+	if (UECRAbilitySystemComponent* ECRASC = GetECRAbilitySystemComponent())
+	{
+		ECRASC->ProcessAbilityInput(DeltaTime, bGamePaused);
+	}
+
+	Super::PostProcessInput(DeltaTime, bGamePaused);
+}
+
+void AECRPlayerController::OnStartAutoRun()
+{
+	if (UECRAbilitySystemComponent* ECRASC = GetECRAbilitySystemComponent())
+	{
+		ECRASC->SetLooseGameplayTagCount(FECRGameplayTags::Get().Status_AutoRunning, 1);
+		K2_OnStartAutoRun();
+	}
+}
+
+void AECRPlayerController::OnEndAutoRun()
+{
+	if (UECRAbilitySystemComponent* ECRASC = GetECRAbilitySystemComponent())
+	{
+		ECRASC->SetLooseGameplayTagCount(FECRGameplayTags::Get().Status_AutoRunning, 0);
+		K2_OnEndAutoRun();
+	}
+}
+
+void AECRPlayerController::ChangeCameraDistance(double DesiredMultiplierDelta, double DesiredMultiplierMin,
+                                                double DesiredMultiplierMax)
+{
+	DesiredCameraDistanceMultiplier = FMath::Clamp(DesiredCameraDistanceMultiplier + DesiredMultiplierDelta,
+	                                               DesiredMultiplierMin, DesiredMultiplierMax);
+}
+
+//////////////////////////////////////////////////////////////////////
+// AECRReplayPlayerController
+
+void AECRReplayPlayerController::SetPlayer(UPlayer* InPlayer)
+{
+	Super::SetPlayer(InPlayer);
+	K2_OnPlayerSet();
+}

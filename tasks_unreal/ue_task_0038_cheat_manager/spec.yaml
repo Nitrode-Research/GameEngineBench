@@ -1,0 +1,111 @@
+task_id: ue_task_0038
+title: Cheat Manager
+tier: hard
+
+instruction: |
+  The cheat manager provides developer console commands for QA and testing: destroying actors, toggling invincibility, adjusting powerups, and overriding level generation. Currently every command is a no-op.
+
+  The project already contains:
+  - console command bindings and CVars in the class declaration
+  - a generated map, player data asset, and global messaging system as integration points
+
+  The system must satisfy these behavioral requirements:
+
+  Bitmask parsing:
+  - One helper converts a binary digit string to a bitmask (leftmost character is position zero, non-numeric characters skipped).
+  - Another converts a whitespace-separated list of actor type names to a bitmask.
+
+  Destroy commands:
+  - Destroying all actors of a given type removes them from the generated map.
+  - Destroying players by slot kills them through the death event, not by directly destroying the pawn — skipping the death event breaks tabulation and pool return.
+  - Suicide kills the local player through the same death-event path.
+
+  God mode:
+  - Toggles damage immunity on the local player's ability system. Must not delegate to the base class — the base class sets a pawn flag that the GAS damage path does not check.
+
+  Powerups:
+  - Sets all powerup attributes on the local player to a given level, using the project's powerup tag registry — not a hardcoded list.
+
+  AutoCopilot:
+  - Converts the local player to a bot and swaps them to an AI controller. Must use the engine base class's bot-flag setter, not the project's override — the project's override flips the ability system replication mode while a human client is still connected.
+
+  Level generation overrides:
+  - Setting wall or box chance overrides that parameter while preserving any previously-set overrides. A negative value restores the default for that parameter from the data asset. After applying, immediately triggers a regeneration.
+
+  Debug camera:
+  - Enabling and disabling the debug camera requires a specific ordering between setting the internal flag and calling the base class — read the header and base class to determine the correct order for each direction.
+
+hidden_requirements:
+  R1:
+    text: Reverse bitmask parsing must treat the leftmost numeric character as bit position zero and skip non-numeric characters.
+    category: core_logic
+  R2:
+    text: Actor-type bitmask parsing must split whitespace-separated actor type names and resolve them through the project's actor-type enum rather than hardcoded string cases.
+    category: core_logic
+  R3:
+    text: The cheat manager constructor must configure the project debug camera controller subclass so the base debug-camera path spawns the right controller.
+    category: initialization
+  R4:
+    text: Destroying players by slot must enumerate player map components, match by player id bit, and broadcast the player-death gameplay event for each matched pawn.
+    category: core_logic
+  R5:
+    text: Player destruction cheats must never directly destroy the pawn because death events drive tabulation, replication, and pool return.
+    category: object_lifecycle
+  R6:
+    text: Suicide must convert the local player's id into the same slot-bit representation used by DestroyPlayersBySlots.
+    category: core_logic
+  R7:
+    text: God mode must toggle the project's incoming-damage gameplay effect on the local pawn ASC and must not call the base cheat-manager God implementation.
+    category: core_logic
+  R8:
+    text: SetPlayerPowerups must iterate the project powerup tag registry and apply each corresponding powerup attribute override on the local player's ASC.
+    category: core_logic
+  R9:
+    text: AutoCopilot must toggle the engine base bIsABot field directly and then repossess with an AI-capable controller, avoiding the project override that changes ASC replication mode.
+    category: object_lifecycle
+  R10:
+    text: Wall chance overrides must preserve all other generation settings, restore the data-asset default on negative input, clamp excessive values, enable overrides, and regenerate immediately.
+    category: core_logic
+  R11:
+    text: Box chance overrides must preserve all other generation settings, restore the data-asset default on negative input, clamp excessive values, enable overrides, and regenerate immediately.
+    category: core_logic
+  R12:
+    text: Enabling debug camera must set the project debug-camera flag before calling the base implementation; disabling must call the base implementation before clearing the flag and reapplying input contexts.
+    category: object_lifecycle
+
+test_requirements:
+  Bomber.CheatManager.ConstructorSetsDebugCameraControllerClass:
+    - R3
+  Bomber.CheatManager.DestroyPlayersBySlotsBroadcastsDeathEvent:
+    - R4
+    - R5
+  Bomber.CheatManager.GetBitmaskFromActorTypesString:
+    - R2
+  Bomber.CheatManager.GetBitmaskFromReverseString:
+    - R1
+  Bomber.CheatManager.GodDoesNotCallSuper:
+    - R7
+  Bomber.CheatManager.SetAutoCopilotUsesEngineBaseSetIsABot:
+    - R9
+  Bomber.CheatManager.SetBoxesChanceRestoresDefaultsAndRegenerates:
+    - R11
+  Bomber.CheatManager.SetPlayerPowerupsUsesRegistry:
+    - R8
+  Bomber.CheatManager.SetWallsChanceRestoresDefaultsAndRegenerates:
+    - R10
+  Bomber.CheatManager.SlotStringParsesToTargetedDeathEventBit:
+    - R1
+    - R6
+  Bomber.CheatManager.SuicideRoutesThroughDeathEvent:
+    - R4
+    - R5
+    - R6
+
+files_to_edit:
+  - Source/Bomber/Private/GameFramework/BmrCheatManager.cpp
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "Bomber.CheatManager"

@@ -1,0 +1,76 @@
+task_id: ue_task_0051
+title: ALSXT Recoil Curve Animation Modifier
+tier: medium
+
+instruction: |
+  The TargetVector ALSXT plugin includes an editor animation modifier that extracts recoil motion from an animation sequence and writes it either into animation curves or into generated `UCurveVector` assets. Implement the modifier behavior in the task-owned files.
+
+  Designers must be able to run the modifier on an animation, sample a configured bone over time, compute transform deltas, normalize those values when requested, and save the result as reusable procedural recoil curves.
+
+  The implementation must preserve the existing editor workflow:
+
+  - Validate the animation sequence, skeleton, reference animation, and configured bone before modifying assets.
+  - Sample the configured bone in component/root space at `AnimationSampleRate` over the animation length.
+  - Compute translation and rotation deltas against the reference pose.
+  - When normalization is enabled, collect maximum absolute translation/rotation values and remap all sampled values safely.
+  - When adding curves to an animation asset, create or update six float curves using stable names derived from `CurveName`.
+  - On revert, remove the same six generated curves.
+  - When exporting standalone curve assets, use plugin settings for the save path, create translation and rotation `UCurveVector` assets, register them with the asset registry, and save their packages.
+
+  Do not replace the modifier with hard-coded curve names or no-op editor code. The code should fit Unreal's animation data controller, asset registry, and package-save APIs.
+
+files_to_edit:
+  - Plugins/ALSXT/Source/ALSXTEditor/Private/Modifiers/AlsxtAnimationModifier_ExtractRecoilCurves.cpp
+  - Plugins/ALSXT/Source/ALSXTEditor/Public/Modifiers/AlsxtAnimationModifier_ExtractRecoilCurves.h
+  - Plugins/ALSXT/Source/ALSXT/Private/Settings/AlsxtAnimationModifierExtractCurvesSettings.cpp
+  - Plugins/ALSXT/Source/ALSXT/Public/Settings/AlsxtAnimationModifierExtractCurvesSettings.h
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "TargetVector.ALSXTRecoilCurveModifier"
+
+hidden_requirements:
+  R1:
+    text: The modifier must validate animation, skeleton, reference animation, and configured bone before sampling or writing curves.
+    category: validation
+  R2:
+    text: Bone pose extraction must use Unreal animation pose data, bone containers, compact pose indices, and component-space pose transforms.
+    category: animation_sampling
+  R3:
+    text: The sampling loop must use animation length and AnimationSampleRate to generate keys over the full animation duration.
+    category: animation_sampling
+  R4:
+    text: Translation and rotation deltas must be computed from sampled pose versus reference pose.
+    category: core_logic
+  R5:
+    text: Normalization must track max absolute translation and rotation per axis and divide safely, returning zero for near-zero maxima.
+    category: core_logic
+  R6:
+    text: Animation-asset mode must create or update six named float curves for translation and rotation axes.
+    category: editor_asset_pipeline
+  R7:
+    text: Revert must remove the same six generated curves from the animation asset.
+    category: cleanup
+  R8:
+    text: Standalone asset mode must use the settings save path, create Loc and Rot packages, create UCurveVector assets, register them with the asset registry, and save packages.
+    category: editor_asset_pipeline
+  R9:
+    text: Curve names must be derived consistently from CurveName plus translation/rotation and axis tokens.
+    category: api_contract
+
+test_requirements:
+  TargetVector.ALSXTRecoilCurveModifier.validation_and_sampling_source:
+    - R1
+    - R2
+    - R3
+    - R4
+  TargetVector.ALSXTRecoilCurveModifier.normalization_and_anim_curve_source:
+    - R5
+    - R6
+    - R7
+    - R9
+  TargetVector.ALSXTRecoilCurveModifier.asset_export_source:
+    - R5
+    - R8

@@ -1,0 +1,81 @@
+task_id: ue_task_0027
+title: Data Assets Loader Editor K2 Nodes
+tier: medium
+
+instruction: |
+  Bomber's DataAssetsLoader plugin includes custom Blueprint editor nodes that expose Data Asset and Data Registry loading/listening operations as typed Blueprint graph nodes. Implement the editor node behavior in the task-owned files.
+
+  Designers must be able to place the custom K2 nodes, configure row or data-asset types, compile Blueprint graphs, and have the nodes expand into the correct runtime DataAssetsLoader calls.
+
+  The implementation must preserve the editor workflow:
+
+  - Allocate stable input and output pins for execution, row structs, registry item ids, data asset classes, loaded data assets, Completed callbacks, and Failed callbacks.
+  - Keep output pin types synchronized with selected data asset classes or row structs.
+  - Register node spawners and menu categories so the nodes are discoverable in Blueprint action menus.
+  - Expand each node into the intended runtime function call, moving or copying user pin links to intermediate pins.
+  - Build delegate/custom-event callbacks for listener nodes and route Completed/Failed execution pins correctly.
+  - Preserve reconstruction behavior so existing Blueprint links survive class/type changes where possible.
+
+  Do not replace these nodes with no-op editor classes or hard-coded pins that do not expand into the runtime DataAssetsLoader APIs.
+
+files_to_edit:
+  - Plugins/DataAssetsLoader/Source/DataAssetsLoaderEditor/Private/K2Node_BindAndLoadRegistryRows.cpp
+  - Plugins/DataAssetsLoader/Source/DataAssetsLoaderEditor/Private/K2Node_GetAllRegistryRows.cpp
+  - Plugins/DataAssetsLoader/Source/DataAssetsLoaderEditor/Private/K2Node_ListenForDataAsset.cpp
+  - Plugins/DataAssetsLoader/Source/DataAssetsLoaderEditor/Private/K2Node_ListenForDataRegistryRow.cpp
+  - Plugins/DataAssetsLoader/Source/DataAssetsLoaderEditor/Public/K2Node_BindAndLoadRegistryRows.h
+  - Plugins/DataAssetsLoader/Source/DataAssetsLoaderEditor/Public/K2Node_GetAllRegistryRows.h
+  - Plugins/DataAssetsLoader/Source/DataAssetsLoaderEditor/Public/K2Node_ListenForDataAsset.h
+  - Plugins/DataAssetsLoader/Source/DataAssetsLoaderEditor/Public/K2Node_ListenForDataRegistryRow.h
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "Bomber.DataAssetsLoaderEditorK2"
+
+hidden_requirements:
+  R1:
+    text: Nodes must allocate the correct exec, type-selection, data-output, item-id, Completed, and Failed pins with stable names and categories.
+    category: editor_pins
+  R2:
+    text: Data asset listener output pins must track the selected asset class from defaults or linked class pins.
+    category: type_propagation
+  R3:
+    text: Registry row query output pins must change between wildcard and typed struct arrays based on the selected row struct.
+    category: type_propagation
+  R4:
+    text: Nodes must expand into the intended DataAssetsLoader runtime functions and transfer user pin links to intermediate call pins.
+    category: graph_expansion
+  R5:
+    text: Listener nodes must build custom-event delegate callbacks and connect callback execution to user Completed pins.
+    category: delegate_expansion
+  R6:
+    text: Data asset listener nodes must branch callback results into Completed and Failed exec outputs based on loaded object validity.
+    category: graph_expansion
+  R7:
+    text: Nodes must register Blueprint action menu spawners and categories.
+    category: editor_registration
+  R8:
+    text: Reconstruction and pin-change hooks must preserve type updates when selected classes or row structs change.
+    category: editor_lifecycle
+
+test_requirements:
+  Bomber.DataAssetsLoaderEditorK2.asset_listener_node_source:
+    - R1
+    - R2
+    - R4
+    - R5
+    - R6
+    - R8
+  Bomber.DataAssetsLoaderEditorK2.registry_query_node_source:
+    - R1
+    - R3
+    - R4
+    - R7
+    - R8
+  Bomber.DataAssetsLoaderEditorK2.registry_listener_nodes_source:
+    - R1
+    - R4
+    - R5
+    - R7

@@ -1,0 +1,83 @@
+task_id: ue_task_0081
+title: SPUD Destroyed Actor Persistence
+tier: hard
+
+instruction: |
+  You are working in an Unreal Engine 5 project that uses the SPUD runtime save plugin.
+  Implement the behavior of SPUD's destroyed placed actor persistence in the task-owned files.
+
+  The project already contains the public API surface, build/module wiring, and surrounding SPUD level state storage.
+  The broken implementation has several connected lifecycle regressions, so a local one-function patch is not sufficient.
+
+  Implement the following behavior:
+
+  - Level-authored persistent actors destroyed during gameplay remain destroyed after level streaming reloads and full save/load cycles.
+  - Runtime-spawned actors are not recorded as destroyed level actors; their absence or respawn is handled by SPUD runtime actor identity.
+  - Actor destruction caused by level unload, map travel, game load, or subsystem teardown should not be mistaken for gameplay destruction.
+  - SPUD subscribes and unsubscribes to placed persistent actor destruction events as levels load, restore, store, and unload.
+  - Destroyed actor records use stable level actor identity and are applied after normal restore work so saved actor state and deletion state do not conflict.
+  - Excluded levels should not record or apply destroyed actor state.
+  - Repeated notifications for the same destroyed actor should be idempotent so archive reloads do not accumulate duplicate tombstones.
+
+files_to_edit:
+  - "Plugins/SPUD/Source/SPUD/Public/SpudSubsystem.h"
+  - "Plugins/SPUD/Source/SPUD/Private/SpudSubsystem.cpp"
+  - "Plugins/SPUD/Source/SPUD/Public/SpudState.h"
+  - "Plugins/SPUD/Source/SPUD/Private/SpudState.cpp"
+  - "Plugins/SPUD/Source/SPUD/Private/SpudPropertyUtil.cpp"
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "SPUD.DestroyedActorPersistence"
+
+hidden_requirements:
+  R1:
+    text: Destroyed placed actor records must use stable level actor identity and be associated with the correct level data.
+    category: core_logic
+  R2:
+    text: Destroyed placed actor records must persist through SPUD's chunked archive format and survive reload into a fresh state object.
+    category: serialization
+  R3:
+    text: Repeated destroyed notifications for the same placed actor must be idempotent and not create duplicate tombstones.
+    category: core_logic
+  R4:
+    text: RestoreLevel must apply destroyed actor tombstones after normal actor restore so actors listed as destroyed are removed from the world even if saved actor state also exists.
+    category: object_lifecycle
+  R5:
+    text: SPUD must record and subscribe destroyed-actor tombstones only for persistent level-authored actors and not for runtime-spawned actors.
+    category: runtime_integration
+  R6:
+    text: Destroyed actor subscriptions and unsubscriptions must respect excluded-level filtering.
+    category: runtime_integration
+  R7:
+    text: Actor destruction must be recorded only during normal gameplay, not during level unload, map travel, game load, or subsystem teardown.
+    category: runtime_integration
+  R8:
+    text: Streaming restore and unload lifecycle paths must attach and detach destroyed-actor delegates in sync with level restore/store ordering.
+    category: object_lifecycle
+  R9:
+    text: The implementation must repair SPUD's existing state/subsystem destroyed actor lifecycle rather than adding a parallel deletion registry.
+    category: subsystem_architecture
+
+test_requirements:
+  SPUD.DestroyedActorPersistence.records_stable_actor_names_and_roundtrips_archive:
+    - R1
+    - R2
+    - R3
+  SPUD.DestroyedActorPersistence.restore_applies_destroyed_records_after_actor_restore:
+    - R4
+  SPUD.DestroyedActorPersistence.state_filters_dedupes_and_restores_tombstones:
+    - R1
+    - R3
+    - R4
+    - R5
+    - R9
+  SPUD.DestroyedActorPersistence.subscribes_only_level_persistent_actor_destroy_events:
+    - R5
+    - R6
+  SPUD.DestroyedActorPersistence.ignores_teardown_travel_and_unload_destruction:
+    - R7
+  SPUD.DestroyedActorPersistence.streaming_restore_store_lifecycle_keeps_delegates_in_sync:
+    - R8

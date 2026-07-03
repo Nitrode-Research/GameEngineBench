@@ -1,0 +1,80 @@
+task_id: ue_task_0074
+title: Dataconfig Anystruct Serde
+tier: medium
+
+instruction: |
+  TargetVector's DataConfigExtra module includes `FDcAnyStruct`, a type-erased heap-owned reflected struct handle, plus serializer/deserializer handlers that read and write arbitrary struct values through a `$type` metadata field. Implement the AnyStruct behavior in the task-owned files.
+
+  Arbitrary reflected structs must be stored, copied, moved, destroyed, serialized, and deserialized safely through the AnyStruct value semantics and DataConfig SerDe integration.
+
+  The implementation must satisfy the following behavior:
+
+  - `FDcAnyStruct` owns initialized struct memory together with its `UScriptStruct` type.
+  - Copies share the same underlying struct payload through the reference controller, while moves leave the source invalid.
+  - Destruction calls the script struct destructor and frees owned memory exactly once.
+  - `Reset`, null assignment, `IsValid`, `GetSharedReferenceCount`, and typed `GetChecked<T>` behave consistently.
+  - Deserialization accepts `None` as an invalid AnyStruct and map payloads with a `$type` string plus reflected fields.
+  - Deserialization resolves the struct type, allocates and initializes memory, pushes the struct property state, and recursively deserializes the payload.
+  - Serialization writes `None` for invalid values and writes `$type` plus recursive reflected struct fields for valid values.
+
+  Do not replace AnyStruct with shallow raw pointers, hard-coded test structs, or no-op SerDe handlers.
+
+files_to_edit:
+  - Plugins/DataConfig/Source/DataConfigExtra/Private/DataConfig/Extra/SerDe/DcSerDeAnyStruct.cpp
+  - Plugins/DataConfig/Source/DataConfigExtra/Public/DataConfig/Extra/SerDe/DcSerDeAnyStruct.h
+  - Plugins/DataConfig/Source/DataConfigExtra/Private/DataConfig/Extra/Types/DcAnyStruct.cpp
+  - Plugins/DataConfig/Source/DataConfigExtra/Public/DataConfig/Extra/Types/DcAnyStruct.h
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "TargetVector.DataConfigAnyStruct"
+
+hidden_requirements:
+  R1:
+    text: AnyStruct must store both the payload pointer and UScriptStruct type and initialize handles from raw struct pointers.
+    category: type_erasure
+  R2:
+    text: Copy construction and copy assignment must share payload ownership through a reference controller.
+    category: ownership
+  R3:
+    text: Move construction and move assignment must transfer ownership state and invalidate the moved-from handle.
+    category: ownership
+  R4:
+    text: Destroying the last reference must call DestroyStruct and free owned memory exactly once.
+    category: cleanup
+  R5:
+    text: Validity, shared-reference count, reset, null assignment, and typed GetChecked access must reflect the underlying handle state.
+    category: api_contract
+  R6:
+    text: AnyStruct deserialization must support None values by resetting the destination handle.
+    category: deserialization
+  R7:
+    text: AnyStruct deserialization must require `$type`, resolve the UScriptStruct, allocate and initialize memory, and push struct property state.
+    category: deserialization
+  R8:
+    text: AnyStruct deserialization must recursively deserialize the reflected struct payload through a putback reader.
+    category: deserialization
+  R9:
+    text: AnyStruct serialization must write None for invalid values and `$type` plus recursive reflected fields for valid values.
+    category: serialization
+  R10:
+    text: Public handlers must use DataConfig object-name formatting and lookup helpers for type identity.
+    category: serialization
+
+test_requirements:
+  TargetVector.DataConfigAnyStruct.ownership_source:
+    - R1
+    - R2
+    - R3
+    - R4
+    - R5
+  TargetVector.DataConfigAnyStruct.deserialize_source:
+    - R6
+    - R7
+    - R8
+    - R10
+  TargetVector.DataConfigAnyStruct.serialize_source:
+    - R9
+    - R10

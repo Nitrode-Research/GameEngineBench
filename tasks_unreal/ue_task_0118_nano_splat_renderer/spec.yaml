@@ -1,0 +1,69 @@
+task_id: ue_task_0118
+title: Gaussian Splat Renderer
+tier: hard
+instruction: "Implement the Gaussian Splat Renderer \u2014 GPU compute pipeline orchestrating multiple\ncompute shader dispatches\
+  \ for view data calculation, distance sorting, culling,\nand final rendering. The system must transform 3D splat data to\
+  \ 2D screen-space,\nsort by distance for correct alpha blending, cull clusters, compact visible splats,\nand draw with sRGB\
+  \ compositing.\n\nExpected behaviors:\n\nView data calculation:\n- Transform splat position to view space\n- Calculate screen-space\
+  \ covariance matrix (2D Gaussian projection)\n- Compute screen-space scale and rotation\n- Evaluate spherical harmonics\
+  \ for view-dependent color\n- Calculate opacity with depth fade\n\nDistance calculation:\n- Calculate Euclidean distance\
+  \ from camera to each splat\n- Output distance buffer for sorting\n\nRadix sort:\n- Back-to-front sorting by distance for\
+  \ correct alpha blending\n- GPU-driven radix sort with indirect dispatch\n- Output sorted splat indices\n\nCluster culling:\n\
+  - Frustum culling for cluster-level LOD selection\n- Calculate screen-space error for LOD threshold\n- Select LOD level\
+  \ based on error threshold\n- Output cluster visibility bitmap\n\nSplat compaction:\n- Build compact list of visible splat\
+  \ indices using atomics\n- Remove culled/LOD-skipped splats\n- Output compacted splat indices buffer\n\nDraw splats:\n-\
+  \ Draw all visible splats in sorted order\n- Use packed splat buffer for position/scale/rotation\n- Use SH buffer for view-dependent\
+  \ color\n- Composite to SceneColor with sRGB blending\n\nGlobal accumulator (one-draw-call):\n- Accumulate all view data\
+  \ into single buffer for multiple splat actors\n- Compute prefix sums for indirect dispatch\n- Single draw call for all\
+  \ splats\n\nEdge cases:\n- 0 splats \u2014 skip all dispatches\n- SHOrder > available bands \u2014 clamp to available\n\
+  - Camera inside cluster \u2014 skip culling, render all splats\n- Cluster completely outside frustum \u2014 skip all splats\
+  \ in cluster\n- First frame for view \u2014 use current frame as \"previous\" for zero velocity\n- Multiple viewports \u2014\
+  \ track per-view previous frame data\n\nQuality bar:\n- The implementation must compile as part of the NanoGaussianSplatting\
+  \ UE5 plugin\n- Follow the existing C++ conventions, macro usage, and naming patterns\n- All public-facing methods must\
+  \ use the appropriate UFUNCTION macros\n- No new assets or classes outside the listed files\n- Must integrate with GPU buffer\
+  \ management and cluster builder systems\n"
+hidden_requirements:
+  R1:
+    text: DispatchCalcViewData must transform splat position to view space, calculate screen-space covariance, evaluate spherical
+      harmonics, and calculate opacity.
+    category: core_logic
+  R2:
+    text: DispatchCalcDistances must calculate Euclidean distance from camera to each splat.
+    category: core_logic
+  R3:
+    text: DispatchRadixSort must perform back-to-front sorting by distance for correct alpha blending.
+    category: core_logic
+  R4:
+    text: DispatchClusterCulling must test cluster bounding spheres against view frustum and select LOD level.
+    category: core_logic
+  R5:
+    text: DispatchCompactSplats must build compact list of visible splat indices using atomics.
+    category: core_logic
+  R6:
+    text: DrawSplats must draw all visible splats in sorted order with sRGB blending.
+    category: core_logic
+  R7:
+    text: Global accumulator must accumulate all view data into single buffer for multiple splat actors.
+    category: core_logic
+  R8:
+    text: Edge cases must handle 0 splats, SHOrder clamping, camera inside cluster, cluster outside frustum, first frame,
+      multiple viewports.
+    category: core_logic
+test_requirements:
+  Nano.Renderer.SourcePipelineSemantics:
+  - R1
+  - R2
+  - R3
+  - R4
+  - R5
+  - R6
+  - R7
+  - R8
+files_to_edit:
+- Plugins/NanoGS/Source/NanoGS/Public/GaussianSplatRenderer.h
+- Plugins/NanoGS/Source/NanoGS/Private/GaussianSplatRenderer.cpp
+tests:
+  runner: ue_automation
+  mode: editor
+  num_clients: 0
+  filter: Nano.Renderer

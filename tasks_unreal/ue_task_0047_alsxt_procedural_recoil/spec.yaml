@@ -1,0 +1,76 @@
+task_id: ue_task_0047
+title: ALSXT Procedural Recoil
+tier: hard
+
+instruction: |
+  You are working in an Unreal Engine 5 third-person character project that uses the ALSXT plugin.
+  Implement the procedural recoil animation system in AlsxtProceduralRecoilAnimComponent.cpp.
+
+  The component manages the recoil timeline setup and update flow, a state machine for single-fire
+  versus sustained-fire behavior, controller recoil smoothing and damping, random kick and sway
+  generation from settings, owner versus non-owner replication behavior for output transforms,
+  readiness and aiming-dependent scaling, and fire-rate-based timing and correction logic.
+
+  The project already contains:
+  - The component class and its public API
+  - Settings data assets and the attribute-set type definitions
+  - Replicated properties and delegates
+  - The existing firearm and gameplay ability callers
+
+  Implement the following behavior:
+
+  - Firing produces procedural transform recoil and controller kick rather than static offsets.
+  - Single-fire and sustained-fire behavior differ in timing and smoothing.
+  - Aiming and ready states scale recoil differently using the existing settings.
+  - The owning player receives local controller recoil; other players observe the resulting replicated transform on the character.
+  - Recoil decays smoothly when firing stops.
+  - Fire rate and playback timing remain consistent so automatic fire does not jitter or drift badly.
+
+files_to_edit:
+  - Plugins/ALSXT/Source/ALSXT/Private/Components/Character/AlsxtProceduralRecoilAnimComponent.cpp
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "ALSXT.ProceduralRecoil"
+
+hidden_requirements:
+  R1:
+    text: Initialization builds a recoil state machine with single-fire and repeating-fire states.
+    category: initialization
+  R2:
+    text: Each recoil state has transition and playback delegates that drive the correct recoil behavior.
+    category: initialization
+  R3:
+    text: Firing starts the recoil animation timeline and advances procedural playback.
+    category: core_logic
+  R4:
+    text: Firing produces both procedural transform recoil and local controller kick.
+    category: core_logic
+  R5:
+    text: Single-fire and sustained-fire recoil use different timing and smoothing behavior.
+    category: core_logic
+  R6:
+    text: Aiming and ready states scale recoil through the existing settings and attributes.
+    category: runtime_integration
+  R7:
+    text: The owning player receives local controller recoil while other players observe the replicated output transform.
+    category: replication
+  R8:
+    text: Recoil decays smoothly when firing stops.
+    category: core_logic
+  R9:
+    text: Automatic and burst fire preserve fire-rate-based timing without jitter or drift.
+    category: core_logic
+  R10:
+    text: Simulation timers continue automatic or burst recoil playback and manage burst counters.
+    category: object_lifecycle
+
+test_requirements:
+  ALSXT.ProceduralRecoil.firing_drives_recoil_animation:
+    - R3
+    - R4
+  ALSXT.ProceduralRecoil.initialize_builds_fire_state_machine:
+    - R1
+    - R2

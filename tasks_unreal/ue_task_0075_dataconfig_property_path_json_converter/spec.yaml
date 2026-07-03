@@ -1,0 +1,79 @@
+task_id: ue_task_0075
+title: Dataconfig Property Path JSON Converter
+tier: hard
+
+instruction: |
+  TargetVector's DataConfigExtra module includes two higher-level utilities on top of the low-level DataConfig readers and writers: property-path access for reflected Unreal data and a JSON converter for Unreal structs/classes. Implement these utilities in the task-owned files.
+
+  Callers must be able to locate nested reflected properties by string paths, read/write values, and convert Unreal structs to and from JSON using DataConfig's serializer/deserializer pipeline.
+
+  The implementation must satisfy the following behavior:
+
+  - Split dot-delimited property paths and traverse structs, classes, arrays, sets, and maps.
+  - Match struct/class fields by reflected property name and report missing fields through DataConfig diagnostics.
+  - Use numeric path elements for array/set indexes and string/name keys for maps.
+  - Return `FDcPropertyDatum` values that point at the selected reflected field.
+  - Template helpers should expose typed pointer access and typed assignment by path.
+  - JSON conversion must lazily initialize DataConfig serializer/deserializer instances with JSON handlers.
+  - JSON serialization must standardize property names to JSON/camel-case style for struct and class roots.
+  - JSON conversion must use `FDcPropertyReader`, `FDcPropertyWriter`, `FDcJsonReader`, and `FDcJsonWriter` rather than bypassing DataConfig reflection.
+
+  Do not replace these utilities with ad-hoc string lookup, hard-coded test fixtures, or Unreal's JSON converter alone.
+
+files_to_edit:
+  - Plugins/DataConfig/Source/DataConfigExtra/Private/DataConfig/Extra/Types/DcPropertyPathAccess.cpp
+  - Plugins/DataConfig/Source/DataConfigExtra/Public/DataConfig/Extra/Types/DcPropertyPathAccess.h
+  - Plugins/DataConfig/Source/DataConfigExtra/Private/DataConfig/Extra/Types/DcJsonConverter.cpp
+  - Plugins/DataConfig/Source/DataConfigExtra/Public/DataConfig/Extra/Types/DcJsonConverter.h
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "TargetVector.DataConfigPropertyJson"
+
+hidden_requirements:
+  R1:
+    text: Property paths must be split segment-by-segment from dot-delimited strings.
+    category: path_parsing
+  R2:
+    text: Traversal must support struct roots and class roots, matching fields by reflected property name.
+    category: property_traversal
+  R3:
+    text: Traversal must support arrays and sets through numeric path indexes.
+    category: property_traversal
+  R4:
+    text: Traversal must support maps using string or name keys and report key type mismatches.
+    category: property_traversal
+  R5:
+    text: Missing fields and invalid traversal must report DataConfig diagnostics rather than silently returning unrelated data.
+    category: diagnostics
+  R6:
+    text: GetDatumPropertyByPath must return an FDcPropertyDatum for the final reflected field.
+    category: api_contract
+  R7:
+    text: Template helpers must expose typed pointer access for object/struct/property-map values and typed assignment by path.
+    category: api_contract
+  R8:
+    text: JSON conversion must lazily initialize DataConfig serializers/deserializers with JSON handlers.
+    category: json_conversion
+  R9:
+    text: JSON serialization must customize struct/class/root field handling to emit standardized JSON property names.
+    category: json_conversion
+  R10:
+    text: JSON conversion must route through FDcPropertyReader, FDcPropertyWriter, FDcJsonReader, and FDcJsonWriter.
+    category: json_conversion
+
+test_requirements:
+  TargetVector.DataConfigPropertyJson.property_path_source:
+    - R1
+    - R2
+    - R3
+    - R4
+    - R5
+    - R6
+    - R7
+  TargetVector.DataConfigPropertyJson.json_converter_pipeline_source:
+    - R8
+    - R9
+    - R10

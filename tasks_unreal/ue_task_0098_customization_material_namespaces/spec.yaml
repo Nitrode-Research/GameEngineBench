@@ -1,0 +1,75 @@
+task_id: ue_task_0098
+title: Implement customization material namespace application
+tier: hard
+
+instruction: |
+  Implement the customization material namespace system so selected cosmetic
+  material choices are resolved and applied to character meshes correctly.
+  
+  Expected behavior:
+  - Customization data can resolve material choices by namespace, slot, and saved selection.
+  - Applying a customization updates the correct mesh material slots without disturbing unrelated slots.
+  - Runtime material instances are created or reused consistently so parameter overrides affect the intended mesh only.
+  - Missing namespaces, missing assets, invalid slot names, or incomplete saved data fail safely.
+  - Reapplying the same customization is idempotent and does not leak duplicate dynamic materials.
+  - Saved material selections can be loaded back into the same visual state.
+  - The implementation must compile and fit the existing customization asset and save-data architecture.
+  
+  Constraints:
+  - Use the repository to infer how customization assets, material namespaces, skeletal meshes, and save records are connected.
+  - Do not hardcode individual character materials or build a parallel cosmetic format.
+  - Do not require new assets or hidden manual setup.
+  
+  Quality bar:
+  The implementation must preserve data-driven customization behavior, avoid
+  material leaks or unintended slot overwrites, and round-trip saved selections
+  through the existing customization data model.
+
+files_to_edit:
+  - Source/ECRCommon/Private/Customization/CustomizationMaterialAsset.cpp
+  - Source/ECRCommon/Private/Customization/CustomizationMaterialLoaderComponent.cpp
+  - Source/ECRCommon/Private/Customization/CustomizationMaterialNameSpace.cpp
+  - Source/ECRCommon/Private/Customization/CustomizationSavingNameSpace.cpp
+  - Source/ECRCommon/Public/Customization/CustomizationMaterialAsset.h
+  - Source/ECRCommon/Public/Customization/CustomizationMaterialLoaderComponent.h
+  - Source/ECRCommon/Public/Customization/CustomizationMaterialNameSpace.h
+  - Source/ECRCommon/Public/Customization/CustomizationSavingNameSpace.h
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "ECR.CustomizationMaterials"
+
+hidden_requirements:
+  R1:
+    text: Customization data can resolve material choices by namespace, slot, and saved selection.
+    category: assets
+  R2:
+    text: Applying a customization updates the correct mesh material slots without disturbing unrelated slots.
+    category: assets
+  R3:
+    text: Runtime material instances are created or reused consistently so parameter overrides affect the intended mesh only.
+    category: assets
+  R4:
+    text: Missing namespaces, missing assets, invalid slot names, or incomplete saved data fail safely.
+    category: assets
+  R5:
+    text: Reapplying the same customization is idempotent and does not leak duplicate dynamic materials.
+    category: assets
+  R6:
+    text: Saved material selections can be loaded back into the same visual state.
+    category: assets
+  R7:
+    text: The implementation must compile and fit the existing customization asset and save-data architecture.
+    category: assets
+
+test_requirements:
+  ECR.CustomizationMaterials.source_contract_tokens_present:
+    - R1
+    - R2
+    - R3
+    - R4
+    - R5
+    - R6
+    - R7

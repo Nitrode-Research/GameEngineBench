@@ -1,0 +1,80 @@
+task_id: ue_task_0025
+title: Sounds Subsystem
+tier: medium
+
+instruction: |
+  The Bomber project uses a world-level sounds subsystem to manage reusable 2D sound components, persisted volume settings, countdown sound effects, in-game music, UI click sounds, and game-state-driven audio routing. Implement the subsystem behavior in the task-owned files.
+
+  The game must be able to safely play singleton 2D sounds without stacking duplicates, stop or destroy those components, update sound-class volumes, and react to game lifecycle events.
+
+  The implementation must preserve the existing architecture:
+
+  - `UBmrSoundsSubsystem` is the world subsystem that owns runtime audio component state.
+  - `UBmrSoundsDataAsset` supplies sound classes, sound mix, SFX, end-game sounds, UI click sound, and Data Registry-backed background music.
+  - Singleton 2D sounds must be cached by sound asset, reused on later plays, stopped before replay when already playing, and cleaned up on subsystem deinitialize.
+  - Volume setters must update the config-backed stored values and route sound-class overrides through the main sound mix when audio playback is available.
+  - World begin play must apply the base sound mix, apply persisted volume settings, bind global game-state/local-player messages, and bind background music registry rows.
+  - Game-state events must start and stop in-game music and countdown sounds at the intended transitions.
+  - Local-player-ready handling must subscribe to the player state's end-game state delegate and play the correct end-game SFX.
+
+  Direct audible output is not the contract. Preserve the subsystem state, routing, cleanup, and lifecycle semantics even in headless or audio-disabled runs.
+
+files_to_edit:
+  - Source/Bomber/Private/Subsystems/BmrSoundsSubsystem.cpp
+  - Source/Bomber/Public/Subsystems/BmrSoundsSubsystem.h
+  - Source/Bomber/Private/DataAssets/BmrSoundsDataAsset.cpp
+  - Source/Bomber/Public/DataAssets/BmrSoundsDataAsset.h
+  - Source/Bomber/Public/DataRegistries/BmrSoundsBackgroundRow.h
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "Bomber.SoundsSubsystem"
+
+hidden_requirements:
+  R1:
+    text: PlaySingleSound2D must cache one audio component per sound asset and reuse that component on subsequent plays.
+    category: audio_lifecycle
+  R2:
+    text: PlaySingleSound2D must stop an already-playing singleton sound component before replaying it.
+    category: audio_lifecycle
+  R3:
+    text: StopSingleSound2D must stop the cached component without destroying or removing it.
+    category: audio_lifecycle
+  R4:
+    text: DestroySingleSound2D must stop, destroy, unload references for, and remove the cached component for the sound.
+    category: cleanup
+  R5:
+    text: DestroyAllSoundComponents and Deinitialize must stop and destroy all cached components and clear subsystem state.
+    category: cleanup
+  R6:
+    text: Master, music, and SFX volume setters must update persisted subsystem values and apply the corresponding sound-class override when sounds can play.
+    category: settings
+  R7:
+    text: OnWorldBeginPlay must apply the base sound mix, apply persisted volume settings, bind global gameplay messages, and bind background music Data Registry rows.
+    category: object_lifecycle
+  R8:
+    text: Game-state changes must start in-game music and start-game countdown during GameStarting, stop them in Menu, and stop end-game countdown on EndGame.
+    category: game_state
+  R9:
+    text: Local-player-ready handling must bind the player state's end-game state delegate and play the sound mapped to the final end-game state.
+    category: game_state
+  R10:
+    text: UBmrSoundsDataAsset must resolve in-game music through the background music Data Registry row and return end-game SFX by end-game state.
+    category: data_asset
+
+test_requirements:
+  Bomber.SoundsSubsystem.volume_setters_update_subsystem_state:
+    - R6
+  Bomber.SoundsSubsystem.singleton_sound_component_lifecycle_source:
+    - R1
+    - R2
+    - R3
+    - R4
+    - R5
+  Bomber.SoundsSubsystem.world_and_game_state_routing_source:
+    - R7
+    - R8
+    - R9
+    - R10

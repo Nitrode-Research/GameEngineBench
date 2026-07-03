@@ -1,0 +1,140 @@
+task_id: ue_task_0002
+title: Weapon and Projectile System
+tier: hard
+
+instruction: |
+  You are working in a multiplayer horde-survival game built with Unreal Engine 5 native C++.
+  Implement the weapon and projectile system.
+
+  The project has a functional inventory system, player characters that hold and switch weapons,
+  and weapon item data in a data table (accessible via UInventoryHelpers::FindItemByID). The header
+  files for all weapon and projectile classes are provided — implement the missing .cpp files and
+  extend the headers as needed.
+
+  The weapon and projectile system must satisfy these behavioral requirements:
+
+  Firing authority:
+  - All fire requests from clients must be executed on the server. A client cannot apply damage
+    or consume ammo directly.
+  - Dead players and players who are reloading must not be able to fire.
+  - A player may only fire a weapon they currently have equipped.
+  - Empty weapons cannot fire.
+
+  Fire modes:
+  - Weapons support single-shot, burst, and full-auto fire modes.
+  - Single-shot: one round per trigger pull.
+  - Burst: fires a fixed number of rounds in rapid succession, then stops automatically.
+  - Full-auto: fires continuously until the player stops or ammo runs out.
+  - Players can cycle through whichever fire modes are available for their weapon.
+
+  Timing:
+  - A minimum interval must be enforced between shots, server-side.
+  - The fire rate comes from the weapon's item data. Clients cannot bypass this timing.
+
+  Ammo:
+  - Each shot consumes one round of loaded ammo.
+  - The inventory display must reflect ammo consumption.
+
+  Spread:
+  - Shots have a base spread angle applied at the time of firing.
+  - Spread increases with consecutive shots and resets after a short pause.
+  - Moving and being airborne apply additional spread.
+
+  Projectile:
+  - Each shot spawns a projectile on the server that travels and hits targets.
+  - When a projectile hits a character, it applies point damage. The shooting player
+    is attributed as the instigator for kill tracking purposes.
+  - Impact visual effects must play on all clients at the hit location.
+
+  Explosive projectile:
+  - The explosive variant applies area-of-effect damage on impact instead of point damage.
+
+  Visual and audio feedback:
+  - Muzzle flash and weapon sound must play on all clients when the weapon fires.
+  - Firing state must replicate so animation blueprints can drive looping fire animations.
+
+  Healing weapon:
+  - The healing weapon can only be used when the wielder's health is below maximum, ammo
+    is available, and a healing sequence is not already in progress.
+  - When activated, a healing sequence plays visibly on all clients.
+  - When the healing sequence completes, the wielder's health increases and one ammo unit
+    is consumed.
+
+hidden_requirements:
+  R1:
+    text: Projectiles must be configured to replicate, move with valid projectile movement, collide, carry visible tracer geometry, and have a finite lifespan.
+    category: defaults
+  R2:
+    text: Server-authoritative firing must consume exactly one loaded round for each successful shot.
+    category: authority
+  R3:
+    text: Empty weapons must not fire or spawn projectiles.
+    category: core_logic
+  R4:
+    text: Firing must spawn a server projectile owned or instigated by the shooting character and configured to travel.
+    category: authority
+  R5:
+    text: Ammo consumed by firing must update the inventory-facing ammo display state.
+    category: core_logic
+  R6:
+    text: Character fire requests must be blocked while reloading, dead, or lacking a valid equipped firearm.
+    category: core_logic
+  R7:
+    text: Firearm visual and audio feedback must use replicated or multicast state visible to clients.
+    category: replication
+  R8:
+    text: Fire-mode toggling must cycle only through the weapon's supported single, burst, and full-auto modes.
+    category: core_logic
+  R9:
+    text: Projectile impact feedback must spawn replicated visual impact effects at the hit location.
+    category: replication
+  R10:
+    text: Explosive projectiles must apply area-of-effect damage on impact.
+    category: core_logic
+  R11:
+    text: Firearms must expose and use the correct projectile rotation source needed for spread and muzzle behavior.
+    category: core_logic
+
+test_requirements:
+  HordeTemplate.Weapon.Projectile_CDOConfiguration:
+    - R1
+  HordeTemplate.Weapon.Firearm_ServerFireDecrementsAmmoExactlyOne:
+    - R2
+  HordeTemplate.Weapon.Firearm_EmptyWeaponCannotFire:
+    - R3
+  HordeTemplate.Weapon.Firearm_FireSpawnsProjectileOwnedByShooter:
+    - R4
+  HordeTemplate.Weapon.Firearm_FireUpdatesInventoryDisplayAmmo:
+    - R5
+  HordeTemplate.Weapon.Firearm_CharacterFireGatesReloadDeadAndEquippedWeapon:
+    - R6
+  HordeTemplate.Weapon.Firearm_PlayFirearmFXMulticastActivatesAudio:
+    - R7
+  HordeTemplate.Weapon.Firearm_ServerToggleFireModeCyclesValidly:
+    - R8
+  HordeTemplate.Weapon.Projectile_SpawnImpactFXSpawnsImpactActor:
+    - R9
+  HordeTemplate.Weapon.Projectile_ExplosiveImpactAppliesAOEDamage:
+    - R10
+  HordeTemplate.Weapon.Firearm_ExposesRotationSourceForSpread:
+    - R11
+
+files_to_edit:
+  - Source/HordeTemplateV2Native/Public/Weapons/BaseFirearm.h
+  - Source/HordeTemplateV2Native/Private/Weapons/BaseFirearm.cpp
+  - Source/HordeTemplateV2Native/Public/Projectiles/BaseProjectile.h
+  - Source/HordeTemplateV2Native/Private/Projectiles/BaseProjectile.cpp
+  - Source/HordeTemplateV2Native/Public/Projectiles/ExplosiveProjectile.h
+  - Source/HordeTemplateV2Native/Private/Projectiles/ExplosiveProjectile.cpp
+  - Source/HordeTemplateV2Native/Public/Weapons/GranadeLauncher.h
+  - Source/HordeTemplateV2Native/Private/Weapons/GranadeLauncher.cpp
+  - Source/HordeTemplateV2Native/Public/Weapons/Med_VAC.h
+  - Source/HordeTemplateV2Native/Private/Weapons/Med_VAC.cpp
+  - Source/HordeTemplateV2Native/Public/Weapons/Weapon_HM5.h
+  - Source/HordeTemplateV2Native/Private/Weapons/Weapon_HM5.cpp
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "HordeTemplate.Weapon"

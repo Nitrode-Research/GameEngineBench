@@ -1,0 +1,60 @@
+{
+	"FileVersion" : 3,
+	"Version" : 1,
+	"VersionName" : "1.0",
+	"FriendlyName" : "Data Config",
+	"Description" : "Serialization framework for Unreal Engine that just works!",
+	"Category" : "Editor",
+	"SupportURL" : "",
+	"EnabledByDefault" : true,
+	"CanContainContent" : true,
+	"IsBetaVersion" : false,
+	"Installed" : false,
+	"Modules": [
+		{
+			"Name": "DataConfigCore",
+			"Type": "Runtime",
+			"LoadingPhase": "None"
+		},
+		{
+			"Name": "DataConfigExtra",
+			"Type": "Runtime",
+	    	"LoadingPhase": "Default"
+		},
+		{
+			"Name": "DataConfigEngineExtra",
+			"Type": "Runtime",
+	    	"LoadingPhase": "Default"
+		},
+		{
+			"Name": "DataConfigEngineExtra5",
+			"Type": "Editor",
+	    	"LoadingPhase": "Default"
+		},
+		{
+			"Name": "DataConfigTests",
+			"Type": "Editor",
+	    	"LoadingPhase": "Default"
+		},
+		{
+			"Name": "DataConfigEditorExtra",
+			"Type": "Editor",
+	    	"LoadingPhase": "Default"
+		},
+		{
+			"Name": "DataConfigTests5",
+			"Type": "Editor",
+	    	"LoadingPhase": "Default"
+		}
+	],
+	"Plugins": [
+		{
+			"Name": "GameplayAbilities",
+			"Enabled": true
+		},
+		{
+			"Name": "SQLiteCore",
+			"Enabled": true
+		}
+	]
+}

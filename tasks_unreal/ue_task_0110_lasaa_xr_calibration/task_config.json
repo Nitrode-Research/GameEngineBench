@@ -1,0 +1,134 @@
+{
+    "task_id":  "ue_task_0110",
+    "task_name":  "LASAA XR Calibration \u0026 Alignment",
+    "capability_mode":  "ue_automation",
+    "engine":  "unreal",
+    "instruction":  "You are working in a UE5 C++ plugin called LASAA (Large-area Spatially Aligned Anchors)\nfor Meta XR headsets. The plugin provides drift-corrected spatial tracking by calibrating\nthe XR headset coordinate system against an external tracking system.\n\nThe module already has:\n- a functional UE5 module setup (LASAA.Build.cs, LASAA.h/cpp) with dependencies on\n  Core, OculusXRAnchors, Json, JsonUtilities, and Eigen\n- the anchor management subsystem (AAnchor) implemented and available\n- the alignment component (UAlignmentComponent) implemented, which calls into the\n  cloud registration class you will implement\n\nImplement the calibration, cloud registration, and helper subsystems to provide the\nmathematical foundation for aligning the XR headset pose with external tracking data.\n\nUse the repository to infer the relevant patterns, API conventions, lifecycle rules,\nand integration points from the existing code  especially UAlignmentComponent, which\ncalls into your cloud registration implementation. Do not replace the plugin with a toy\nimplementation  restore the missing system in production-quality code that fits the\nexisting architecture.\n\nThe calibration system must satisfy these behavioral requirements:\n\nCoordinate system conversion:\n- The system must provide utilities to convert transforms between Unreal Engine\n  coordinate conventions (Y-forward, X-right, Z-up) and OpenCV conventions\n  (Z-forward, X-right, Y-down).\n- Both directions of conversion must be available and callable from blueprints.\n- The conversion must correctly handle axis remapping through a general-purpose\n  function that accepts three axis parameters defining the source-to-target mapping.\n\nEigen-Unreal type bridging:\n- The system must provide utilities to convert between Eigen linear algebra types\n  (Vector3d, Matrix3d, Matrix4d) and Unreal types (FVector, FMatrix).\n- Rotation vectors (axis-angle encoded as a direction scaled by angle) must be\n  convertible to 33 rotation matrices.\n- A 44 extrinsic transformation matrix must be constructible from a rotation matrix\n  and a translation vector.\n\nWeighted point cloud alignment:\n- The system must compute the optimal rigid transformation (rotation + translation)\n  that aligns one set of 3D points to another, with per-point weighting.\n- Given fewer than 3 points, or mismatched point counts, the system must return\n  the identity transform.\n- Points closer to the camera should influence the result more than distant ones\n  when weighted mode is active; in unweighted mode all points contribute equally.\n- The computed transformation must be a valid rotation (no reflection)  if the\n  raw computation produces a reflected result, it must be corrected.\n\nXR calibration:\n- Given a sufficient number of placed anchors (at least 7), the system must compute\n  the transformation from external tracking coordinates to XR headset coordinates\n  by minimizing the alignment error between paired anchor positions.\n- The calibration must produce a single consistent transform that accounts for\n  rotational ambiguity across individual anchor pairs  individual anchors may\n  yield different quaternion representations of the same physical rotation, and\n  the system must resolve this to a single mean rotation.\n- The final calibration transform must be applied as the component\u0027s relative transform\n  and propagated to all anchors via the calibration offset mechanism.\n- Calibration can only succeed if enough anchors are available; with too few anchors\n  it must fail and log an appropriate message.\n\nCalibration persistence:\n- The computed calibration transform must be written to a CSV file as a 44 matrix.\n- The file format must use a different unit scale for translation values than the\n  in-memory representation, requiring conversion on both read and write.\n- The calibration file must be loadable on component startup, restoring the previous\n  calibration without needing to recalibrate.\n- The system must support switching between calibration files (e.g., a current and\n  a previously saved calibration).\n\nCalibration lifecycle:\n- Calibration can only be run once per session. Attempting to recalibrate after already\n  calibrating must fail with a log message.\n- Calibration can be reset, which clears the transform and allows recalibration.\n- On BeginPlay, the component must load any saved calibration and apply it immediately\n  to all anchors.\n\nAlignment component integration:\n- The UAlignmentComponent (already implemented) calls UCloudRegistration::calculateTransformationMatrix\n  with two point clouds and a weight array. Your implementation must produce transforms\n  that correctly adjust the player camera position to compensate for XR drift.\n\nEdge cases:\n- Converting a transform from Unreal to OpenCV and back must produce an equivalent\n  transform  the two conversion functions must be exact inverses of each other.\n- Computing a transformation from fewer than 3 points must return the identity matrix,\n  not a partially computed or NaN-filled result.\n- When the SVD-based rotation extraction produces a reflection (determinant \u003c 0), the\n  correction must negate the appropriate row of the V matrix and recompute  not simply\n  flip the sign of the determinant or skip the correction.\n- Calibrating with exactly 6 anchors must fail (the threshold is strictly greater than 6).\n  Calibrating with 7 anchors must succeed.\n- Loading a calibration file that was written by a previous session must restore the\n  correct transform  the read path must be the exact inverse of the write path,\n  including unit conversion and coordinate system transformation.\n- Writing a calibration file must always use the spatial calibration filename, even if\n  the user previously switched to load an old calibration file.\n- On BeginPlay, if the saved calibration file does not exist, the component must not\n  crash  it should gracefully handle the missing file and propagate whatever transform\n  is available (identity if nothing loaded) to all anchors.\n\nQuality bar:\n- The implementation must compile as part of the LASAA UE5 module and follow the\n  existing C++ conventions, macro usage, and naming patterns in the kept files.\n- The plugin depends on the Eigen library for general linear algebra and the Chaos\n  library (UE5\u0027s physics math) for dense matrix operations and SVD. The existing\n  codebase uses both  inspect the kept files to determine which library is used\n  where and follow the established pattern.\n- Coordinate system conversions, unit scaling, and matrix transpositions must be\n  applied in a consistent order so that round-trip operations (write then read,\n  UnrealOpenCVUnreal) produce correct results.\n- The calibration offset propagated to anchors must be derived from the component\u0027s\n  relative transform and applied uniformly to all active anchors.\n- Blueprint-callable functions must use the appropriate UFUNCTION macros with the\n  correct Category strings so they are discoverable in the editor.\n- No new assets, no new classes outside the listed files, and no changes to the\n  build configuration are required.\n",
+    "files_to_edit":  [
+                          "Source/LASAA/Public/Helper.h",
+                          "Source/LASAA/Private/Helper.cpp",
+                          "Source/LASAA/Public/CloudRegistration.h",
+                          "Source/LASAA/Public/XRCalibration.h",
+                          "Source/LASAA/Private/XRCalibration.cpp"
+                      ],
+    "hidden_requirements":  {
+                                "R1":  {
+                                           "text":  "ConvertCoordinateSystem builds an identity matrix, sets its first three columns to the unit vectors of the three specified axes, then applies M12^T * Transform * M12. The axis order for UnrealOpenCV is (Y, Zn, X) and for OpenCVUnreal is (Z, X, Yn).",
+                                           "category":  "core_logic"
+                                       },
+                                "R2":  {
+                                           "text":  "eigenMatrixToUnreal copies all 16 elements from Eigen Matrix4d(r,c) into FMatrix.M[r][c] then returns the transposed matrix  the transposition is critical because Eigen and Unreal use different memory layouts.",
+                                           "category":  "core_logic"
+                                       },
+                                "R3":  {
+                                           "text":  "calculateTransformationMatrix uses Chaos::PMatrix and Chaos::SingularValueDecomposition (not Eigen), while the rest of the subsystem uses Eigen. The SVD is called on covariance.GetTransposed(), not covariance directly.",
+                                           "category":  "core_logic"
+                                       },
+                                "R4":  {
+                                           "text":  "The reflection fix in calculateTransformationMatrix negates vt row 2 (indices (2,0), (2,1), (2,2)) then recomputes R as vt.GetTransposed() * ut  not v * ut as in the non-reflection case.",
+                                           "category":  "core_logic"
+                                       },
+                                "R5":  {
+                                           "text":  "The calibration optimization uses a Levenberg-Marquardt solver with a custom functor inheriting from Functor\u003cdouble\u003e (6 inputs, 6 values). The cost function is distances.mean() * variance(distances)  a product of mean and variance, not a sum or plain mean.",
+                                           "category":  "core_logic"
+                                       },
+                                "R6":  {
+                                           "text":  "The quaternion ambiguity resolution computes A = mean(q * q^T) as a 44 matrix from the per-anchor quaternions, then extracts the mean quaternion from column 0 of the U matrix from JacobiSVD, not from the singular values or V matrix.",
+                                           "category":  "core_logic"
+                                       },
+                                "R7":  {
+                                           "text":  "loadFromFile reads from ProjectPluginsDir + \"LASAA/\" + filename, while writeToFile writes to ProjectContentDir + \"CalibrationData/\" + filenameSpatial  these are different directories.",
+                                           "category":  "core_logic"
+                                       },
+                                "R8":  {
+                                           "text":  "During file I/O, the translation column (column index 3, rows 0-2) is multiplied by 100 on write (meterscm) and divided by 100 on read (cmmeters). Row 3 (the homogeneous w row) is NOT scaled.",
+                                           "category":  "core_logic"
+                                       },
+                                "R9":  {
+                                           "text":  "loadFromFile applies three transformations in order: SetFromMatrix(mat.GetTransposed()), then ConvertOpenCVToUnreal, then Inverse. The order matters  applying them differently produces wrong results.",
+                                           "category":  "core_logic"
+                                       },
+                                "R10":  {
+                                            "text":  "writeToFile applies the inverse transformations: Inverse, then ConvertUnrealToOpenCV, then ToMatrixWithScale().GetTransposed(). The filename used is always filenameSpatial regardless of which file was last loaded.",
+                                            "category":  "core_logic"
+                                        },
+                                "R11":  {
+                                            "text":  "calibrate() requires strictly more than 6 anchors (numAnchors \u003c= 6 fails), not 6 or more. The check is `if (numAnchors \u003c= 6) return`.",
+                                            "category":  "core_logic"
+                                        },
+                                "R12":  {
+                                            "text":  "The Levenberg-Marquardt solver is configured with maxfev=1000000 and ftol=1.0e-13. The initial guess is a 6-element zero vector, not the identity transform parameters.",
+                                            "category":  "core_logic"
+                                        },
+                                "R13":  {
+                                            "text":  "The calibrate() method computes the initial transformation via LM optimization, then for each anchor computes cam2w = getCurrentExtPose() * transformation and cam2xr = cam2w * GetActorTransform().Inverse()  the transform composition order is critical.",
+                                            "category":  "core_logic"
+                                        },
+                                "R14":  {
+                                            "text":  "The weighted center of mass in calculateTransformationMatrix divides by totalWeight (sum of all weights), not by the point count. Equal weights (mode==1) produce a simple arithmetic mean.",
+                                            "category":  "core_logic"
+                                        }
+                            },
+    "test_requirements":  {
+                              "LASAA.Calibration.unreal_to_opencv_roundtrip":  [
+                                                                                   "R1"
+                                                                               ],
+                              "LASAA.Calibration.opencv_axes_mapping":  [
+                                                                            "R1"
+                                                                        ],
+                              "LASAA.Calibration.rodrigues_zero_is_identity":  [
+                                                                                   "R1"
+                                                                               ],
+                              "LASAA.Calibration.rodrigues_nonzero_is_rotation":  [
+                                                                                      "R1"
+                                                                                  ],
+                              "LASAA.Calibration.extrinsic_from_rt_structure":  [
+                                                                                    "R2"
+                                                                                ],
+                              "LASAA.Calibration.eigen_to_unreal_roundtrip":  [
+                                                                                  "R2"
+                                                                              ],
+                              "LASAA.Calibration.variance_computation":  [
+                                                                             "R5"
+                                                                         ],
+                              "LASAA.Calibration.icp_identity_points":  [
+                                                                            "R3",
+                                                                            "R14"
+                                                                        ],
+                              "LASAA.Calibration.icp_known_rotation":  [
+                                                                           "R3"
+                                                                       ],
+                              "LASAA.Calibration.icp_reflection_fix":  [
+                                                                           "R4"
+                                                                       ],
+                              "LASAA.Calibration.icp_fewer_than_3_points":  [
+                                                                                "R3"
+                                                                            ],
+                              "LASAA.Calibration.beginplay_loads_calibration":  [
+                                                                                    "R9"
+                                                                                ],
+                              "LASAA.Calibration.reset_calibration_clears_state":  [
+                                                                                       "R11"
+                                                                                   ],
+                              "LASAA.Calibration.write_load_roundtrip":  [
+                                                                             "R7",
+                                                                             "R8",
+                                                                             "R9",
+                                                                             "R10"
+                                                                         ],
+                              "LASAA.Calibration.calibrate_requires_enough_anchors":  [
+                                                                                          "R11"
+                                                                                      ],
+                              "LASAA.Calibration.change_calibration_toggles_files":  [
+                                                                                         "R7",
+                                                                                         "R10"
+                                                                                     ]
+                          },
+    "tests":  {
+                  "runner":  "ue_automation",
+                  "mode":  "editor",
+                  "num_clients":  0,
+                  "filter":  "LASAA.Calibration"
+              },
+    "tier":  "hard"
+}

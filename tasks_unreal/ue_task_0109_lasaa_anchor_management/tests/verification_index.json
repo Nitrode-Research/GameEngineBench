@@ -1,0 +1,278 @@
+{
+  "reportCreatedOn": "2026.06.26-03.54.57",
+  "tests": [
+    {
+      "testDisplayName": "average_pair_distance",
+      "fullTestPath": "LASAA.Anchor.average_pair_distance",
+      "tags": [],
+      "state": "Success",
+      "deviceInstance": [
+        "8FF561C74FA2DA5C98FE17AC336A243D"
+      ],
+      "duration": 5.17380952835083,
+      "dateTime": "2026.06.26-03.54.00",
+      "entries": [
+        {
+          "event": {
+            "type": "Warning",
+            "message": "LogEditorServer: Can't find file 'Y:/Development/WORK/nitrode_ue_lasaa/Content/Maps/Prep.umap'",
+            "context": "log",
+            "artifact": "00000000000000000000000000000000"
+          },
+          "filename": "",
+          "lineNumber": -1,
+          "timestamp": "2026.06.26-03.54.00"
+        }
+      ],
+      "warnings": 1,
+      "errors": 0,
+      "artifacts": []
+    },
+    {
+      "testDisplayName": "calibration_offset_propagation",
+      "fullTestPath": "LASAA.Anchor.calibration_offset_propagation",
+      "tags": [],
+      "state": "Success",
+      "deviceInstance": [
+        "8FF561C74FA2DA5C98FE17AC336A243D"
+      ],
+      "duration": 3.685326099395752,
+      "dateTime": "2026.06.26-03.54.05",
+      "entries": [
+        {
+          "event": {
+            "type": "Warning",
+            "message": "LogEditorServer: Can't find file 'Y:/Development/WORK/nitrode_ue_lasaa/Content/Maps/Prep.umap'",
+            "context": "log",
+            "artifact": "00000000000000000000000000000000"
+          },
+          "filename": "",
+          "lineNumber": -1,
+          "timestamp": "2026.06.26-03.54.05"
+        }
+      ],
+      "warnings": 1,
+      "errors": 0,
+      "artifacts": []
+    },
+    {
+      "testDisplayName": "creation_rejects_duplicate_component",
+      "fullTestPath": "LASAA.Anchor.creation_rejects_duplicate_component",
+      "tags": [],
+      "state": "Success",
+      "deviceInstance": [
+        "8FF561C74FA2DA5C98FE17AC336A243D"
+      ],
+      "duration": 3.1574342250823975,
+      "dateTime": "2026.06.26-03.54.09",
+      "entries": [
+        {
+          "event": {
+            "type": "Warning",
+            "message": "LogEditorServer: Can't find file 'Y:/Development/WORK/nitrode_ue_lasaa/Content/Maps/Prep.umap'",
+            "context": "log",
+            "artifact": "00000000000000000000000000000000"
+          },
+          "filename": "",
+          "lineNumber": -1,
+          "timestamp": "2026.06.26-03.54.09"
+        }
+      ],
+      "warnings": 1,
+      "errors": 0,
+      "artifacts": []
+    },
+    {
+      "testDisplayName": "erase_with_and_without_sdk_component",
+      "fullTestPath": "LASAA.Anchor.erase_with_and_without_sdk_component",
+      "tags": [],
+      "state": "Success",
+      "deviceInstance": [
+        "8FF561C74FA2DA5C98FE17AC336A243D"
+      ],
+      "duration": 4.173593997955322,
+      "dateTime": "2026.06.26-03.54.12",
+      "entries": [
+        {
+          "event": {
+            "type": "Warning",
+            "message": "LogEditorServer: Can't find file 'Y:/Development/WORK/nitrode_ue_lasaa/Content/Maps/Prep.umap'",
+            "context": "log",
+            "artifact": "00000000000000000000000000000000"
+          },
+          "filename": "",
+          "lineNumber": -1,
+          "timestamp": "2026.06.26-03.54.12"
+        }
+      ],
+      "warnings": 1,
+      "errors": 0,
+      "artifacts": []
+    },
+    {
+      "testDisplayName": "lifecycle_register_unregister",
+      "fullTestPath": "LASAA.Anchor.lifecycle_register_unregister",
+      "tags": [],
+      "state": "Success",
+      "deviceInstance": [
+        "8FF561C74FA2DA5C98FE17AC336A243D"
+      ],
+      "duration": 4.680155277252197,
+      "dateTime": "2026.06.26-03.54.16",
+      "entries": [
+        {
+          "event": {
+            "type": "Warning",
+            "message": "LogEditorServer: Can't find file 'Y:/Development/WORK/nitrode_ue_lasaa/Content/Maps/Prep.umap'",
+            "context": "log",
+            "artifact": "00000000000000000000000000000000"
+          },
+          "filename": "",
+          "lineNumber": -1,
+          "timestamp": "2026.06.26-03.54.16"
+        }
+      ],
+      "warnings": 1,
+      "errors": 0,
+      "artifacts": []
+    },
+    {
+      "testDisplayName": "load_from_buffer",
+      "fullTestPath": "LASAA.Anchor.load_from_buffer",
+      "tags": [],
+      "state": "Success",
+      "deviceInstance": [
+        "8FF561C74FA2DA5C98FE17AC336A243D"
+      ],
+      "duration": 3.1462886333465576,
+      "dateTime": "2026.06.26-03.54.21",
+      "entries": [
+        {
+          "event": {
+            "type": "Warning",
+            "message": "LogEditorServer: Can't find file 'Y:/Development/WORK/nitrode_ue_lasaa/Content/Maps/Prep.umap'",
+            "context": "log",
+            "artifact": "00000000000000000000000000000000"
+          },
+          "filename": "",
+          "lineNumber": -1,
+          "timestamp": "2026.06.26-03.54.21"
+        }
+      ],
+      "warnings": 1,
+      "errors": 0,
+      "artifacts": []
+    },
+    {
+      "testDisplayName": "load_spawns_external_pairs_attached_to_owner",
+      "fullTestPath": "LASAA.Anchor.load_spawns_external_pairs_attached_to_owner",
+      "tags": [],
+      "state": "Success",
+      "deviceInstance": [
+        "8FF561C74FA2DA5C98FE17AC336A243D"
+      ],
+      "duration": 3.1996259689331055,
+      "dateTime": "2026.06.26-03.54.24",
+      "entries": [
+        {
+          "event": {
+            "type": "Warning",
+            "message": "LogEditorServer: Can't find file 'Y:/Development/WORK/nitrode_ue_lasaa/Content/Maps/Prep.umap'",
+            "context": "log",
+            "artifact": "00000000000000000000000000000000"
+          },
+          "filename": "",
+          "lineNumber": -1,
+          "timestamp": "2026.06.26-03.54.24"
+        }
+      ],
+      "warnings": 1,
+      "errors": 0,
+      "artifacts": []
+    },
+    {
+      "testDisplayName": "persistence_roundtrip_json",
+      "fullTestPath": "LASAA.Anchor.persistence_roundtrip_json",
+      "tags": [],
+      "state": "Success",
+      "deviceInstance": [
+        "8FF561C74FA2DA5C98FE17AC336A243D"
+      ],
+      "duration": 3.6488006114959717,
+      "dateTime": "2026.06.26-03.54.27",
+      "entries": [
+        {
+          "event": {
+            "type": "Warning",
+            "message": "LogEditorServer: Can't find file 'Y:/Development/WORK/nitrode_ue_lasaa/Content/Maps/Prep.umap'",
+            "context": "log",
+            "artifact": "00000000000000000000000000000000"
+          },
+          "filename": "",
+          "lineNumber": -1,
+          "timestamp": "2026.06.26-03.54.27"
+        }
+      ],
+      "warnings": 1,
+      "errors": 0,
+      "artifacts": []
+    },
+    {
+      "testDisplayName": "reset_clears_everything",
+      "fullTestPath": "LASAA.Anchor.reset_clears_everything",
+      "tags": [],
+      "state": "Success",
+      "deviceInstance": [
+        "8FF561C74FA2DA5C98FE17AC336A243D"
+      ],
+      "duration": 4.659834861755371,
+      "dateTime": "2026.06.26-03.54.31",
+      "entries": [
+        {
+          "event": {
+            "type": "Warning",
+            "message": "LogEditorServer: Can't find file 'Y:/Development/WORK/nitrode_ue_lasaa/Content/Maps/Prep.umap'",
+            "context": "log",
+            "artifact": "00000000000000000000000000000000"
+          },
+          "filename": "",
+          "lineNumber": -1,
+          "timestamp": "2026.06.26-03.54.31"
+        }
+      ],
+      "warnings": 1,
+      "errors": 0,
+      "artifacts": []
+    },
+    {
+      "testDisplayName": "sixty_four_cap_enforced",
+      "fullTestPath": "LASAA.Anchor.sixty_four_cap_enforced",
+      "tags": [],
+      "state": "Success",
+      "deviceInstance": [
+        "8FF561C74FA2DA5C98FE17AC336A243D"
+      ],
+      "duration": 3.144566297531128,
+      "dateTime": "2026.06.26-03.54.35",
+      "entries": [
+        {
+          "event": {
+            "type": "Warning",
+            "message": "LogEditorServer: Can't find file 'Y:/Development/WORK/nitrode_ue_lasaa/Content/Maps/Prep.umap'",
+            "context": "log",
+            "artifact": "00000000000000000000000000000000"
+          },
+          "filename": "",
+          "lineNumber": -1,
+          "timestamp": "2026.06.26-03.54.35"
+        }
+      ],
+      "warnings": 1,
+      "errors": 0,
+      "artifacts": []
+    }
+  ],
+  "filter": "LASAA.Anchor",
+  "succeeded": 10,
+  "failed": 0
+}

@@ -1,0 +1,111 @@
+task_id,title,tier,domain,Claude Fable 5 (max),GPT-5.5 (xhigh),Claude Opus 4.8 (max),GPT-5.5 (high),Gemini 3.1 Pro (High),Claude Opus 4.8 (high),Claude Opus 4.7 (high),GPT-5.5 (medium),Kimi for Coding,Claude Sonnet 4.6 (high),Qwen 3.7 Plus,DeepSeek 4 Pro
+ue_task_0001,Zombie System,hard,AI / Enemies,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0002,Weapon and Projectile System,hard,Weapons / Combat,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0003,Inventory System,hard,Inventory / Interaction,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0004,Trader System,hard,Inventory / Interaction,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0005,Interaction and Door System,hard,Inventory / Interaction,PASS,PASS,PASS,PASS,PASS,PASS,PASS,PASS,FAIL,PASS,FAIL,FAIL
+ue_task_0006,Round-Based Match Loop,hard,Core Gameplay,FAIL,FAIL,PASS,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0007,Character Combat and Health,hard,Weapons / Combat,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0008,Action System,hard,Core Gameplay,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0009,Interaction Component,medium,Inventory / Interaction,PASS,FAIL,PASS,FAIL,PASS,PASS,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0010,Explosive Barrel,easy,Weapons / Combat,PASS,PASS,FAIL,PASS,FAIL,PASS,PASS,PASS,FAIL,FAIL,FAIL,FAIL
+ue_task_0011,Treasure Chest,medium,Inventory / Interaction,PASS,FAIL,FAIL,PASS,FAIL,FAIL,FAIL,PASS,FAIL,PASS,PASS,PASS
+ue_task_0012,Pickup System,hard,Inventory / Interaction,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0013,Game Mode Spawn System,hard,Core Gameplay,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,PASS,FAIL,PASS,FAIL,FAIL
+ue_task_0014,Monster Corpse System,medium,AI / Enemies,PASS,FAIL,FAIL,FAIL,FAIL,FAIL,PASS,PASS,FAIL,FAIL,FAIL,FAIL
+ue_task_0015,AI Controller + Behavior Tree,hard,AI / Enemies,FAIL,PASS,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0017,Actor Pooling,medium,Engine Systems / Pooling,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0018,Significance / LOD System,hard,AI / Enemies,FAIL,PASS,FAIL,PASS,FAIL,FAIL,FAIL,PASS,FAIL,FAIL,FAIL,FAIL
+ue_task_0019,Generated Map Orchestrator,hard,Inventory / Interaction,PASS,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0020,Cell Math + Cell Utility Library,hard,Core Gameplay,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0021,Bomb Ability Actor,hard,Gameplay Ability System,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0022,Bomb Placement and Explosion Execution,hard,Core Gameplay,PASS,FAIL,PASS,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0023,Pool Manager Runtime,hard,Engine Systems / Pooling,PASS,PASS,PASS,FAIL,FAIL,FAIL,PASS,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0024,Data Assets Loader Runtime,hard,Engine Systems / Pooling,PASS,FAIL,FAIL,FAIL,PASS,PASS,PASS,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0025,Sounds Subsystem,medium,Engine Systems / Pooling,PASS,FAIL,PASS,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0026,Pool Manager Editor K2 Nodes,medium,Engine Systems / Pooling,PASS,FAIL,FAIL,FAIL,FAIL,PASS,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0027,Data Assets Loader Editor K2 Nodes,medium,Engine Systems / Pooling,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0028,Instanced Static Mesh Converter,medium,Engine Systems / Pooling,PASS,FAIL,PASS,FAIL,PASS,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0029,Settings Widget Constructor Runtime,hard,Core Gameplay,PASS,FAIL,FAIL,FAIL,PASS,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0030,Progression System Runtime,hard,Core Gameplay,PASS,FAIL,FAIL,FAIL,FAIL,PASS,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0031,Function Picker Editor Customization,medium,Inventory / Interaction,PASS,PASS,PASS,PASS,FAIL,FAIL,PASS,PASS,PASS,PASS,PASS,FAIL
+ue_task_0034,Main Menu Camera Subsystem,hard,Engine Systems / Pooling,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0035,Modular Game Features Loader Subsystem,hard,Common UI / GameFeatures,FAIL,FAIL,PASS,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0036,Player Controller (Input and State-Driven Contexts),hard,Core Gameplay,PASS,FAIL,PASS,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0037,Player State (Chosen Character Persistence and GAS),hard,Core Gameplay,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0038,Cheat Manager,hard,Core Gameplay,PASS,PASS,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,PASS,FAIL,FAIL
+ue_task_0039,NMM Player Controller Component (Cinematic Input and Save Game),hard,Core Gameplay,PASS,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0042,"Game State (StateTree-Driven, ASC Tag Bridge)",hard,Core Gameplay,PASS,FAIL,PASS,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0043,NMM Base Subsystem (State Prediction and MGF Race Recovery),hard,Engine Systems / Pooling,PASS,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0045,ALSXT Vaulting,hard,ALS Locomotion,PASS,FAIL,FAIL,FAIL,FAIL,PASS,PASS,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0046,ALSXT Impact Reaction,hard,ALS Locomotion,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0047,ALSXT Procedural Recoil,hard,ALS Locomotion,PASS,PASS,PASS,PASS,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0048,ALSXT Character Sound,hard,ALS Locomotion,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0049,ALSXT Camera Effects,hard,ALS Locomotion,PASS,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0050,ALSXT Mesh Painting,hard,ALS Locomotion,PASS,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0051,ALSXT Recoil Curve Animation Modifier,medium,ALS Locomotion,FAIL,FAIL,FAIL,PASS,PASS,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0052,ALSXT GAS Ability Async Tasks,hard,ALS Locomotion,PASS,PASS,FAIL,FAIL,PASS,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0053,ALSXT Movement Effect Notifies,hard,ALS Locomotion,PASS,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0054,ALS-Refactored Actions,hard,ALS Locomotion,FAIL,PASS,FAIL,FAIL,PASS,FAIL,FAIL,FAIL,FAIL,FAIL,PASS,FAIL
+ue_task_0055,ALS-Refactored Camera,hard,ALS Locomotion,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0056,CommonUser Session Request and Notification Layer,hard,Common UI / GameFeatures,FAIL,FAIL,PASS,FAIL,PASS,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0057,ALS-Refactored Locomotion Pipeline,hard,ALS Locomotion,PASS,FAIL,PASS,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0058,ALS-Refactored Animation State Evaluation,hard,ALS Locomotion,PASS,PASS,FAIL,PASS,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0059,CommonUser Auth And Presence,hard,Common UI / GameFeatures,PASS,PASS,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0060,CommonGame UI Policy,hard,Common UI / GameFeatures,FAIL,FAIL,FAIL,PASS,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0061,ALS-Refactored Footstep Effects,hard,ALS Locomotion,FAIL,FAIL,FAIL,FAIL,PASS,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0062,CommonLoadingScreen Manager,hard,Common UI / GameFeatures,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0063,UIExtension System,hard,Common UI / GameFeatures,PASS,PASS,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0064,Gameplay Message Router,hard,Common UI / GameFeatures,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0065,Modular Feature Extra Actions,hard,Common UI / GameFeatures,PASS,PASS,FAIL,FAIL,PASS,FAIL,FAIL,FAIL,PASS,FAIL,PASS,FAIL
+ue_task_0067,EOSIntegrationKit User Auth,hard,Online / Sessions (EOS/EIK),PASS,FAIL,FAIL,FAIL,PASS,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0068,EOSIntegrationKit Voice Chat User,hard,Online / Sessions (EOS/EIK),FAIL,FAIL,PASS,FAIL,PASS,FAIL,FAIL,FAIL,PASS,FAIL,FAIL,FAIL
+ue_task_0069,TTToolbox Rig Tools,hard,Core Gameplay,PASS,PASS,PASS,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0070,Ricochet Bullets,hard,Weapons / Combat,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0071,Ricochet Weapon Part Components,medium,Weapons / Combat,PASS,PASS,FAIL,PASS,PASS,FAIL,FAIL,PASS,FAIL,FAIL,FAIL,FAIL
+ue_task_0072,DataConfig JSON SerDe,hard,Serialization (DataConfig),PASS,PASS,PASS,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0074,Dataconfig Anystruct Serde,medium,Serialization (DataConfig),PASS,PASS,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,PASS,FAIL,FAIL
+ue_task_0075,Dataconfig Property Path JSON Converter,hard,Serialization (DataConfig),PASS,FAIL,FAIL,FAIL,FAIL,PASS,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0077,SPUD Persistent Runtime Restore Composite,hard,Save / Persistence (SPUD),FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0078,SPUD Save Archive Lifecycle,hard,Save / Persistence (SPUD),FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0079,SPUD Streaming Level Persistence,hard,Save / Persistence (SPUD),FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0080,SPUD Save Load Lifecycle,hard,Save / Persistence (SPUD),PASS,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0081,SPUD Destroyed Actor Persistence,hard,Save / Persistence (SPUD),FAIL,FAIL,FAIL,FAIL,PASS,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0082,Ability System Component And Montage Replication,hard,Gameplay Ability System,PASS,PASS,FAIL,FAIL,PASS,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0083,"Hero Lifecycle, Inventory, Perspective, And Revive",hard,Inventory / Interaction,PASS,PASS,FAIL,FAIL,PASS,FAIL,FAIL,FAIL,PASS,FAIL,FAIL,FAIL
+ue_task_0085,"Weapon, Pickup, Ammo, And Ability-Granting Integration",hard,Gameplay Ability System,PASS,PASS,FAIL,PASS,FAIL,PASS,FAIL,FAIL,PASS,FAIL,FAIL,FAIL
+ue_task_0086,"Attributes, Damage Execution, And Attribute Update Flow",hard,Gameplay Ability System,PASS,PASS,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,PASS,FAIL,FAIL,FAIL
+ue_task_0087,"PlayerState, PlayerController, HUD, And Respawn Glue",hard,Core Gameplay,PASS,FAIL,FAIL,PASS,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0088,Gameplay Ability Effect Containers,hard,Gameplay Ability System,PASS,PASS,FAIL,PASS,FAIL,FAIL,FAIL,FAIL,PASS,FAIL,FAIL,FAIL
+ue_task_0089,Character Base Lifecycle,hard,Core Gameplay,PASS,FAIL,FAIL,PASS,PASS,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0090,Implement actor indicator projection and screen-space layout,hard,Engine Systems / Pooling,PASS,FAIL,PASS,PASS,FAIL,PASS,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0091,Implement camera mode stack and penetration avoidance,hard,Engine Systems / Pooling,PASS,FAIL,FAIL,FAIL,PASS,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0092,Implement replicated character parts cosmetics,hard,Inventory / Interaction,PASS,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0093,Implement CommonSession host lifecycle,hard,Common UI / GameFeatures,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0094,"Implement CommonSession search, join, quickplay, and invites",hard,Common UI / GameFeatures,PASS,PASS,FAIL,PASS,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0095,Implement CommonUser local-player initialization,hard,Common UI / GameFeatures,PASS,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0096,Implement CommonUser login and privilege checks,hard,Common UI / GameFeatures,PASS,FAIL,PASS,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0097,Implement customization attachment module assembly,hard,Inventory / Interaction,FAIL,FAIL,PASS,FAIL,FAIL,FAIL,PASS,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0098,Implement customization material namespace application,hard,Inventory / Interaction,FAIL,FAIL,PASS,PASS,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0099,Implement game UI policy and layer stack behavior,hard,Common UI / GameFeatures,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0100,"Implement health, death, and damage execution flow",hard,Core Gameplay,PASS,FAIL,PASS,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0101,Implement input mapping registration and user settings,hard,Core Gameplay,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0102,Implement interactable target scanning and option generation,hard,Inventory / Interaction,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0103,Implement replicated inventory item instances and stat fragments,hard,Inventory / Interaction,PASS,PASS,FAIL,FAIL,FAIL,PASS,FAIL,FAIL,FAIL,PASS,FAIL,FAIL
+ue_task_0104,Implement pawn extension and player initialization flow,hard,Core Gameplay,PASS,FAIL,FAIL,FAIL,FAIL,PASS,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0105,Implement replicated quickbar equipment activation,hard,Inventory / Interaction,PASS,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0106,"Implement ranged weapon fire control, targeting, and hit feedback",hard,Weapons / Combat,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0107,Implement replication graph connection routing and relevancy,hard,Engine Systems / Pooling,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0108,Implement startup asset loading and game instance boot flow,hard,Core Gameplay,PASS,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0109,LASAA Anchor Management,hard,XR / Spatial Anchors,PASS,PASS,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,PASS
+ue_task_0110,LASAA XR Calibration & Alignment,hard,XR / Spatial Anchors,FAIL,FAIL,PASS,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0111,HL2 Velocity + Braking System,hard,Movement / Physics,PASS,PASS,PASS,FAIL,FAIL,PASS,FAIL,PASS,PASS,FAIL,FAIL,FAIL
+ue_task_0112,Crouch + Jump + Slope System,hard,Movement / Physics,PASS,PASS,PASS,FAIL,FAIL,PASS,FAIL,FAIL,PASS,FAIL,FAIL,FAIL
+ue_task_0113,Crouch Slide + Ladder + NoClip System,hard,Movement / Physics,FAIL,PASS,FAIL,PASS,FAIL,FAIL,PASS,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0114,Gaussian Cluster Builder,hard,Gaussian Splatting (Nano),FAIL,PASS,PASS,PASS,PASS,FAIL,PASS,PASS,FAIL,FAIL,FAIL,PASS
+ue_task_0115,Gaussian Splat Data Compression,hard,Gaussian Splatting (Nano),FAIL,FAIL,FAIL,PASS,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0116,PLY File Reader,hard,Gaussian Splatting (Nano),FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0117,Gaussian Splat Asset Management,hard,Gaussian Splatting (Nano),PASS,PASS,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0118,Gaussian Splat Renderer,hard,Gaussian Splatting (Nano),FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL
+ue_task_0119,Global Accumulator & View Extension,hard,Gaussian Splatting (Nano),PASS,PASS,FAIL,PASS,FAIL,FAIL,PASS,FAIL,FAIL,PASS,FAIL,FAIL
+ue_task_0120,GPU Compute Shaders,hard,Gaussian Splatting (Nano),FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL,FAIL

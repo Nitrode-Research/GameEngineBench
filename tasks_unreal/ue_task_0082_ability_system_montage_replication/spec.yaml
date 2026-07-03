@@ -1,0 +1,112 @@
+task_id: ue_task_0082
+title: Ability System Component And Montage Replication
+tier: hard
+
+instruction: |
+  # Implement Ability System Component And Montage Replication
+  
+  This repository is a multiplayer Unreal Engine shooter built around the Gameplay Ability System. Implement the custom ability system component behavior so abilities, prediction, gameplay cues, and character animation replication work correctly in singleplayer, listen-server, and networked client scenarios.
+  
+  Use the repository to infer the relevant Unreal Engine patterns, Gameplay Ability System lifecycle rules, gameplay tags, animation assets, Blueprint integration points, and networking expectations. Do not replace the existing architecture with a simplified parallel ability system.
+  
+  ## Expected Behavior
+  
+  - Ability input routes through the ability system correctly, including normal ability activation and generic confirm/cancel input.
+  - Abilities configured to activate on input begin when their input is pressed, provided they are eligible.
+  - Weapon ability activation can batch the activation, target-data, and optional immediate-end RPC path to reduce network traffic while preserving correct server authority.
+  - Gameplay cues can be executed, added, and removed locally for cosmetic-only effects without requiring a replicated gameplay effect.
+  - Gameplay effects applied through Blueprint helpers use prediction when a valid prediction key exists and fall back to the normal path when prediction is unavailable.
+  - The component exposes gameplay tag count and ability-spec lookup helpers that work for Blueprint and C++ callers.
+  - When abilities end, any animation state owned by that ability is cleaned up.
+  
+  ## Multi-Mesh Montage Behavior
+  
+  - Abilities can play montages on more than one skeletal mesh owned by the same avatar, such as first-person and third-person meshes.
+  - Each mesh has independent local montage state, while still respecting the Gameplay Ability System's current animating ability rules.
+  - Starting a montage records the animating ability, play rate, section, start time, prediction key, and replicated montage state needed by other clients.
+  - Simulated clients receive replicated montage state and play, stop, jump sections, or correct montage position locally.
+  - Montage position corrections should avoid visible desync while not constantly restarting montages for tiny timing differences.
+  - Stopping one mesh montage should not accidentally stop unrelated mesh montages unless the caller explicitly stops all current montages.
+  - Montage section jumps, next-section changes, and play-rate changes must work locally and replicate through the appropriate server path when required.
+  - If replicated montage data arrives before the avatar is ready to consume it, the component must defer and process it when ability actor info is initialized.
+  
+  ## Multiplayer And Prediction Constraints
+  
+  - The server remains authoritative for gameplay state.
+  - Clients may predict ability-related behavior only through the expected Gameplay Ability System prediction mechanisms.
+  - Simulated clients must play cosmetic montage state from replication, not by inventing local authority.
+  - Listen-server players must not lose either the local player experience or the replicated simulated-proxy experience for other players.
+  - Ability input, target data, ability end, and montage updates must integrate with existing GAS lifecycle rules.
+  
+  ## Integration Expectations
+  
+  - Existing weapon abilities, reload abilities, sprint/interact abilities, and animation Blueprints should continue using the custom component without changes to assets.
+  - First-person and third-person animation playback must remain synchronized enough for weapon fire, reload, equip, revive, and interaction abilities.
+  - Existing HUD and gameplay cue behavior should continue to receive expected cosmetic events.
+  - No toy parallel ability system should be introduced; use the existing Unreal GAS architecture already present in the repository.
+  - Avoid broad rewrites outside the requested subsystem unless they are required to maintain integration with existing abilities, animation, UI, or networking.
+  
+  ## Validation Expectations
+  
+  - Build the project successfully.
+  - Verify a local player can activate input-driven abilities and generic confirm/cancel flows still work.
+  - Verify weapon fire, reload, equip, sprint, and interaction abilities still trigger their expected animations and cosmetic cues.
+  - Verify first-person and third-person montages play correctly for the local player, listen-server host, remote clients, and simulated proxies.
+  - Verify repeated ability activation and cancellation does not leave stale animating ability or montage state.
+  
+  ## Quality Bar
+  
+  The implementation must compile cleanly, preserve multiplayer correctness, and fit the project architecture as production code, not just enough code for a single ability to run. Edge cases around prediction, simulated proxies, listen servers, montage cleanup, and delayed replication handling must be addressed.
+
+files_to_edit:
+  - Source/GASShooter/Private/Characters/Abilities/GSAbilitySystemComponent.cpp
+  - Source/GASShooter/Public/Characters/Abilities/GSAbilitySystemComponent.h
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "GASShooter.AbilitySystem"
+
+hidden_requirements:
+  R1:
+    text: Ability input must route through the Gameplay Ability System, including generic confirm and cancel before ordinary ability activation.
+    category: core_logic
+  R2:
+    text: Input-activated abilities must only auto-activate when the ability is configured for input activation.
+    category: core_logic
+  R3:
+    text: Weapon ability batching must preserve activation, target-data submission, and optional same-frame ability ending through GAS prediction/RPC paths.
+    category: replication
+  R4:
+    text: Local gameplay cue helpers must execute, add, and remove cosmetic cues without requiring replicated gameplay effects.
+    category: effects
+  R5:
+    text: Gameplay effect Blueprint helpers must use prediction keys when available and fall back safely when prediction is unavailable.
+    category: prediction
+  R6:
+    text: Ability lookup and gameplay-tag-count helpers must expose usable Blueprint and C++ query surfaces.
+    category: api_contract
+  R7:
+    text: Ability end cleanup must clear montage state owned by the ending ability without disrupting unrelated montage channels.
+    category: lifecycle
+  R8:
+    text: Multi-mesh montage playback must maintain independent mesh state and replicated montage correction for local, authority, and simulated-proxy roles.
+    category: replication
+  R9:
+    text: Replicated montage data that arrives before actor info is ready must be deferred and consumed after ability actor info initialization.
+    category: lifecycle
+
+test_requirements:
+  GASShooter.AbilitySystem.input_activation_and_confirm_cancel_paths_present:
+    - R1
+    - R2
+    - R6
+  GASShooter.AbilitySystem.prediction_batching_and_local_cues_present:
+    - R3
+    - R4
+    - R5
+  GASShooter.AbilitySystem.multi_mesh_montage_replication_state_present:
+    - R7
+    - R8
+    - R9

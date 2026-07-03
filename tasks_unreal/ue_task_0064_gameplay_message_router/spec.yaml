@@ -1,0 +1,74 @@
+task_id: ue_task_0064
+title: Gameplay Message Router
+tier: hard
+
+instruction: |
+  You are working in an Unreal Engine 5 project that uses the GameplayMessageRouter plugin.
+  Implement the behavior of the Gameplay Message Router system in the task-owned files.
+  
+  The project already contains the public API surface, assets, build/module wiring, and surrounding gameplay or plugin integration points.
+  
+  Implement the following behavior:
+  
+  - Listeners can subscribe to a gameplay-message channel with the existing exact or partial tag match modes.
+  - Broadcasting a message reaches the appropriate listeners with the original payload type preserved.
+  - Unregistering a listener stops future delivery and cleans up handle state.
+  - The async Blueprint action binds through the real subsystem path and tears itself down safely.
+  - Subsystem deinitialization cleans remaining listeners without stale callbacks.
+
+files_to_edit:
+  - "Plugins/GameplayMessageRouter/Source/GameplayMessageRuntime/Private/GameFramework/GameplayMessageSubsystem.cpp"
+  - "Plugins/GameplayMessageRouter/Source/GameplayMessageRuntime/Public/GameFramework/GameplayMessageSubsystem.h"
+  - "Plugins/GameplayMessageRouter/Source/GameplayMessageRuntime/Private/GameFramework/AsyncAction_ListenForGameplayMessage.cpp"
+  - "Plugins/GameplayMessageRouter/Source/GameplayMessageRuntime/Public/GameFramework/AsyncAction_ListenForGameplayMessage.h"
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "GameplayMessageRouter.System"
+
+hidden_requirements:
+  R1:
+    text: Registering a listener must store the callback, channel, handle id, payload type, and match mode, then return a valid handle.
+    category: subsystem_architecture
+  R2:
+    text: Broadcasting a message must deliver to exact-channel listeners and partial-match parent-channel listeners as appropriate.
+    category: runtime_integration
+  R3:
+    text: Broadcast callbacks must receive the original channel, UScriptStruct payload type, and payload bytes without type erasure or copying errors.
+    category: core_logic
+  R4:
+    text: Listener type filtering must deliver compatible payload structs and reject mismatched payload types safely.
+    category: core_logic
+  R5:
+    text: Unregistering a listener must remove the stored listener, invalidate handle state, and stop future delivery.
+    category: object_lifecycle
+  R6:
+    text: Broadcasting must tolerate listeners unregistering or becoming invalid during callback iteration.
+    category: object_lifecycle
+  R7:
+    text: The async Blueprint action must resolve the world subsystem, register through the same listener path, and unregister when ready to destroy.
+    category: subsystem_architecture
+  R8:
+    text: The async Blueprint action must expose received payloads only when the requested payload type matches the received struct type.
+    category: core_logic
+  R9:
+    text: Subsystem deinitialization must clear remaining listeners so stale callbacks cannot fire after shutdown.
+    category: object_lifecycle
+  R10:
+    text: "Per-channel listener handle ids must be allocated from this project's handle-id seed rather than the stock plugin's starting base, so the first handle registered on a channel carries the project's seeded id."
+    category: subsystem_architecture
+
+test_requirements:
+  GameplayMessageRouter.System.register_listener_returns_valid_handle:
+    - R1
+    - R10
+  GameplayMessageRouter.System.broadcast_reaches_registered_listener:
+    - R1
+    - R2
+    - R3
+  GameplayMessageRouter.System.unregister_stops_future_delivery:
+    - R1
+    - R3
+    - R5

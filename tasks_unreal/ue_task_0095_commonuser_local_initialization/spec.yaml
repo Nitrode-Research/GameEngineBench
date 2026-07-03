@@ -1,0 +1,83 @@
+task_id: ue_task_0095
+title: Implement CommonUser local-player initialization
+tier: hard
+
+instruction: |
+  Implement CommonUser local-player initialization so local players, input
+  devices, and platform users are associated correctly before gameplay starts.
+  
+  Expected behavior:
+  - Local play initialization can start for a requested local-player index and primary input device.
+  - The system maps platform users, local players, and input devices using the existing platform input mapper rules.
+  - Guest login is allowed only when requested and represented consistently in user info.
+  - Initialization state changes are tracked and reported to callers through the existing async action and delegates.
+  - Waiting for start/login input captures the intended keys and resumes initialization for the correct user.
+  - Cancellation stops pending initialization without broadcasting stale success and without leaving initialization half-applied.
+  - Multiple local players are bounded by max-local-player and platform trait rules.
+  - The implementation must compile and fit the existing CommonUser subsystem, async action, platform user, and local player architecture.
+  
+  Constraints:
+  - Use the repository to infer initialization params, platform user rules, input-device mapping, async action lifecycle, and trait tags.
+  - Do not replace CommonUser with a single global user or hardcoded player zero flow.
+  - Do not require new assets or hidden manual setup.
+  
+  Quality bar:
+  The implementation must be correct for local-player lifecycle and input
+  ownership. It should handle cancellation, input-device changes,
+  and multi-local-player limits without stale state.
+
+files_to_edit:
+  - Plugins/CommonUser/Source/CommonUser/Private/AsyncAction_CommonUserInitialize.cpp
+  - Plugins/CommonUser/Source/CommonUser/Private/CommonUserSubsystem.cpp
+  - Plugins/CommonUser/Source/CommonUser/Private/CommonUserTypes.cpp
+  - Plugins/CommonUser/Source/CommonUser/Public/AsyncAction_CommonUserInitialize.h
+  - Plugins/CommonUser/Source/CommonUser/Public/CommonUserSubsystem.h
+  - Plugins/CommonUser/Source/CommonUser/Public/CommonUserTypes.h
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "ECR.CommonUserLocalInit"
+
+hidden_requirements:
+  R1:
+    text: Local play initialization can start for a requested local-player index and primary input device.
+    category: lifecycle
+  R2:
+    text: The system maps platform users, local players, and input devices using the existing platform input mapper rules.
+    category: ui
+  R3:
+    text: Guest login is allowed only when requested and represented consistently in user info.
+    category: core_logic
+  R4:
+    text: Initialization state changes are tracked and reported to callers through the existing async action and delegates.
+    category: lifecycle
+  R5:
+    text: Waiting for start/login input captures the intended keys and resumes initialization for the correct user.
+    category: lifecycle
+  R6:
+    text: >-
+      During user-initialize login handling, a non-primary local player whose platform login
+      fails or collides with the primary player's net id must fall back to a guest identity when
+      guest login is permitted: create a guest net id (e.g. GuestPlayer<index>), mark the user as a
+      guest, and continue with a local profile instead of failing initialization. A reconstruction
+      that omits this guest fallback fails this requirement.
+    category: lifecycle
+  R7:
+    text: Multiple local players are bounded by max-local-player and platform trait rules.
+    category: ui
+  R8:
+    text: The implementation must compile and fit the existing CommonUser subsystem, async action, platform user, and local player architecture.
+    category: ui
+
+test_requirements:
+  ECR.CommonUserLocalInit.source_contract_tokens_present:
+    - R1
+    - R2
+    - R3
+    - R4
+    - R5
+    - R6
+    - R7
+    - R8

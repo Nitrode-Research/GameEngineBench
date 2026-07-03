@@ -1,0 +1,117 @@
+task_id: ue_task_0021
+title: Bomb Ability Actor
+tier: hard
+
+instruction: |
+  When a bomb is placed on the grid, the bomb actor must register its cell, manage player collision, precompute its blast area, apply visuals, and replicate its state to clients. Currently the placed actor is inert.
+
+  The project already contains:
+  - a placement ability that spawns the bomb actor and assigns it a placer
+  - a grid that notifies the actor when it joins the map
+  - attribute data on the placer for explosion range and visuals
+
+  The system must satisfy these behavioral requirements:
+
+  Initialization:
+  - The actor depends on two independent events arriving in unpredictable order: grid registration and placer assignment. Initialization must run exactly once — when the second event arrives — regardless of which comes first.
+  - On clients, the same initialization must run once the placer reference replicates.
+
+  Collision:
+  - The bomb blocks players from entering its cell.
+  - Any player already on the cell when the bomb initializes may remain until they leave voluntarily.
+  - On the server, if the placing pawn hasn't yet reached the bomb's cell when it becomes ready, the bomb must wait before applying collision, up to a ping-compensated timeout.
+
+  Blast area:
+  - The server computes which cells the bomb will affect at detonation using the placer's fire radius. Clients do not compute this.
+
+  Visuals:
+  - The bomb displays the mesh and material for the placer's character, cycled by player index when multiple players share a bomb type.
+
+  Cleanup:
+  - On removal, release all timers and subscriptions and clear the placer reference.
+
+  Use the repository to understand how the placement ability, explosion execution, and map component interact with the bomb actor.
+
+hidden_requirements:
+  R1:
+    text: Bomb readiness must require both a valid map cell and a valid placer ability-system component.
+    category: object_lifecycle
+  R2:
+    text: Grid registration and placer assignment must both gate OnBombReady so initialization runs once regardless of arrival order.
+    category: object_lifecycle
+  R3:
+    text: The placer ability-system component must replicate with an OnRep path that reruns the same readiness logic on clients.
+    category: replication
+  R4:
+    text: Changes to the replicated placer component must be push-marked dirty on assignment and cleanup.
+    category: replication
+  R5:
+    text: The bomb actor must replicate, remain always relevant, and register its replicated placer reference.
+    category: replication
+  R6:
+    text: Explosion cells must be computed only on authority and cached idempotently after the first computation.
+    category: authority
+  R7:
+    text: Explosion cells must be computed from the bomb's registered cell using the placer's fire radius, defaulting safely when no placer attribute is available.
+    category: core_logic
+  R8:
+    text: Collision must block all player channels by default while allowing players already occupying the bomb cell to overlap until they leave.
+    category: core_logic
+  R9:
+    text: Player-specific collision channel mapping must map player IDs 0 through 3 to the corresponding custom collision channels and ignore invalid IDs.
+    category: core_logic
+  R10:
+    text: Server replicas of remotely placed bombs must defer collision setup until the placer reaches the bomb cell or a ping-compensated timeout expires.
+    category: authority
+  R11:
+    text: The SROC predicate must identify authoritative bombs whose placer pawn is not locally controlled.
+    category: authority
+  R12:
+    text: Bomb visuals must apply the placer's bomb mesh and choose material by player index when multiple players share a bomb row.
+    category: core_logic
+  R13:
+    text: Bomb cleanup must unsubscribe from map and pawn-cell delegates, clear timers, clear explosion cells, and clear the placer reference.
+    category: object_lifecycle
+  R14:
+    text: OnPostRemovedFromLevel must leave the bomb inert so pooled reuse cannot retain stale placer or explosion state.
+    category: object_lifecycle
+
+test_requirements:
+  Bomber.BombAbilityActor.ReplicationMetadata:
+    - R1
+    - R2
+    - R3
+    - R4
+    - R5
+  Bomber.BombAbilityActor.PerPlayerChannelMapping:
+    - R8
+    - R9
+  Bomber.BombAbilityActor.PIE_InertBaseline:
+    - R1
+    - R7
+  Bomber.BombAbilityActor.PIE_ReadinessGateAndExplosionCells:
+    - R1
+    - R2
+    - R6
+    - R7
+  Bomber.BombAbilityActor.PIE_CleanupResetsPlacerAndCells:
+    - R4
+    - R13
+    - R14
+  Bomber.BombAbilityActor.AuthorityAndSrocGuards:
+    - R6
+    - R10
+  Bomber.BombAbilityActor.PIE_InitBombGate:
+    - R1
+    - R2
+  Bomber.BombAbilityActor.PIE_SrocPredicate:
+    - R11
+
+files_to_edit:
+  - Source/Bomber/Private/Actors/BmrBombAbilityActor.cpp
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "Bomber.BombAbilityActor"

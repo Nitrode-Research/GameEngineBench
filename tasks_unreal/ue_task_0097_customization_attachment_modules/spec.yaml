@@ -1,0 +1,84 @@
+task_id: ue_task_0097
+title: Implement customization attachment module assembly
+tier: hard
+
+instruction: |
+  Implement the customization attachment module system so character cosmetic
+  parts are assembled from data assets at runtime.
+  
+  Expected behavior:
+  - A customization module can load the selected cosmetic part from the existing data assets.
+  - Meshes, attachments, and child components are attached to the correct parent component and socket.
+  - Switching a selection removes or hides the previous part without orphaned components.
+  - Dependent attachments update when their parent module changes.
+  - Invalid assets, missing sockets, hidden parts, and absent mesh components fail safely.
+  - Runtime application and editor-preview usage both derive world and component context from the owning actor.
+  - Reapplying the same selection is idempotent and does not duplicate components.
+  - The implementation must compile and fit the existing customization loader, asset, and save-data architecture.
+  
+  Constraints:
+  - Use the repository to infer module ownership, socket naming, component lifetime, save/load flow, and mesh attachment patterns.
+  - Do not hardcode a fixed list of cosmetics or create unrelated preview-only components.
+  - Do not require new assets or hidden manual setup.
+  
+  Quality bar:
+  The implementation must be data-driven, safe across repeated reapplication,
+  and compatible with both runtime customization and editor-preview usage.
+
+files_to_edit:
+  - Source/ECRCommon/Private/Customization/CustomizationAttachmentAsset.cpp
+  - Source/ECRCommon/Private/Customization/CustomizationElementaryAsset.cpp
+  - Source/ECRCommon/Private/Customization/CustomizationElementaryModule.cpp
+  - Source/ECRCommon/Private/Customization/CustomizationLoaderAsset.cpp
+  - Source/ECRCommon/Private/Customization/CustomizationLoaderComponent.cpp
+  - Source/ECRCommon/Public/Customization/CustomizationAttachmentAsset.h
+  - Source/ECRCommon/Public/Customization/CustomizationElementaryAsset.h
+  - Source/ECRCommon/Public/Customization/CustomizationElementaryModule.h
+  - Source/ECRCommon/Public/Customization/CustomizationLoaderAsset.h
+  - Source/ECRCommon/Public/Customization/CustomizationLoaderComponent.h
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "ECR.CustomizationAttachments"
+
+hidden_requirements:
+  R1:
+    text: A customization module can load the selected cosmetic part from the existing data assets.
+    category: assets
+  R2:
+    text: Meshes, attachments, and child components are attached to the correct parent component and socket.
+    category: assets
+  R3:
+    text: Switching a selection removes or hides the previous part without orphaned components.
+    category: core_logic
+  R4:
+    text: Dependent attachments update when their parent module changes.
+    category: core_logic
+  R5:
+    text: Invalid assets, missing sockets, hidden parts, and absent mesh components fail safely.
+    category: assets
+  R6:
+    text: Runtime application and editor-preview usage both derive world and component context from the owning actor.
+    category: camera
+  R7:
+    text: Reapplying the same selection is idempotent and does not duplicate components.
+    category: core_logic
+  R8:
+    text: The implementation must compile and fit the existing customization loader, asset, and save-data architecture.
+  R9:
+    text: "Cosmetic modules that share a mesh-merge namespace must be combined into a single merged skeletal mesh via the skeletal mesh merge library (MergeMeshes), not attached as separate components. Same-namespace merging is a required part of the customization assembly, not optional."
+    category: assets
+
+test_requirements:
+  ECR.CustomizationAttachments.source_contract_tokens_present:
+    - R1
+    - R2
+    - R3
+    - R4
+    - R5
+    - R6
+    - R7
+    - R8
+    - R9

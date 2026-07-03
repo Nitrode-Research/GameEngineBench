@@ -1,0 +1,24 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "Travos",
+	"Description": "",
+	"Category": "Other",
+	"CreatedBy": "Uriel Ballinas, VOIDWARE Prohibited",
+	"CreatedByURL": "",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"SupportURL": "",
+	"CanContainContent": true,
+	"IsBetaVersion": true,
+	"IsExperimentalVersion": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "Travos",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}
+	]
+}

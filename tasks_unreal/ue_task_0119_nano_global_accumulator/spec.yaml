@@ -1,0 +1,66 @@
+task_id: ue_task_0119
+title: Global Accumulator & View Extension
+tier: hard
+instruction: "Implement the Global Accumulator and View Extension systems. Global Accumulator\nprovides one-draw-call rendering\
+  \ for multiple splat actors by accumulating view\ndata into shared GPU buffers. View Extension manages proxy registration\
+  \ and\nrender pipeline integration.\n\nExpected behaviors:\n\nGlobal accumulator buffer layout:\n- GlobalViewDataBuffer\
+  \ \u2014 view data for all proxies concatenated\n- GlobalSortDistanceBuffer \u2014 ping-pong buffers for radix sort\n- GlobalSortKeysBuffer\
+  \ \u2014 ping-pong buffers for sort keys\n- GlobalRadixHistogramBuffer \u2014 256 * NumTiles uints\n- GlobalRadixDigitOffsetBuffer\
+  \ \u2014 256 uints\n- GlobalSortParamsBuffer \u2014 2 uints (SortCount, NumTiles)\n\nCompaction path buffers:\n- GlobalVisibleCountArrayBuffer\
+  \ \u2014 [MAX_PROXY_COUNT] visible counts\n- GlobalBaseOffsetsBuffer \u2014 [MAX_PROXY_COUNT + 1] exclusive prefix sums\n\
+  - GlobalCalcDistIndirectArgsBuffer \u2014 [3] indirect dispatch args\n- GlobalSortIndirectArgsGlobalBuffer \u2014 [3] indirect\
+  \ dispatch args\n- GlobalDrawIndirectArgsBuffer \u2014 [5] indirect draw args\n\nCamera-static skip cache:\n- Track if camera\
+  \ hasn't moved to skip sort\n- Cache view-projection matrix and total splat count\n\nPrevious frame data (per-view):\n-\
+  \ Store translated view-projection matrix and pre-view translation\n- Use un-jittered matrices for stable velocity calculation\n\
+  - Track per-view data separately\n\nView extension proxy management:\n- Register/unregister scene proxies\n- Get all registered\
+  \ proxies\n- Thread-safe access with critical section\n\nRender pipeline integration:\n- Hook into SetupViewFamily, BeginRenderViewFamily,\
+  \ PreRenderView\n- Composite splats to SceneColor in PostRenderBasePassDeferred\n- Final pass in PrePostProcessPass\n\n\
+  Singleton pattern:\n- Static Instance pointer\n- Get() method for singleton access\n- AutoRegister constructor parameter\n\
+  \nEdge cases:\n- No proxies registered \u2014 skip all rendering\n- Camera hasn't moved \u2014 use cached sort data\n- Proxy\
+  \ destroyed mid-frame \u2014 check destruction flag\n- Multiple viewports \u2014 track per-view previous frame data\n- Proxy\
+  \ count exceeds MAX_PROXY_COUNT \u2014 error or skip\n- View extension not active \u2014 skip rendering\n\nQuality bar:\n\
+  - The implementation must compile as part of the NanoGaussianSplatting UE5 plugin\n- Follow the existing C++ conventions,\
+  \ macro usage, and naming patterns\n- All public-facing methods must use the appropriate UFUNCTION macros\n- No new assets\
+  \ or classes outside the listed files\n- Must integrate with GPU buffer management and render pipeline systems\n"
+hidden_requirements:
+  R1:
+    text: Global accumulator must manage buffer layout and compaction path buffers.
+    category: core_logic
+  R2:
+    text: Camera-static skip cache must track movement and cache sort data.
+    category: core_logic
+  R3:
+    text: Previous frame data must store matrices per-view for stable velocity calculation.
+    category: core_logic
+  R4:
+    text: View extension proxy management must support register/unregister/get with thread safety.
+    category: core_logic
+  R5:
+    text: View extension render pipeline integration must hook into UE render lifecycle.
+    category: core_logic
+  R6:
+    text: View extension singleton pattern must use static Instance and Get() method.
+    category: core_logic
+  R7:
+    text: Edge cases must handle no proxies, camera static, proxy destroyed, multiple viewports, max proxy count, extension
+      inactive.
+    category: core_logic
+test_requirements:
+  Nano.GlobalAccumulator.SourceAndLayoutSemantics:
+  - R1
+  - R2
+  - R3
+  - R4
+  - R5
+  - R6
+  - R7
+files_to_edit:
+- Plugins/NanoGS/Source/NanoGS/Public/GaussianGlobalAccumulator.h
+- Plugins/NanoGS/Source/NanoGS/Private/GaussianGlobalAccumulator.cpp
+- Plugins/NanoGS/Source/NanoGS/Public/GaussianSplatViewExtension.h
+- Plugins/NanoGS/Source/NanoGS/Private/GaussianSplatViewExtension.cpp
+tests:
+  runner: ue_automation
+  mode: editor
+  num_clients: 0
+  filter: Nano.GlobalAccumulator

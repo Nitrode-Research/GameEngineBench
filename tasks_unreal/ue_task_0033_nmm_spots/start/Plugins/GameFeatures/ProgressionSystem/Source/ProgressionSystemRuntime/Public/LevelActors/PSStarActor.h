@@ -1,0 +1,102 @@
+// Copyright (c) Valerii Rotermel & Yevhenii Selivanov
+
+#pragma once
+
+#include "GameFramework/Actor.h"
+
+#include "PSStarActor.generated.h"
+
+enum class EPSStarActorState : uint8;
+
+UCLASS()
+class PROGRESSIONSYSTEMRUNTIME_API APSStarActor : public AActor
+{
+	GENERATED_BODY()
+
+public:
+	// Sets default values for this actor's properties
+	APSStarActor();
+
+	/** Helper function that plays any given star animation from various places. */
+	UFUNCTION(BlueprintCallable, Category = "C++")
+	bool TryPlayStarAnimation(UPARAM(ref) float& StartTimeRef, class UCurveTable* AnimationCurveTable);
+
+	/** Set the start time for hiding stars in the main menu */
+	UFUNCTION(BlueprintCallable, Category = "C++")
+	void SetStartTimeHideStars();
+
+	/** Set the start time for main menu stars animation */
+	UFUNCTION(BlueprintCallable, Category = "C++")
+	void SetStartTimeMenuStars();
+
+	/** Automatically set the transform and location of actor
+	 * when a Star actor is initialized
+	 * @param PreviousActorLocation Previous star actor location reference
+	 */
+	UFUNCTION(BlueprintCallable, Category = "C++")
+	void OnInitialized(const FVector& PreviousActorLocation);
+
+	/** Updates star actors Mesh material to the Locked Star, Unlocked or partially achieved
+	 * 0 - locked star material
+	 * 1 - unlocked star material
+	 * between 0-1 - partially unlocked material (dynamic) e.g. 0.5
+	 * @param AmountOfStars The number of stars to be added on top of the character
+	 * @param StarActorState Desired state of the star actor.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "C++")
+	void UpdateStarActorProgressMeshMaterial(float AmountOfStars, EPSStarActorState StarActorState);
+
+protected:
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
+
+	/** Called when this actor is explicitly being destroyed during gameplay or in the editor, not called during level streaming or gameplay ending */
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
+	/** Function called every frame on this Actor */
+	virtual void Tick(float DeltaTime) override;
+
+	/** A base Mesh component of the star actors. Used to display progression by changing its mesh material */
+	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category = "C++", meta = (DisplayName = "StarMeshComponent"))
+	TObjectPtr<class UStaticMeshComponent> StarMeshComponent = nullptr;
+
+	/** Stores the starting time to hide stars in the main menu when cinematic started */
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite, Transient, Category = "C++", meta = (BlueprintProtected, DisplayName = "Starting time to hide stars"))
+	float StartTimeHideStarsInternal = 0.0f;
+
+	/** Stores the starting time to animate stars in main menu */
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite, Transient, Category = "C++", meta = (BlueprintProtected, DisplayName = "Starting time to animate stars in menu"))
+	float StartTimeMenuStarsInternal = 0.0f;
+
+	/** The initial transform of the star actor with which the star actor was initialized. */
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite, Transient, AdvancedDisplay, Category = "C++", meta = (BlueprintProtected, DisplayName = "Initial Transform"))
+	FTransform InitialTransformInternal = FTransform::Identity;
+
+	/** When a local character load finished */
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "C++", meta = (BlueprintProtected))
+	void OnLocalPawnReady(const struct FGameplayEventData& Payload);
+
+	/** Called when the current game state was changed */
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "C++", meta = (BlueprintProtected))
+	void OnGameStateChanged(const struct FGameplayEventData& Payload);
+
+	/** Is called when any cinematic started to play in the main menu */
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "C++", meta = (BlueprintProtected))
+	void OnAnyCinematicStarted(const UObject* LevelSequence, const UObject* FromInstigator);
+
+	/** Hiding stars with animation in main menu when cinematic is start to play */
+	UFUNCTION(BlueprintCallable, Category = "C++", meta = (BlueprintProtected))
+	void TryPlayHideStarAnimation();
+
+	/** Menu stars with animation in main menu idle */
+	UFUNCTION(BlueprintCallable, Category = "C++", meta = (BlueprintProtected))
+	void TryPlayMenuStarAnimation();
+
+	/** Applies the star dynamic material */
+	UFUNCTION(BlueprintCallable, Category = "C++", meta = (BlueprintProtected))
+	void SetStarActorProgressMeshMaterial(class UMaterialInstanceDynamic* StarDynamicMaterial, float StarProgressionAmount);
+
+	/** Changes current bomb mesh to current spot bomb mesh */
+	UFUNCTION(BlueprintCallable, Category = "C++", meta = (BlueprintProtected))
+	void ChangeStarMesh(const class UPSSpotComponent* SpotComponent);
+};

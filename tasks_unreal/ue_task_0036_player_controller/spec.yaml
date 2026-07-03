@@ -1,0 +1,100 @@
+task_id: ue_task_0036
+title: Player Controller (Input and State-Driven Contexts)
+tier: hard
+
+instruction: |
+  The player controller manages which input actions are active based on game phase, binds those actions to the correct targets, and handles reconnect and pawn lifecycle. Currently all input is disabled.
+
+  The project already contains:
+  - an input data asset listing every input mapping context and the game phases each should be active during
+  - actions within each context that carry a delegate resolving the receiver object at bind time
+  - a pool-managed pawn that must not be destroyed when a player leaves
+
+  The system must satisfy these behavioral requirements:
+
+  Input contexts:
+  - When the game phase changes, contexts whose phase bitmask matches the new phase must be added; contexts that don't match must be removed unconditionally, regardless of direction. This prevents contexts leaking across transitions.
+  - Using a push/pop stack leaks contexts when two contexts have overlapping phase bitmasks.
+
+  Action binding:
+  - When binding a context's actions, each action's resolver delegate must be invoked at bind time to determine the receiver. The action's handler is then looked up by name on that receiver and bound through the input component.
+  - Hardcoding the controller as the receiver routes actions to the wrong target when they belong to a different object.
+
+  Navigation suppression:
+  - At initialization, install a null navigation configuration so tab and arrow keys don't steal focus from gameplay.
+
+  Reconnect:
+  - When initializing the player state, first check whether one already exists for this controller. If so, adopt it instead of creating a new one — reconnecting players resume with their prior state intact.
+
+  Pawn lifecycle:
+  - When the pawn leaves the game, do not call through to the base class. The base class destroys the pawn; pool-managed pawns must survive.
+
+hidden_requirements:
+  R1:
+    text: BeginPlay must focus the game viewport and install UI navigation suppression before gameplay input is expected.
+    category: initialization
+  R2:
+    text: UI navigation suppression must install a null Slate navigation configuration so tab, arrow, and analog navigation cannot steal focus from gameplay.
+    category: core_logic
+  R3:
+    text: Input context application must iterate the flat managed context list and enable every context whose state tags match the current game phase.
+    category: core_logic
+  R4:
+    text: Contexts whose state tags do not match the new phase must be removed or disabled unconditionally on every state change.
+    category: core_logic
+  R5:
+    text: The controller must not implement input phase changes as a push/pop stack or by toggling Unreal input modes, because overlapping phase bitmasks leak stale contexts.
+    category: edge_case
+  R6:
+    text: Binding an action must invoke that action's resolver delegate at bind time, using the resolver class default object and current world to find the receiver.
+    category: core_logic
+  R7:
+    text: The resolved receiver object, not the controller by default, must receive the named handler binding through the enhanced input component.
+    category: core_logic
+  R8:
+    text: InitPlayerState must look up and adopt an existing player state for reconnecting controllers before creating a new player state.
+    category: object_lifecycle
+  R9:
+    text: PawnLeavingGame must not call the base implementation because the base class destroys the possessed pawn.
+    category: object_lifecycle
+  R10:
+    text: PawnLeavingGame must still perform replacement cleanup, including session/player-state notification and pawn logout handling, while preserving the pool-managed pawn.
+    category: object_lifecycle
+  R11:
+    text: The controller must expose the runtime UClass surface expected by the input, lifecycle, and pawn-management tests.
+    category: initialization
+
+test_requirements:
+  Bomber.PlayerController.BeginPlaySetsViewportFocusAndIgnoresUIInput:
+    - R1
+    - R2
+  Bomber.PlayerController.BindInputActionsInContextResolvesTargetDynamically:
+    - R6
+    - R7
+  Bomber.PlayerController.InitPlayerStateReusesExistingOnReconnect:
+    - R8
+  Bomber.PlayerController.NoInputModeSwitchingInController:
+    - R5
+  Bomber.PlayerController.NonMatchingContextsRemovedOnStateChange:
+    - R4
+  Bomber.PlayerController.PawnLeavingGameDoesNotCallSuper:
+    - R9
+    - R10
+  Bomber.PlayerController.PawnLeavingGameRuntimePawnSurvives:
+    - R9
+    - R10
+  Bomber.PlayerController.RuntimeUClassSurface:
+    - R11
+  Bomber.PlayerController.SetAllInputContextsEnabledIteratesFlatListByStateTag:
+    - R3
+  Bomber.PlayerController.SetUIInputIgnoredInstallsNullNavigationConfig:
+    - R2
+
+files_to_edit:
+  - Source/Bomber/Private/Controllers/BmrPlayerController.cpp
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "Bomber.PlayerController"

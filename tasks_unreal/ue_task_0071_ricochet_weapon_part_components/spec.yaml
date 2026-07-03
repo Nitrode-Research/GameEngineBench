@@ -1,0 +1,69 @@
+task_id: ue_task_0071
+title: Ricochet Weapon Part Components
+tier: medium
+
+instruction: |
+  TargetVector's Ricochet plugin includes firearm part components for barrels, magazines, detachable magazines, and muzzle attachments. Implement these components in the task-owned files.
+
+  Weapon-part components must support replicated configuration, component-local ability systems, and attachment/magazine weight semantics.
+
+  The implementation must satisfy the following behavior:
+
+  - Barrel and muzzle attachment components should create replicated ability system components and use minimal gameplay-effect replication.
+  - Barrel components should replicate compatible calibers and compatible muzzle attachments using push-model lifetime replication that skips the owning client.
+  - Magazine components should expose their ability system component through `IAbilitySystemInterface`.
+  - Detachable magazines should tick like runtime components and report base magazine weight.
+  - Detachable magazine total weight should include the base magazine weight plus the weight of loaded ammunition rounds.
+  - Muzzle attachments should expose their ability system component and muzzle attachment weight API.
+
+  Do not replace weapon parts with passive data holders or logic that ignores ability system and replication setup.
+
+files_to_edit:
+  - Plugins/Ricochet/Source/Ricochet/Private/Components/RicochetBarrel.cpp
+  - Plugins/Ricochet/Source/Ricochet/Private/Components/RicochetMagazineBase.cpp
+  - Plugins/Ricochet/Source/Ricochet/Private/Components/RicochetMagazineDetachable.cpp
+  - Plugins/Ricochet/Source/Ricochet/Private/Components/RicochetMuzzleAttachment.cpp
+  - Plugins/Ricochet/Source/Ricochet/Public/Components/RicochetBarrel.h
+  - Plugins/Ricochet/Source/Ricochet/Public/Components/RicochetMagazineBase.h
+  - Plugins/Ricochet/Source/Ricochet/Public/Components/RicochetMagazineDetachable.h
+  - Plugins/Ricochet/Source/Ricochet/Public/Components/RicochetMuzzleAttachment.h
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "TargetVector.RicochetWeaponParts"
+
+hidden_requirements:
+  R1:
+    text: Barrel components must create replicated ability system components with minimal replication mode.
+    category: ability_system
+  R2:
+    text: Barrel components must replicate compatible calibers and muzzle attachments with push-model skip-owner lifetime parameters.
+    category: replication
+  R3:
+    text: Magazine base components must create replicated ability system components and return them through IAbilitySystemInterface.
+    category: ability_system
+  R4:
+    text: Detachable magazines must enable ticking and return their configured base magazine weight.
+    category: magazine
+  R5:
+    text: Detachable magazines must calculate total weight from base magazine weight plus loaded round weights.
+    category: magazine
+  R6:
+    text: Muzzle attachments must create replicated ability system components with minimal replication mode.
+    category: ability_system
+  R7:
+    text: Muzzle attachments must preserve their public weight accessor and ability system accessor.
+    category: attachment
+
+test_requirements:
+  TargetVector.RicochetWeaponParts.barrel_and_muzzle_source:
+    - R1
+    - R2
+    - R6
+    - R7
+  TargetVector.RicochetWeaponParts.magazine_source:
+    - R3
+    - R4
+    - R5

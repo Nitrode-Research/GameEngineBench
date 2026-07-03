@@ -1,0 +1,132 @@
+task_id: ue_task_0085
+title: Weapon, Pickup, Ammo, And Ability-Granting Integration
+tier: hard
+
+instruction: |
+  # Implement Weapon, Pickup, Ammo, And Ability-Granting Integration
+  
+  This repository is a multiplayer Unreal Engine shooter where weapons are world actors, inventory items, ability source objects, ammo containers, pickup objects, and first-person/third-person presentation objects. Implement the weapon and pickup integration subsystem so weapons can be picked up, equipped, replicated, used by abilities, and displayed correctly.
+  
+  Use the repository to infer the existing hero inventory flow, Gameplay Ability System source-object expectations, ammo attributes, HUD binding behavior, Blueprint assets, collision profiles, and networking patterns. Do not replace the weapon actor architecture with a separate inventory or ammo system.
+  
+  ## Expected Weapon Behavior
+  
+  - Weapons initialize with the correct collision, replication, mesh, ammo, fire-mode, status, and gameplay tag state.
+  - A weapon can exist in the world as a pickup or in a hero's inventory as an owned item.
+  - Picking up a weapon transfers ownership to the hero, disables pickup collision, attaches the weapon to the character, and optionally equips it.
+  - Dropping a weapon removes ownership, detaches it, places it in the world, enables appropriate pickup behavior, and updates clients.
+  - Equipping and unequipping a weapon attach and detach first-person and third-person meshes to the appropriate character meshes and sockets.
+  - Mesh visibility, hidden shadows, collision state, and relative transforms must be correct for first-person owners, third-person viewers, and unequipped inventory weapons.
+  - Weapons expose HUD-facing icons, reticles, status text, fire mode, pickup sounds, equip montages, and ammo values.
+  
+  ## Ability Integration
+  
+  - Equipped weapons grant their configured gameplay abilities through the owning character's ability system.
+  - Granted abilities use the weapon as their source object so ability logic can identify the active weapon.
+  - Weapon abilities are granted and removed only by the server.
+  - Removing a weapon clears granted ability specs without leaving stale handles.
+  - Weapon ability levels are derived from the configured ability input or ability identity expected by the project.
+  - Weapons lazily provide reusable target actors for line trace and sphere trace abilities.
+  
+  ## Ammo And Replication Behavior
+  
+  - Primary and secondary clip ammo values replicate to the owning client.
+  - Maximum primary and secondary clip ammo values replicate to the owning client.
+  - Ammo-change delegates fire with old and new values when replicated or changed locally.
+  - Clip ammo replication should not fight local fire prediction during active firing.
+  - Infinite-ammo weapons report and behave as infinite-ammo weapons where existing abilities expect that.
+  - Current clip and reserve ammo readouts integrate with the hero and ammo attribute systems.
+  
+  ## Pickup Behavior
+  
+  - Pickup overlap works only for valid heroes.
+  - Restricted gameplay tags, such as dead or knocked-down state, prevent pickup.
+  - Pickup effects such as sound and inventory updates happen through the existing gameplay path.
+  - Pickup actors should not crash or duplicate inventory when touched repeatedly or by invalid actors.
+  
+  ## Multiplayer Constraints
+  
+  - The server is authoritative for ownership, pickup, ability granting, dropping, and replicated ammo state.
+  - Clients should receive enough replicated state for HUD and weapon presentation without owning authoritative state.
+  - Listen-server behavior must be correct for both the local player and remote clients.
+  
+  ## Integration Expectations
+  
+  - Existing rifle, shotgun, rocket launcher, hero inventory, HUD, ability system, targeting actors, and pickup assets should work without asset changes.
+  - Do not introduce a parallel weapon inventory or ammo system. Maintain the weapon actor's integration with the existing hero, ability, attribute, and UI architecture.
+  - Avoid broad rewrites outside the requested subsystem unless they are required to maintain integration with existing hero inventory, ability, ammo, or UI flow.
+  
+  ## Validation Expectations
+  
+  - Build the project successfully.
+  - Verify weapons can be picked up, equipped, unequipped, switched, dropped, and picked up again.
+  - Verify weapon meshes attach correctly in first-person and third-person views, including visibility and shadow behavior.
+  - Verify equipped weapons grant usable abilities and removed weapons revoke those abilities.
+  - Verify primary and secondary clip ammo update HUD values and replicate correctly to the owning client.
+  - Verify repeated pickup overlaps, invalid actors, dead heroes, and knocked-down heroes do not create duplicate or invalid inventory state.
+  
+  ## Quality Bar
+  
+  The implementation must compile cleanly and deliver production-quality weapon behavior across pickup, equip, unequip, drop, ability grant/removal, ammo replication, HUD updates, target actor access, and first-person/third-person presentation.
+
+files_to_edit:
+  - Source/GASShooter/Private/Characters/Heroes/GSHeroCharacter.cpp
+  - Source/GASShooter/Private/Items/Pickups/GSPickup.cpp
+  - Source/GASShooter/Private/Weapons/GSWeapon.cpp
+  - Source/GASShooter/Public/Characters/Heroes/GSHeroCharacter.h
+  - Source/GASShooter/Public/Items/Pickups/GSPickup.h
+  - Source/GASShooter/Public/Weapons/GSWeapon.h
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "GASShooter.WeaponIntegration"
+
+hidden_requirements:
+  R1:
+    text: Weapons must distinguish world-pickup state from inventory-owned state through collision, owner, replication, mesh, status, and tag changes.
+    category: weapon_lifecycle
+  R2:
+    text: Pickup overlap must accept only valid heroes and reject restricted states such as dead or knocked down.
+    category: pickup
+  R3:
+    text: Equipping and unequipping must attach first-person and third-person meshes to the correct character meshes and sockets with correct visibility and shadows.
+    category: presentation
+  R4:
+    text: Weapon abilities must be granted and removed only by server authority, with the weapon as source object.
+    category: ability_grants
+  R5:
+    text: >-
+      Ability removal must clear each granted spec on the owning ability system component AND
+      empty the weapon's granted-handle container afterward, so no stale handles survive removal
+      and a later grant (e.g. picking the weapon up again) cannot accumulate dangling specs.
+      Use the project's established TArray clearing convention (TArray::Empty), consistent with the
+      rest of the codebase, rather than leaving the populated handle array in place.
+    category: ability_grants
+  R6:
+    text: Primary and secondary clip ammo and max ammo must update delegates and replicate to the owning client without fighting predicted firing.
+    category: ammo
+  R7:
+    text: Dropping a weapon must detach it, clear ownership, restore world pickup behavior, and make it pickable again.
+    category: weapon_lifecycle
+  R8:
+    text: Repeated pickup overlaps must not duplicate inventory entries or ability grants.
+    category: edge_case
+  R9:
+    text: Weapons must lazily provide reusable line and sphere target actors for ability targeting.
+    category: targeting
+
+test_requirements:
+  GASShooter.WeaponIntegration.pickup_inventory_state_paths_present:
+    - R1
+    - R2
+    - R7
+    - R8
+  GASShooter.WeaponIntegration.ability_grant_and_target_actor_paths_present:
+    - R4
+    - R5
+    - R9
+  GASShooter.WeaponIntegration.ammo_replication_and_mesh_presentation_paths_present:
+    - R3
+    - R6

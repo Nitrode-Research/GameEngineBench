@@ -1,0 +1,432 @@
+// Copyright Expertise centre for Digital Media, 2024. All Rights Reserved.
+// Benchmark automation tests for the XR Calibration subsystem (PIE tests).
+// Run with: Automation > filter "LASAA.Calibration"
+
+#include "CoreMinimal.h"
+
+#include "Misc/AutomationTest.h"
+#include "Misc/FileHelper.h"
+#include "Tests/AutomationCommon.h"
+#include "GameFramework/Actor.h"
+#include "Components/SceneComponent.h"
+#include "Engine/Engine.h"
+#include "EngineUtils.h"
+#include "UObject/UObjectGlobals.h"
+
+#if WITH_EDITOR
+#include "Settings/LevelEditorPlaySettings.h"
+#include "Tests/AutomationEditorCommon.h"
+#endif
+
+DEFINE_LOG_CATEGORY_STATIC(LogCalibrationPIETests, Log, All);
+
+namespace CalibrationTests
+{
+	static const TCHAR* TestMapPath = TEXT("/Game/Maps/Prep");
+
+	static UWorld* GetFirstPIEWorld()
+	{
+		if (!GEngine) return nullptr;
+		for (const FWorldContext& Context : GEngine->GetWorldContexts())
+		{
+			if (Context.WorldType == EWorldType::PIE && Context.World())
+			{
+				if (Context.World()->GetNetMode() == NM_Standalone || Context.World()->GetNetMode() == NM_ListenServer)
+				{
+					return Context.World();
+				}
+			}
+		}
+		return nullptr;
+	}
+
+	static UClass* GetXRCalibrationClass()
+	{
+		return FindObject<UClass>(nullptr, TEXT("/Script/LASAA.XRCalibration"));
+	}
+
+	static void InvokeCalibrationMethod(UObject* CalibrationComponent, const FName MethodName)
+	{
+		if (!CalibrationComponent)
+		{
+			return;
+		}
+
+		if (UFunction* Function = CalibrationComponent->FindFunction(MethodName))
+		{
+			CalibrationComponent->ProcessEvent(Function, nullptr);
+		}
+	}
+
+	static void AddExpectedMetaProjectSetupNoise(FAutomationTestBase& Test)
+	{
+		if (GEngine)
+		{
+			GEngine->Exec(nullptr, TEXT("log LogProjectSetupTool off"));
+		}
+	}
+}
+
+// Static trackers for PIE test object persistence
+static FWeakObjectPtr Test12_CalibrationActor;
+static FWeakObjectPtr g_CalibActor;
+static FWeakObjectPtr g_CalibComponent;
+
+using namespace CalibrationTests;
+
+// ===================================================================
+// UXRCalibration  PIE lifecycle tests
+// ===================================================================
+
+// --- 12. beginplay_loads_calibration  (R6) ---
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FXRCalibrationBeginPlayTest,
+	"LASAA.Calibration.beginplay_loads_calibration",
+	EAutomationTestFlags_ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+
+bool FXRCalibrationBeginPlayTest::RunTest(const FString& Parameters)
+{
+#if WITH_EDITOR
+	AddExpectedMetaProjectSetupNoise(*this);
+
+	ADD_LATENT_AUTOMATION_COMMAND(FEditorLoadMap(FString(TestMapPath)));
+	ADD_LATENT_AUTOMATION_COMMAND(FWaitForShadersToFinishCompiling());
+	ADD_LATENT_AUTOMATION_COMMAND(FStartPIECommand(false));
+	ADD_LATENT_AUTOMATION_COMMAND(FWaitLatentCommand(3.0f));
+
+	// Spawn an actor with a UXRCalibration component.
+	ADD_LATENT_AUTOMATION_COMMAND(FFunctionLatentCommand([this]()
+	{
+		UWorld* World = GetFirstPIEWorld();
+		if (!TestNotNull(TEXT("PIE world must be available"), World))
+		{
+			return true;
+		}
+
+		FActorSpawnParameters Params;
+		Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+		AActor* Actor = World->SpawnActor<AActor>(AActor::StaticClass(), FVector(0, 0, 100), FRotator::ZeroRotator, Params);
+		if (!TestNotNull(TEXT("Calibration actor must spawn"), Actor))
+		{
+			return true;
+		}
+
+		UClass* CalibrationClass = GetXRCalibrationClass();
+		if (!TestNotNull(TEXT("UXRCalibration class must be registered"), CalibrationClass))
+		{
+			return true;
+		}
+
+		USceneComponent* Calib = Cast<USceneComponent>(
+			Actor->AddComponentByClass(CalibrationClass, false, FTransform::Identity, false));
+		if (!TestNotNull(TEXT("UXRCalibration component must be creatable"), Calib))
+		{
+			return true;
+		}
+		Calib->RegisterComponent();
+
+		Test12_CalibrationActor = Actor;
+		g_CalibActor = Actor;
+		g_CalibComponent = Calib;
+		return true;
+	}));
+
+	ADD_LATENT_AUTOMATION_COMMAND(FWaitLatentCommand(1.0f));
+
+	// BeginPlay should have been called, which calls loadFromFile + setCalibrationOffset.
+	ADD_LATENT_AUTOMATION_COMMAND(FFunctionLatentCommand([this]()
+	{
+		AActor* Actor = Cast<AActor>(Test12_CalibrationActor.Get());
+		if (!Actor)
+		{
+			AddWarning(TEXT("Calibration actor was garbage collected"));
+			return true;
+		}
+
+		UE_LOG(LogCalibrationPIETests, Display,
+			TEXT("[BeginPlay] Calibration component created and BeginPlay should have fired."));
+
+		return true;
+	}));
+
+	ADD_LATENT_AUTOMATION_COMMAND(FEndPlayMapCommand());
+#endif
+	return true;
+}
+
+// --- 13. reset_calibration_clears_state  (R6) ---
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FXRCalibrationResetTest,
+	"LASAA.Calibration.reset_calibration_clears_state",
+	EAutomationTestFlags_ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+
+bool FXRCalibrationResetTest::RunTest(const FString& Parameters)
+{
+#if WITH_EDITOR
+	AddExpectedMetaProjectSetupNoise(*this);
+
+	ADD_LATENT_AUTOMATION_COMMAND(FEditorLoadMap(FString(TestMapPath)));
+	ADD_LATENT_AUTOMATION_COMMAND(FWaitForShadersToFinishCompiling());
+	ADD_LATENT_AUTOMATION_COMMAND(FStartPIECommand(false));
+	ADD_LATENT_AUTOMATION_COMMAND(FWaitLatentCommand(3.0f));
+
+	ADD_LATENT_AUTOMATION_COMMAND(FFunctionLatentCommand([this]()
+	{
+		UWorld* World = GetFirstPIEWorld();
+		if (!World) return true;
+
+		FActorSpawnParameters Params;
+		AActor* Actor = World->SpawnActor<AActor>(AActor::StaticClass(), FVector(0, 0, 100), FRotator::ZeroRotator);
+		if (!Actor) return true;
+
+		UClass* CalibrationClass = GetXRCalibrationClass();
+		if (!CalibrationClass) return true;
+
+		USceneComponent* Calib = Cast<USceneComponent>(
+			Actor->AddComponentByClass(CalibrationClass, false, FTransform::Identity, false));
+		if (!Calib) return true;
+		Calib->RegisterComponent();
+
+		// Set a non-identity transform to simulate a loaded calibration.
+		FTransform TestTransform(FRotator(10, 20, 30), FVector(5, 10, 15));
+		Calib->SetRelativeTransform(TestTransform);
+
+		g_CalibActor = Actor;
+		g_CalibComponent = Calib;
+		return true;
+	}));
+
+	ADD_LATENT_AUTOMATION_COMMAND(FWaitLatentCommand(0.5f));
+
+	// Call resetCalibration  should set transform to identity and propagate.
+	ADD_LATENT_AUTOMATION_COMMAND(FFunctionLatentCommand([this]()
+	{
+		USceneComponent* Calib = Cast<USceneComponent>(g_CalibComponent.Get());
+		if (!TestNotNull(TEXT("Calibration component must still exist"), Calib))
+		{
+			return true;
+		}
+
+		InvokeCalibrationMethod(Calib, TEXT("resetCalibration"));
+
+		FTransform AfterReset = Calib->GetRelativeTransform();
+		FTransform Identity = FTransform::Identity;
+
+		TestTrue(TEXT("resetCalibration sets rotation to identity"),
+			AfterReset.GetRotation().Equals(Identity.GetRotation(), 1e-6));
+		TestTrue(TEXT("resetCalibration sets translation to identity"),
+			AfterReset.GetTranslation().Equals(Identity.GetTranslation(), 1e-6));
+
+		return true;
+	}));
+
+	ADD_LATENT_AUTOMATION_COMMAND(FEndPlayMapCommand());
+#endif
+	return true;
+}
+
+// --- 14. write_load_via_public_api  (R6, R7) ---
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FXRCalibrationWriteLoadRoundtripTest,
+	"LASAA.Calibration.write_load_roundtrip",
+	EAutomationTestFlags_ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+
+bool FXRCalibrationWriteLoadRoundtripTest::RunTest(const FString& Parameters)
+{
+#if WITH_EDITOR
+	AddExpectedMetaProjectSetupNoise(*this);
+
+	ADD_LATENT_AUTOMATION_COMMAND(FEditorLoadMap(FString(TestMapPath)));
+	ADD_LATENT_AUTOMATION_COMMAND(FWaitForShadersToFinishCompiling());
+	ADD_LATENT_AUTOMATION_COMMAND(FStartPIECommand(false));
+	ADD_LATENT_AUTOMATION_COMMAND(FWaitLatentCommand(3.0f));
+
+	ADD_LATENT_AUTOMATION_COMMAND(FFunctionLatentCommand([this]()
+	{
+		UWorld* World = GetFirstPIEWorld();
+		if (!World) return true;
+
+		FActorSpawnParameters Params;
+		AActor* Actor = World->SpawnActor<AActor>(AActor::StaticClass(), FVector(0, 0, 100), FRotator::ZeroRotator);
+		if (!Actor) return true;
+
+		UClass* CalibrationClass = GetXRCalibrationClass();
+		if (!CalibrationClass) return true;
+
+		USceneComponent* Calib = Cast<USceneComponent>(
+			Actor->AddComponentByClass(CalibrationClass, false, FTransform::Identity, false));
+		if (!Calib) return true;
+		Calib->RegisterComponent();
+
+		g_CalibActor = Actor;
+		g_CalibComponent = Calib;
+
+		// Set a known transform to simulate a calibrated state.
+		FTransform Original(FRotator(5, 10, 15), FVector(1, 2, 3));
+		Calib->SetRelativeTransform(Original);
+
+		// Write a calibration file manually: identity matrix in the expected CSV format.
+		TArray<FString> CSVLines;
+		CSVLines.Add(TEXT("1,0,0,0"));
+		CSVLines.Add(TEXT("0,1,0,0"));
+		CSVLines.Add(TEXT("0,0,1,0"));
+		CSVLines.Add(TEXT("0,0,0,1"));
+
+		FString Filepath = FPaths::ConvertRelativePathToFull(
+			FPaths::ProjectPluginsDir() + TEXT("LASAA/anchorCalibrate.txt"));
+		FFileHelper::SaveStringArrayToFile(CSVLines, *Filepath);
+
+		UE_LOG(LogCalibrationPIETests, Display,
+			TEXT("[Roundtrip] Wrote identity calibration to %s"), *Filepath);
+
+		return true;
+	}));
+
+	ADD_LATENT_AUTOMATION_COMMAND(FWaitLatentCommand(0.5f));
+
+	// Call changeCalibration  toggles filename, loads file, propagates offset.
+	ADD_LATENT_AUTOMATION_COMMAND(FFunctionLatentCommand([this]()
+	{
+		USceneComponent* Calib = Cast<USceneComponent>(g_CalibComponent.Get());
+		if (!TestNotNull(TEXT("Calibration component must still exist"), Calib))
+		{
+			return true;
+		}
+
+		FTransform Before = Calib->GetRelativeTransform();
+
+		InvokeCalibrationMethod(Calib, TEXT("changeCalibration"));
+		FTransform AfterFirst = Calib->GetRelativeTransform();
+
+		InvokeCalibrationMethod(Calib, TEXT("changeCalibration"));
+		FTransform AfterSecond = Calib->GetRelativeTransform();
+
+		UE_LOG(LogCalibrationPIETests, Display,
+			TEXT("[Roundtrip] Before=(%.1f,%.1f,%.1f) AfterFirst=(%.1f,%.1f,%.1f) AfterSecond=(%.1f,%.1f,%.1f)"),
+			Before.GetTranslation().X, Before.GetTranslation().Y, Before.GetTranslation().Z,
+			AfterFirst.GetTranslation().X, AfterFirst.GetTranslation().Y, AfterFirst.GetTranslation().Z,
+			AfterSecond.GetTranslation().X, AfterSecond.GetTranslation().Y, AfterSecond.GetTranslation().Z);
+
+		TestNotNull(TEXT("Component must survive changeCalibration x 2"), Calib);
+
+		return true;
+	}));
+
+	ADD_LATENT_AUTOMATION_COMMAND(FEndPlayMapCommand());
+#endif
+	return true;
+}
+
+// --- 15. calibrate_requires_enough_anchors  (R3, R4) ---
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FXRCalibrationAnchorRequirementTest,
+	"LASAA.Calibration.calibrate_requires_enough_anchors",
+	EAutomationTestFlags_ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+
+bool FXRCalibrationAnchorRequirementTest::RunTest(const FString& Parameters)
+{
+#if WITH_EDITOR
+	AddExpectedMetaProjectSetupNoise(*this);
+
+	ADD_LATENT_AUTOMATION_COMMAND(FEditorLoadMap(FString(TestMapPath)));
+	ADD_LATENT_AUTOMATION_COMMAND(FWaitForShadersToFinishCompiling());
+	ADD_LATENT_AUTOMATION_COMMAND(FStartPIECommand(false));
+	ADD_LATENT_AUTOMATION_COMMAND(FWaitLatentCommand(3.0f));
+
+	ADD_LATENT_AUTOMATION_COMMAND(FFunctionLatentCommand([this]()
+	{
+		UWorld* World = GetFirstPIEWorld();
+		if (!World) return true;
+
+		FActorSpawnParameters Params;
+		AActor* Actor = World->SpawnActor<AActor>(AActor::StaticClass(), FVector(0, 0, 100), FRotator::ZeroRotator);
+		if (!Actor) return true;
+
+		UClass* CalibrationClass = GetXRCalibrationClass();
+		if (!CalibrationClass) return true;
+
+		USceneComponent* Calib = Cast<USceneComponent>(
+			Actor->AddComponentByClass(CalibrationClass, false, FTransform::Identity, false));
+		if (!Calib) return true;
+		Calib->RegisterComponent();
+
+		g_CalibActor = Actor;
+		g_CalibComponent = Calib;
+
+		UE_LOG(LogCalibrationPIETests, Display,
+			TEXT("[AnchorReq] Calling calibrate() in the empty PIE test scene; it should early-out with insufficient anchors."));
+
+		InvokeCalibrationMethod(Calib, TEXT("calibrate"));
+
+		return true;
+	}));
+
+	ADD_LATENT_AUTOMATION_COMMAND(FWaitLatentCommand(0.5f));
+
+	// Verify the component is still valid (no crash).
+	ADD_LATENT_AUTOMATION_COMMAND(FFunctionLatentCommand([this]()
+	{
+		USceneComponent* Calib = Cast<USceneComponent>(g_CalibComponent.Get());
+		TestNotNull(TEXT("Calibration component must survive calibrate() with insufficient anchors"), Calib);
+		return true;
+	}));
+
+	ADD_LATENT_AUTOMATION_COMMAND(FEndPlayMapCommand());
+#endif
+	return true;
+}
+
+// --- 16. change_calibration_toggles_files  (R6) ---
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FXRCalibrationChangeCalibrationTest,
+	"LASAA.Calibration.change_calibration_toggles_files",
+	EAutomationTestFlags_ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+
+bool FXRCalibrationChangeCalibrationTest::RunTest(const FString& Parameters)
+{
+#if WITH_EDITOR
+	AddExpectedMetaProjectSetupNoise(*this);
+
+	ADD_LATENT_AUTOMATION_COMMAND(FEditorLoadMap(FString(TestMapPath)));
+	ADD_LATENT_AUTOMATION_COMMAND(FWaitForShadersToFinishCompiling());
+	ADD_LATENT_AUTOMATION_COMMAND(FStartPIECommand(false));
+	ADD_LATENT_AUTOMATION_COMMAND(FWaitLatentCommand(3.0f));
+
+	ADD_LATENT_AUTOMATION_COMMAND(FFunctionLatentCommand([this]()
+	{
+		UWorld* World = GetFirstPIEWorld();
+		if (!World) return true;
+
+		FActorSpawnParameters Params;
+		AActor* Actor = World->SpawnActor<AActor>(AActor::StaticClass(), FVector(0, 0, 100), FRotator::ZeroRotator);
+		if (!Actor) return true;
+
+		UClass* CalibrationClass = GetXRCalibrationClass();
+		if (!CalibrationClass) return true;
+
+		USceneComponent* Calib = Cast<USceneComponent>(
+			Actor->AddComponentByClass(CalibrationClass, false, FTransform::Identity, false));
+		if (!Calib) return true;
+		Calib->RegisterComponent();
+
+		g_CalibActor = Actor;
+		g_CalibComponent = Calib;
+
+		FTransform Before = Calib->GetRelativeTransform();
+
+		InvokeCalibrationMethod(Calib, TEXT("changeCalibration"));
+
+		FTransform After = Calib->GetRelativeTransform();
+
+		UE_LOG(LogCalibrationPIETests, Display,
+			TEXT("[ChangeCal] Before=(%.1f,%.1f,%.1f) After=(%.1f,%.1f,%.1f)"),
+			Before.GetTranslation().X, Before.GetTranslation().Y, Before.GetTranslation().Z,
+			After.GetTranslation().X, After.GetTranslation().Y, After.GetTranslation().Z);
+
+		return true;
+	}));
+
+	ADD_LATENT_AUTOMATION_COMMAND(FEndPlayMapCommand());
+#endif
+	return true;
+}

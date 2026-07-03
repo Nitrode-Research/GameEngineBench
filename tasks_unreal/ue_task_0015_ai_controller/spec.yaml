@@ -1,0 +1,138 @@
+task_id: ue_task_0015
+title: AI Controller + Behavior Tree
+tier: hard
+
+instruction: |
+  # AI Controller + Behavior Tree
+
+  This repository is a third-person action roguelike built in Unreal Engine. The AI system drives enemy characters through a behavior tree. Implement the AI controller, behavior tree tasks, services, and decorators so enemies perceive the player, chase, and attack.
+
+  ## Expected Behaviors
+
+  ### AI Controller Startup
+  - When the AI controller begins play, it must start the behavior tree assigned to it. If no behavior tree is assigned, the game must log a clear error and skip starting — it must not crash.
+  - The AI controller must register a Blackboard observer on the target actor key so it is notified whenever the target changes.
+  - When the target key is set to a player character, the controller notifies that player via a client RPC that they have been spotted.
+  - The team ID must be assigned to the bot team before the pawn registers its components, so the AI perception system records the correct affiliation from the start.
+
+  ### EQS Query Context — Target Actor
+  - Environment queries that need to know which actor the AI is chasing use this context. It retrieves the querier pawn's AI controller, reads the target actor from the Blackboard, and supplies it as the EQS context result.
+
+  ### BT Service — Check Attack Range
+  - Each tick, the service reads the target actor from the Blackboard. If a target exists, it checks whether the AI pawn is within the configured max attack range and has line-of-sight to the target.
+  - The result is written as a bool to the attack range Blackboard key: true only if both conditions pass, false otherwise.
+  - In non-shipping builds, a debug drawing CVar can enable a visualization of the attack range radius each tick.
+
+  ### BT Service — Start Action (on tick)
+  - Each tick, the service attempts to start a named action on the AI pawn's action component. The result is ignored — it is a fire-and-forget attempt.
+
+  ### BT Task — Start Action (one-shot)
+  - When executed, this task attempts to start a named action on the AI pawn's action component.
+  - If the action starts successfully the task returns Succeeded; if it fails the task returns Failed.
+
+  ### BT Task — Heal Self
+  - When executed, this task reads the AI pawn's maximum health and applies a full heal, setting current health to that maximum.
+  - The task always returns Succeeded.
+
+  ### BT Decorator — Check Health
+  - This decorator checks whether the AI pawn is at low health.
+  - It reads current health and max health from the action component and returns true if the ratio falls below the configured low-health threshold.
+  - The behavior tree uses this to trigger a flee-or-heal branch when the AI is injured.
+
+  ## Quality Bar
+
+  Enemies must perceive the player and pursue them — this depends on the behavior tree starting in BeginPlay and the correct team ID being set before pawn registration. The attack range service must correctly gate the attack branch in the BT. The heal task must restore health to full. The health decorator must trigger the correct branch at the right threshold. The EQS context must correctly resolve the Blackboard target so environment queries for positioning work. No new classes or assets are required — implement the behavior within the existing file structure.
+
+hidden_requirements:
+  R1:
+    text: The AI controller must start the assigned behavior tree in BeginPlay and avoid crashing when no tree is assigned.
+    category: object_lifecycle
+  R2:
+    text: The AI controller must register a blackboard observer for the target actor key after the behavior tree initializes the blackboard.
+    category: initialization
+  R3:
+    text: When the target actor key changes to a player character, the AI controller must notify that player through the ClientOnSeenBy RPC.
+    category: authority
+  R4:
+    text: The AI controller must set the bot team ID before pawn component registration so perception records the correct affiliation.
+    category: initialization
+  R5:
+    text: The EQS target context must resolve the querier's AI controller and supply the blackboard target actor as the context result.
+    category: core_logic
+  R6:
+    text: The attack-range service must read the target actor from the blackboard, check range and line of sight, and write true only when both checks pass.
+    category: core_logic
+  R7:
+    text: The attack-range service must use stable blackboard key defaults for the target actor and attack-range result.
+    category: defaults
+  R8:
+    text: The attack-range service must expose non-shipping debug color and radius drawing support without affecting shipping behavior.
+    category: defaults
+  R9:
+    text: The tick-based start-action service must attempt to start the configured action on the pawn's action component each tick.
+    category: core_logic
+  R10:
+    text: The one-shot start-action task must return Succeeded only when the configured action starts and Failed otherwise.
+    category: core_logic
+  R11:
+    text: The start-action task must be implemented as a behavior-tree task node with a configurable action name.
+    category: core_logic
+  R12:
+    text: The heal-self task must restore the pawn's current health by applying the maximum-health value through the action component.
+    category: core_logic
+  R13:
+    text: The heal-self task must be implemented as a behavior-tree task node and return Succeeded after applying the heal.
+    category: core_logic
+  R14:
+    text: The health-check decorator must read current and maximum health from the pawn's action component and compare their ratio to the configured low-health fraction.
+    category: core_logic
+  R15:
+    text: The health-check decorator must default its low-health threshold to a valid fraction between zero and one.
+    category: defaults
+  R16:
+    text: The health-check behavior must be implemented as a behavior-tree decorator so it can gate low-health branches.
+    category: core_logic
+
+test_requirements:
+  ActionRoguelike.AIController.CDOChecks:
+    - R1
+    - R2
+    - R3
+    - R4
+    - R5
+    - R6
+    - R7
+    - R8
+    - R9
+    - R10
+    - R11
+    - R12
+    - R13
+    - R14
+    - R15
+    - R16
+  ActionRoguelike.AIController.RuntimeBehaviors:
+    - R1
+    - R3
+    - R4
+    - R6
+    - R7
+    - R12
+    - R14
+    - R15
+
+files_to_edit:
+  - Source/ActionRoguelike/AI/RogueAIController.cpp
+  - Source/ActionRoguelike/AI/RogueBTDecorator_CheckHealth.cpp
+  - Source/ActionRoguelike/AI/RogueBTService_CheckAttackRange.cpp
+  - Source/ActionRoguelike/AI/RogueBTService_StartAction.cpp
+  - Source/ActionRoguelike/AI/RogueBTTask_HealSelf.cpp
+  - Source/ActionRoguelike/AI/RogueBTTask_RangedAttack.cpp
+  - Source/ActionRoguelike/AI/RogueBTTask_StartAction.cpp
+  - Source/ActionRoguelike/AI/RogueQueryContext_TargetActor.cpp
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "ActionRoguelike.AIController"

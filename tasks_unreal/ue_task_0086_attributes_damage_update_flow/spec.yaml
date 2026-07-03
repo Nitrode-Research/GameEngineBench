@@ -1,0 +1,140 @@
+task_id: ue_task_0086
+title: Attributes, Damage Execution, And Attribute Update Flow
+tier: hard
+
+instruction: |
+  # Implement Attributes, Damage Execution, And Attribute Update Flow
+  
+  This repository uses the Gameplay Ability System for health, mana, stamina, shield, ammo, damage, movement speed, experience, and related UI updates. Implement the attribute, damage execution, and attribute-listener behavior so gameplay effects, damage, pickups, HUD widgets, death checks, and ammo systems observe the correct attribute behavior.
+  
+  Use the repository to infer the existing Gameplay Ability System attribute model, gameplay effect setup, UI binding expectations, PlayerState ownership, pickup integration, death/knockdown flow, and replication patterns. Do not replace GAS attributes with local-only state or a separate stat component.
+  
+  ## Expected Attribute Behavior
+  
+  - Character attributes expose current value, maximum value, regeneration value, and related gameplay-facing values expected by abilities and UI.
+  - Ammo attributes expose reserve and maximum reserve values for supported ammo types.
+  - Attribute values clamp to valid ranges when gameplay effects or direct changes would push them outside the intended bounds.
+  - A clamp that would not actually change an already in-range value should not re-emit a redundant attribute change notification; follow the same no-op guarding convention this attribute set already uses elsewhere when reacting to changes.
+  - Health and shield damage resolve in the expected order so shield can absorb damage before health when applicable.
+  - Healing, mana changes, stamina changes, shield changes, ammo changes, move-speed changes, and experience changes update through the Gameplay Ability System attribute lifecycle.
+  - Attribute changes caused by gameplay effects include enough context for downstream systems to identify instigator, causer, source object, and affected actor where available.
+  - Attribute initialization produces usable values for UI and gameplay immediately after spawn or respawn.
+  
+  ## Damage Execution Behavior
+  
+  - Damage gameplay effects calculate final damage from source and target context according to existing project rules.
+  - Damage can account for target mitigation, shield, health, and source information.
+  - Damage application triggers the expected downstream health/shield changes.
+  - Lethal damage causes the appropriate death or knockdown flow in the owning character.
+  - Damage execution must not apply damage twice or bypass the Gameplay Ability System attribute path.
+  
+  ## Listener And UI Update Behavior
+  
+  - Blueprint async tasks can listen for attribute changes and gameplay tag changes.
+  - Attribute listeners receive old value, new value, and relevant context when changes occur.
+  - Listeners can be ended manually and must unregister cleanly.
+  - Listener callbacks must not crash when the listening Blueprint object has been destroyed or garbage collected.
+  - UI widgets should be able to initialize from current attribute values and then update when values replicate or change.
+  - Gameplay tag listeners should fire when watched tags are added or removed and clean up safely.
+  
+  ## Ammo And Pickup Integration
+  
+  - Ammo pickups and weapon systems can read and write ammo reserves through the attribute system.
+  - Clip ammo, reserve ammo, and maximum reserve ammo remain coherent with weapon HUD readouts.
+  - Health, mana, stamina, shield, and regen pickups or volumes should apply changes through existing gameplay effect and attribute paths.
+  
+  ## Multiplayer Constraints
+  
+  - Server-authoritative gameplay effects and attribute changes must replicate to clients.
+  - Replicated attribute changes must notify client-side UI through the same observable update path used by local changes.
+  - Clients should not invent authoritative attribute changes outside the expected prediction and replication mechanisms.
+  
+  ## Integration Expectations
+  
+  - Existing Gameplay Effects, Gameplay Abilities, HUD widgets, floating status bars, pickups, weapons, death/knockdown behavior, and PlayerState-owned ability system setup should work without asset changes.
+  - Do not replace GAS attributes with a parallel stats component or local-only state.
+  - Avoid broad rewrites outside the requested subsystem unless they are required to maintain integration with existing gameplay effects, UI, pickups, damage, or replication flow.
+  
+  ## Validation Expectations
+  
+  - Build the project successfully.
+  - Verify health, shield, mana, stamina, ammo, move speed, experience, and max-value attributes initialize correctly.
+  - Verify damage, healing, pickups, and regeneration volumes update attributes through the Gameplay Ability System path.
+  - Verify HUD and floating status bars update on local and replicated attribute changes.
+  - Verify lethal damage triggers the expected death or knockdown behavior.
+  - Verify destroyed Blueprint listeners or ended async tasks do not receive unsafe callbacks.
+  
+  ## Quality Bar
+  
+  The implementation must compile cleanly and deliver production-quality attribute behavior. It should handle clamping, damage conversion, replicated updates, UI notifications, listener cleanup, ammo integration, and death/knockdown side effects through the existing Gameplay Ability System architecture.
+
+files_to_edit:
+  - Source/GASShooter/Private/Characters/Abilities/AsyncTaskAttributeChanged.cpp
+  - Source/GASShooter/Private/Characters/Abilities/AsyncTaskGameplayTagAddedRemoved.cpp
+  - Source/GASShooter/Private/Characters/Abilities/AttributeSets/GSAmmoAttributeSet.cpp
+  - Source/GASShooter/Private/Characters/Abilities/AttributeSets/GSAttributeSetBase.cpp
+  - Source/GASShooter/Private/Characters/Abilities/GSDamageExecutionCalc.cpp
+  - Source/GASShooter/Public/Characters/Abilities/AsyncTaskAttributeChanged.h
+  - Source/GASShooter/Public/Characters/Abilities/AsyncTaskGameplayTagAddedRemoved.h
+  - Source/GASShooter/Public/Characters/Abilities/AttributeSets/GSAmmoAttributeSet.h
+  - Source/GASShooter/Public/Characters/Abilities/AttributeSets/GSAttributeSetBase.h
+  - Source/GASShooter/Public/Characters/Abilities/GSDamageExecutionCalc.h
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "GASShooter.AttributesDamage"
+
+hidden_requirements:
+  R1:
+    text: Health, shield, mana, stamina, move speed, experience, ammo reserves, and max values must initialize and clamp through GAS attributes.
+    category: attributes
+  R2:
+    text: Damage must resolve through GAS execution and attribute hooks rather than direct local health mutation.
+    category: damage
+  R3:
+    text: Shield must absorb damage before health where applicable, and lethal damage must drive death or knockdown flow.
+    category: damage
+  R4:
+    text: Attribute changes must preserve useful effect context including source, target, instigator, causer, and affected actor when available.
+    category: context
+  R5:
+    text: Replicated attribute updates must notify UI and floating status bars through the same observable path as local changes.
+    category: replication
+  R6:
+    text: Async attribute listeners must report old/new values and unregister safely when ended or garbage-collected.
+    category: async_task
+  R7:
+    text: Async gameplay tag listeners must fire on watched tag add/remove events and clean up safely.
+    category: async_task
+  R8:
+    text: Ammo reserve and maximum values must remain coherent with weapon and pickup systems.
+    category: ammo
+  R9:
+    text: >
+      In PostGameplayEffectExecute, the non-damage Health/Mana/Stamina/Shield clamp branches must
+      suppress no-op writes instead of calling the setter unconditionally (stock GASShooter calls
+      SetHealth(FMath::Clamp(GetHealth(), 0.0f, GetMaxHealth())) every time). Because these attributes
+      replicate with REPNOTIFY_Always, an unconditional setter re-broadcasts a change even when the
+      value is already in range, spamming UI/floating-bar listeners. Compute the clamped value into a
+      local and only call the setter when it differs from the current value, guarding the write with
+      the same FMath::IsNearlyEqual no-op convention this attribute set already uses in
+      AdjustAttributeForMaxChange. The Health branch must contain the guard expression
+      "!FMath::IsNearlyEqual(CurrentHealth, ClampedHealth)". An unconditional clamp/setter is graded a
+      failure.
+    category: edge_case
+
+test_requirements:
+  GASShooter.AttributesDamage.attribute_clamp_and_damage_hooks_present:
+    - R1
+    - R2
+    - R3
+    - R4
+    - R9
+  GASShooter.AttributesDamage.async_listener_cleanup_paths_present:
+    - R6
+    - R7
+  GASShooter.AttributesDamage.ammo_and_replication_notification_paths_present:
+    - R5
+    - R8

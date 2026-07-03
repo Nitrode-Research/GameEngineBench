@@ -1,0 +1,71 @@
+task_id: ue_task_0088
+title: Gameplay Ability Effect Containers
+tier: hard
+
+instruction: |
+  GASShooter's base gameplay ability class provides the C++ glue that turns gameplay events into target data, effect container specs, prediction-aware RPCs, HUD reticles, custom cost hooks, activation gates, and multi-mesh montage control. Implement this behavior in the task-owned files.
+
+  The gameplay ability implementation must preserve the public Blueprint API and GAS lifecycle.
+
+  The implementation must satisfy the following behavior:
+
+  - Abilities must initialize with the correct default activation flags, blocked/owned gameplay tags, and interaction tags.
+  - Abilities marked to activate when granted must try to activate in `OnAvatarSet`.
+  - Actor arrays and hit results must be converted into GAS target data handles.
+  - Effect containers must run optional target type logic, use the ability level when no override is supplied, build outgoing gameplay effect specs, and apply specs to all target data.
+  - Activation must be blocked while interacting unless the removal tag count cancels the interaction state, and optionally require the source object to match the current weapon.
+  - Cost checking and application must call the GASShooter-specific Blueprint extension hooks in addition to GAS default behavior.
+  - Prediction helpers must batch ability activation, expose prediction-key status, and send predicted target data to the server inside a scoped prediction window.
+  - HUD reticle helpers must set an explicit reticle and reset to the current weapon's primary reticle when available.
+  - Multi-mesh montage helpers must track current montages per skeletal mesh and route jump, next-section, stop-one, and stop-all commands through the custom ability system component only when this ability is animating.
+
+files_to_edit:
+  - Source/GASShooter/Private/Characters/Abilities/GSGameplayAbility.cpp
+  - Source/GASShooter/Public/Characters/Abilities/GSGameplayAbility.h
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "GASShooter.GameplayAbility"
+
+hidden_requirements:
+  R1:
+    text: Constructor and avatar setup must configure default GAS policy, activation flags, interaction tags, blocked/owned tags, and activate-on-granted behavior.
+    category: ability_lifecycle
+  R2:
+    text: Target helpers must build actor-array and single-hit GAS target data handles.
+    category: target_data
+  R3:
+    text: Effect containers must run target type logic, add target data/hits/actors, choose ability level fallback, and create outgoing gameplay effect specs.
+    category: effect_containers
+  R4:
+    text: Effect container specs must apply each generated effect spec to the container's target data.
+    category: effect_application
+  R5:
+    text: Activation gating must enforce interaction-state and current-weapon source-object requirements before deferring to GAS activation checks.
+    category: activation_rules
+  R6:
+    text: Cost checks and application must invoke GASShooter-specific Blueprint extension hooks.
+    category: cost_hooks
+  R7:
+    text: Prediction helpers must batch activation, report scoped prediction status, and send target data to the server inside a scoped prediction window.
+    category: prediction
+  R8:
+    text: HUD reticle helpers must route through the player controller and reset to the current weapon's primary reticle.
+    category: hud
+  R9:
+    text: Multi-mesh montage helpers must track montages per mesh and forward jump/section/stop commands through the custom ability system component when this ability is animating.
+    category: animation
+
+test_requirements:
+  GASShooter.GameplayAbility.source_contract:
+    - R1
+    - R2
+    - R3
+    - R4
+    - R5
+    - R6
+    - R7
+    - R8
+    - R9

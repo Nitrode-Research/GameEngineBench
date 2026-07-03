@@ -1,0 +1,84 @@
+task_id: ue_task_0120
+title: GPU Compute Shaders
+tier: hard
+instruction: "Implement the GPU compute shader pipeline for Gaussian splatting rendering. These\nare pure GPU algorithms with\
+  \ no UE dependencies beyond RHI. The system must handle\nview data calculation, distance calculation, cluster culling, splat\
+  \ compaction,\nradix sort, indirect dispatch preparation, global accumulator prefix sum, and\nsRGB-to-linear composite.\n\
+  \nExpected behaviors:\n\nCalcViewData shader:\n- Transform 3D splat data to 2D screen-space data\n- Unpack splat data, transform\
+  \ to world/clip/view space\n- Frustum culling and covariance calculation\n- Decompose covariance and NDC conversion\n- Spherical\
+  \ harmonics evaluation\n- Write to ViewDataBuffer\n\nCalcDistances shader:\n- Extract Z coordinate from ViewDataBuffer\n\
+  - Check for invalid splat (w <= 0)\n- Calculate depth and convert to sortable uint\n- Write distance and key to output buffers\n\
+  \nClusterCulling shader:\n- Test sphere against 6 frustum planes\n- Calculate projected error (worldSpaceError / distance\
+  \ * ScreenHeight * 0.5)\n- Select LOD level based on error threshold\n- Pack cluster index and LOD flag into single uint\n\
+  - Write visible cluster indices and count\n\nCompactSplats shader:\n- Check leaf cluster visibility (1 bit per cluster)\n\
+  - Check parent cluster LOD selection\n- Determine if splat is visible (original vs LOD splat)\n- Append visible splat indices\
+  \ to compact list using atomic counter\n\nRadixSort shader:\n- 8-bit LSD radix sort with 4 passes (CountCS, PrefixSumCS,\
+  \ DigitPrefixSumCS, ScatterCS)\n- Use BlockThreads=256, KeysPerThread=4, TileSize=1024, NumDigits=256, RadixBits=8\n\nPrepareIndirectArgs\
+  \ shader:\n- Calculate numGroups = ceil(visibleCount / ThreadGroupSize)\n- Prepare indirect dispatch args, indirect draw\
+  \ args, sort indirect dispatch args, and sort parameters\n\nGlobalAccumulatorPrefixSum shaders:\n- GATHER_CS: 1 thread per\
+  \ proxy, copies VisibleSplatCount to GlobalVisibleCountArray\n- VISIBLE_PREFIX_SUM_CS: 1 thread total, computes exclusive\
+  \ prefix sums and writes all indirect args\n\nGaussianSplatComposite shader:\n- Un-premultiply sRGB color\n- Convert sRGB\
+  \ to linear (pow(color, 2.2))\n- Apply inverse ACES tone curve (Narkowicz ACES fit)\n- Re-premultiply with accumulated alpha\n\
+  - Blend onto SceneColor\n\nEdge cases:\n- Invalid splat (w <= 0) \u2014 write invalid data to ViewDataBuffer\n- Camera behind\
+  \ splat \u2014 skip rendering\n- Zero splats \u2014 skip all dispatches\n- Zero visible splats \u2014 skip sort and draw\n\
+  - MaxRenderBudget exceeded \u2014 clamp per-proxy allocation\n- DebugForceLODLevel \u2014 force specific LOD level\n- NaN/Inf\
+  \ in axes \u2014 safety clamp to (0.01, 0.0)\n- SH order 0 \u2014 use DC color only, skip SH evaluation\n- SH order > available\
+  \ \u2014 clamp to available\n- Indirect sort \u2014 use SortParams for Count/NumTiles\n- Direct sort \u2014 use Count/NumTiles\
+  \ uniforms\n\nQuality bar:\n- The implementation must compile as part of the NanoGaussianSplatting UE5 plugin\n- Follow\
+  \ the existing C++ conventions, macro usage, and naming patterns\n- All public-facing methods must use the appropriate UFUNCTION\
+  \ macros\n- No new assets or classes outside the listed files\n- Must integrate with GPU buffer management and splat renderer\
+  \ systems\n"
+hidden_requirements:
+  R1:
+    text: CalcViewData must transform 3D splat data to 2D screen-space with frustum culling, covariance, and SH evaluation.
+    category: core_logic
+  R2:
+    text: CalcDistances must extract Z, check invalid splat, calculate depth, and convert to sortable uint.
+    category: core_logic
+  R3:
+    text: ClusterCulling must test sphere against 6 frustum planes, calculate error, select LOD, and pack results.
+    category: core_logic
+  R4:
+    text: CompactSplats must check cluster visibility, LOD selection, and append visible indices with atomics.
+    category: core_logic
+  R5:
+    text: RadixSort must perform 8-bit LSD radix sort with 4 passes using specified constants.
+    category: core_logic
+  R6:
+    text: PrepareIndirectArgs must calculate numGroups and prepare all indirect dispatch/draw args.
+    category: core_logic
+  R7:
+    text: GlobalAccumulatorPrefixSum must implement GATHER_CS and VISIBLE_PREFIX_SUM_CS for multi-proxy rendering.
+    category: core_logic
+  R8:
+    text: GaussianSplatComposite must convert sRGB to linear, apply inverse ACES tone curve, and blend onto SceneColor.
+    category: core_logic
+  R9:
+    text: Edge cases must handle invalid splat, camera behind, zero splats, zero visible, MaxRenderBudget, DebugForceLODLevel,
+      NaN/Inf, SH order 0, indirect/direct sort.
+    category: core_logic
+test_requirements:
+  Nano.Shaders.CoreComputeSourceSemantics:
+  - R1
+  - R2
+  - R3
+  - R4
+  - R5
+  - R6
+  - R7
+  - R8
+  - R9
+files_to_edit:
+- Plugins/NanoGS/Shaders/Private/CalcViewData.usf
+- Plugins/NanoGS/Shaders/Private/CalcDistances.usf
+- Plugins/NanoGS/Shaders/Private/ClusterCulling.usf
+- Plugins/NanoGS/Shaders/Private/CompactSplats.usf
+- Plugins/NanoGS/Shaders/Private/RadixSort.usf
+- Plugins/NanoGS/Shaders/Private/PrepareIndirectArgs.usf
+- Plugins/NanoGS/Shaders/Private/GlobalAccumulatorPrefixSum.usf
+- Plugins/NanoGS/Shaders/Private/GaussianSplatComposite.usf
+tests:
+  runner: ue_automation
+  mode: editor
+  num_clients: 0
+  filter: Nano.Shaders

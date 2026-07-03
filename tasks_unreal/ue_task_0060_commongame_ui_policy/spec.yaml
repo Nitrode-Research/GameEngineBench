@@ -1,0 +1,62 @@
+task_id: ue_task_0060
+title: CommonGame UI Policy
+tier: hard
+
+instruction: |
+  You are working in an Unreal Engine 5 project that uses the CommonGame plugin.
+  Implement the behavior of the CommonGame UI Policy system in the task-owned files.
+  
+  The project already contains the public API surface, assets, build/module wiring, and surrounding gameplay or plugin integration points.
+  
+  Implement the following behavior:
+  
+  - Each local player receives the correct root layout through the existing UI policy path.
+  - Adding or removing players updates the viewport and layout ownership correctly.
+  - Multiplayer interaction modes, including dormant/active root handoff, continue to use the current policy behavior.
+  - Async widget creation and UI extension pushes integrate with the existing CommonGame layer system rather than bypassing it.
+  - Destroying a player cleans up layout ownership and callbacks without leaking stale UI state.
+
+files_to_edit:
+  - "Plugins/CommonGame/Source/Private/GameUIPolicy.cpp"
+  - "Plugins/CommonGame/Source/Public/GameUIPolicy.h"
+  - "Plugins/CommonGame/Source/Private/CommonUIExtensions.cpp"
+  - "Plugins/CommonGame/Source/Public/CommonUIExtensions.h"
+  - "Plugins/CommonGame/Source/Private/Actions/AsyncAction_CreateWidgetAsync.cpp"
+  - "Plugins/CommonGame/Source/Public/PrimaryGameLayout.h"
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "CommonGame.UIPolicy"
+
+hidden_requirements:
+  R1:
+    text: Each local player receives a root layout through the current UI policy path.
+    category: subsystem_architecture
+  R2:
+    text: Adding players creates or reuses root layouts and adds them to the viewport with the correct local-player context.
+    category: object_lifecycle
+  R3:
+    text: Removing players removes their root layout from the viewport and updates layout ownership state.
+    category: object_lifecycle
+  R4:
+    text: Destroying a player removes player-controller callbacks, removes stored layout info, removes the layout from the viewport, and releases the root layout.
+    category: object_lifecycle
+  R5:
+    text: Single-toggle multiplayer mode hands active control back to the primary player's root layout when a secondary active root is removed.
+    category: runtime_integration
+  R6:
+    text: Async widget creation suspends and resumes input correctly around the asynchronous asset load.
+    category: object_lifecycle
+  R7:
+    text: UI extension push and remove helpers route through the current CommonGame root layout and layer system.
+    category: runtime_integration
+  R8:
+    text: "When a player's root layout loses its owner during removal, that layout must be parked as dormant and tagged with this project's owner-loss dormancy classification, so an unowned layout is never left active and a stock unclassified dormant state is not used."
+    category: object_lifecycle
+
+test_requirements:
+  CommonGame.UIPolicy.notify_player_destroyed_removes_layout_ownership:
+    - R4
+    - R8

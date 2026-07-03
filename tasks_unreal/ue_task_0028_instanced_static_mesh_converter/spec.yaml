@@ -1,0 +1,65 @@
+task_id: ue_task_0028
+title: Instanced Static Mesh Converter
+tier: medium
+
+instruction: |
+  Bomber includes an InstancedStaticMeshConverter plugin that converts actors and individual meshes into reusable instanced static mesh components. Implement the converter actor behavior in the task-owned files.
+
+  The converter must create and cache instanced static mesh components, add instances from either a raw static mesh or an actor Blueprint, and clean up instances when reset or destroyed.
+
+  The implementation must satisfy the following behavior:
+
+  - Direct mesh spawning must reuse an existing instanced static mesh component for the same mesh when possible.
+  - New instanced components must be registered, attached to the actor root, assigned the source mesh, and excluded from navigation influence.
+  - Actor-blueprint conversion must spawn a temporary actor, inspect its visible non-hidden static mesh components, cache their meshes and relative transforms, and destroy the temporary actor.
+  - Actor-blueprint instances must combine cached relative mesh transforms with the requested spawn transform and add them in world space.
+  - Material slots from source static mesh components must be copied to the generated instanced components.
+  - Dynamic material instances must be resolved to their parent material before marking the material usable with instanced static meshes.
+  - Reset and destruction must clear generated instances and drop cached blueprint mesh data without leaking temporary actors.
+
+files_to_edit:
+  - Plugins/InstancedStaticMeshConverter/Source/InstancedStaticMeshConverter/Private/InstancedStaticMeshActor.cpp
+  - Plugins/InstancedStaticMeshConverter/Source/InstancedStaticMeshConverter/Public/InstancedStaticMeshActor.h
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "Bomber.InstancedStaticMeshConverter"
+
+hidden_requirements:
+  R1:
+    text: Direct static mesh spawning must create, register, attach, configure, cache, and reuse instanced static mesh components.
+    category: component_lifecycle
+  R2:
+    text: Direct static mesh spawning must append transforms as instances on the cached component.
+    category: instancing
+  R3:
+    text: Actor-blueprint conversion must cache visible non-hidden static mesh components from a temporary spawned actor.
+    category: actor_conversion
+  R4:
+    text: Actor-blueprint conversion must preserve each source component's relative transform and combine it with the requested actor instance transform in world space.
+    category: transform_semantics
+  R5:
+    text: Generated instanced components must copy source component materials and mark parent materials as usable with instanced static meshes.
+    category: material_handling
+  R6:
+    text: Actor conversion must reuse cached blueprint mesh data rather than spawning and inspecting the blueprint every time.
+    category: caching
+  R7:
+    text: Reset and destruction must clear all generated instances and empty cached blueprint mesh data.
+    category: cleanup
+  R8:
+    text: Temporary spawned actors used for component discovery must be destroyed after cache construction.
+    category: cleanup
+
+test_requirements:
+  Bomber.InstancedStaticMeshConverter.source_contract:
+    - R1
+    - R2
+    - R3
+    - R4
+    - R5
+    - R6
+    - R7
+    - R8

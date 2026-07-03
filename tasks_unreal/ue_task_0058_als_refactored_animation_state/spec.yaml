@@ -1,0 +1,58 @@
+task_id: ue_task_0058
+title: ALS-Refactored Animation State Evaluation
+tier: hard
+
+instruction: |
+  You are working in an Unreal Engine 5 project that uses the ALS-Refactored plugin.
+  Implement the behavior of the ALS-Refactored Animation State Evaluation system in the task-owned files.
+  
+  The project already contains the public API surface, assets, build/module wiring, and surrounding gameplay or plugin integration points.
+  
+  Implement the following behavior:
+  
+  - The animation instance derives coherent locomotion, aim, feet, and pose state from the owning ALS character every frame.
+  - Grounded and in-air animation state updates respond correctly to the movement component instead of freezing or producing contradictory values.
+  - Feet and pelvis state remain consistent with the existing skeleton and settings, supporting the expected animation graph behavior.
+  - Turn-in-place, view-relative rotation, and montage/overlay state feed the existing animation graphs the way ALS expects.
+  - Editor preview behavior still initializes safely when there is no live runtime character.
+
+files_to_edit:
+  - "Plugins/ALS-Refactored/Source/ALS/Private/AlsAnimationInstance.cpp"
+  - "Plugins/ALS-Refactored/Source/ALS/Public/AlsAnimationInstance.h"
+  - "Plugins/ALS-Refactored/Source/ALS/Public/AlsAnimationInstanceProxy.h"
+  - "Plugins/ALS-Refactored/Source/ALS/Public/Settings/AlsAnimationInstanceSettings.h"
+  - "Plugins/ALS-Refactored/Source/ALS/Public/Utility/AlsConstants.h"
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "ALSRefactored.AnimationState"
+
+hidden_requirements:
+  R1:
+    text: The animation instance refreshes locomotion, view, feet, in-air, pose, and ragdoll state from the owning ALS character each update.
+    category: runtime_integration
+  R2:
+    text: Grounded and in-air animation state responds to the movement component instead of freezing or producing contradictory values.
+    category: core_logic
+  R3:
+    text: Feet and pelvis state remain consistent with the skeleton and animation settings.
+    category: runtime_integration
+  R4:
+    text: View-relative spine rotation matches ALS behavior and is enabled only in aiming rotation mode.
+    category: core_logic
+  R5:
+    text: Turn-in-place, view-relative rotation, montage, and overlay state feed the existing animation graph state correctly.
+    category: runtime_integration
+  R6:
+    text: Editor preview initializes safely when there is no live runtime character.
+    category: initialization
+  R7:
+    text: Animation update paths queue and play transition or turn-in-place animation on the correct thread.
+    category: object_lifecycle
+
+test_requirements:
+  ALSRefactored.AnimationState.locomotion_state_derived_from_character_after_tick:
+    - R1
+    - R2

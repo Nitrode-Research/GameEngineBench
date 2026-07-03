@@ -1,0 +1,108 @@
+task_id: ue_task_0041
+title: Pawn Ready Subsystem (Three-Signal Readiness Arbitration)
+tier: hard
+
+instruction: |
+  A pawn becomes ready when three signals have all arrived: pawn possessed, player state initialized, and pawn added to the grid. These arrive in unpredictable order over the network. Currently no readiness signals ever fire.
+
+  The project already contains:
+  - three signal sources: the player controller's possession path, the player state's init path, and the map component's grid-join path
+  - downstream systems that wait for the pawn-ready signal before acting
+
+  The system must satisfy these behavioral requirements:
+
+  Three-signal arbitration:
+  - Each signal marks its field in the pawn's readiness record. When all three are marked, the ready broadcast fires.
+  - A signal arriving after the pawn is already ready must not re-fire the broadcast.
+  - Signals arriving before the world is ready must be dropped.
+
+  Possession check:
+  - Bots on clients arrive as replicated pawns without local AI controllers — they must count as possessed.
+  - Remote other-client players are possessed on their controlling peer — they must count as possessed from this client's view.
+  - Only a local human player's pawn must genuinely wait for possession.
+
+  Broadcasts:
+  - A general pawn-ready event fires for all pawns.
+  - A local-pawn-ready event fires additionally for pawns locally controlled by a human — this lets downstream systems distinguish the local player's pawn.
+
+  Cleanup:
+  - All readiness records reset on subsystem shutdown to prevent leaking across map transitions.
+  - Readiness records must not hold strong references to pawns — this keeps destroyed pawns alive in the garbage collector.
+
+hidden_requirements:
+  R1:
+    text: Each readiness signal must mark only its own field in the pawn readiness record.
+    category: core_logic
+  R2:
+    text: The ready broadcast must fire only when possession, player-state initialization, and generated-map addition are all satisfied for the same pawn.
+    category: core_logic
+  R3:
+    text: Readiness signals arriving before world BeginPlay must be dropped.
+    category: object_lifecycle
+  R4:
+    text: Any readiness signal arriving after a pawn is already ready must not fire duplicate ready broadcasts.
+    category: object_lifecycle
+  R5:
+    text: Possession readiness must implement the project network topology table, treating replicated client bots and remote player pawns as possessed when they cannot have a local controller.
+    category: authority
+  R6:
+    text: Only local human player pawns must wait for a genuine local possession signal.
+    category: authority
+  R7:
+    text: IsReady for a player state must delegate through that player state's current pawn and the pawn readiness path.
+    category: core_logic
+  R8:
+    text: A general Player_PawnReady event must broadcast for every ready pawn.
+    category: core_logic
+  R9:
+    text: Player_LocalPawnReady must additionally broadcast only for locally controlled player-controlled pawns.
+    category: authority
+  R10:
+    text: Deinitialization and explicit reset must empty all readiness records and be safe to call repeatedly.
+    category: object_lifecycle
+  R11:
+    text: Readiness records must store weak pawn and player-state references so they do not keep destroyed objects alive.
+    category: object_lifecycle
+  R12:
+    text: Null pawn, null player state, stale weak references, unknown pawns, and repeated reset calls must safely return not-ready rather than crashing or broadcasting.
+    category: edge_case
+  R13:
+    text: The subsystem class and record shape must expose the reflected fields and helper functions expected by downstream systems and tests.
+    category: initialization
+
+test_requirements:
+  Bomber.PawnReadySubsystem.BroadcastsGateOnHasWorldBegunPlay:
+    - R3
+  Bomber.PawnReadySubsystem.BroadcastsSkipWhenAlreadyReady:
+    - R4
+  Bomber.PawnReadySubsystem.ClassReflectionShape:
+    - R13
+  Bomber.PawnReadySubsystem.DeinitializeCallsResetEmptiesHandles:
+    - R10
+  Bomber.PawnReadySubsystem.IsPawnPossessedHandlesTopologyRows:
+    - R5
+    - R6
+  Bomber.PawnReadySubsystem.IsReadyDelegatesToIsPawnPossessed:
+    - R7
+  Bomber.PawnReadySubsystem.IsReadyRejectsUnknownPawnAtRuntime:
+    - R12
+  Bomber.PawnReadySubsystem.OnReadyDataUsesWeakObjectPtr:
+    - R11
+  Bomber.PawnReadySubsystem.RuntimeNullSafetyAndResetIdempotency:
+    - R10
+    - R12
+  Bomber.PawnReadySubsystem.ThreeSignalsMarkOwnField:
+    - R1
+    - R2
+  Bomber.PawnReadySubsystem.TryBroadcastEmitsBothTagsWithLocalGate:
+    - R8
+    - R9
+
+files_to_edit:
+  - Source/Bomber/Private/Subsystems/BmrPawnReadySubsystem.cpp
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "Bomber.PawnReadySubsystem"

@@ -1,0 +1,61 @@
+task_id: ue_task_0057
+title: ALS-Refactored Locomotion Pipeline
+tier: hard
+
+instruction: |
+  You are working in an Unreal Engine 5 project that uses the ALS-Refactored plugin.
+  Implement the behavior of the ALS-Refactored Locomotion Pipeline system in the task-owned files.
+  
+  The project already contains the public API surface, assets, build/module wiring, and surrounding gameplay or plugin integration points.
+  
+  Implement the following behavior:
+  
+  - The character transitions correctly between idle, moving, sprinting, crouching, jumping, and falling using the existing ALS state model.
+  - Rotation behavior changes correctly with the current rotation mode and locomotion state rather than using one universal facing rule.
+  - Gait limits and effective gait respond to movement input and character state the way the rest of ALS expects.
+  - Networked movement preserves ALS-specific state such as stance, rotation mode, and gait restrictions across client prediction and server correction.
+  - Downstream animation systems receive coherent locomotion state instead of stale or contradictory values.
+
+files_to_edit:
+  - "Plugins/ALS-Refactored/Source/ALS/Private/AlsCharacter.cpp"
+  - "Plugins/ALS-Refactored/Source/ALS/Private/AlsCharacterMovementComponent.cpp"
+  - "Plugins/ALS-Refactored/Source/ALS/Public/AlsCharacter.h"
+  - "Plugins/ALS-Refactored/Source/ALS/Public/AlsCharacterMovementComponent.h"
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "ALSRefactored.Locomotion"
+
+hidden_requirements:
+  R1:
+    text: Desired stance application respects ALS locomotion mode and locomotion action, including crouch, uncrouch, rolling, mantling, and in-air transitions.
+    category: object_lifecycle
+  R2:
+    text: Effective gait is derived from actual movement speed and gait settings rather than desired gait alone.
+    category: core_logic
+  R3:
+    text: Gait refresh does not update grounded gait state while the character is off ground.
+    category: object_lifecycle
+  R4:
+    text: Sprint eligibility respects aiming and sprint-priority rules in addition to rotation mode.
+    category: core_logic
+  R5:
+    text: Rotation mode changes propagate through the ALS character and movement-component state rather than using one universal facing rule.
+    category: core_logic
+  R6:
+    text: Locomotion action transitions reapply stance and clear input blocking when actions end.
+    category: object_lifecycle
+  R7:
+    text: Networked movement preserves ALS stance, rotation mode, and gait restrictions through client prediction and server correction.
+    category: replication
+  R8:
+    text: Downstream animation systems receive coherent locomotion state without stale or contradictory gait, stance, or action values.
+    category: runtime_integration
+
+test_requirements:
+  ALSRefactored.Locomotion.desired_stance_crouch_then_uncrouch:
+    - R1
+  ALSRefactored.Locomotion.effective_gait_follows_actual_speed_not_desired:
+    - R2

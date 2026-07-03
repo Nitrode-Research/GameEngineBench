@@ -1,0 +1,330 @@
+{
+  "reportCreatedOn": "2026.06.26-03.54.57",
+  "tests": [
+    {
+      "testDisplayName": "beginplay_loads_calibration",
+      "fullTestPath": "LASAA.Calibration.beginplay_loads_calibration",
+      "tags": [],
+      "state": "Success",
+      "deviceInstance": [
+        "8FF561C74FA2DA5C98FE17AC336A243D"
+      ],
+      "duration": 4.333468914031982,
+      "dateTime": "2026.06.26-03.54.38",
+      "entries": [
+        {
+          "event": {
+            "type": "Warning",
+            "message": "LogEditorServer: Can't find file 'Y:/Development/WORK/nitrode_ue_lasaa/Content/Maps/Prep.umap'",
+            "context": "log",
+            "artifact": "00000000000000000000000000000000"
+          },
+          "filename": "",
+          "lineNumber": -1,
+          "timestamp": "2026.06.26-03.54.38"
+        }
+      ],
+      "warnings": 1,
+      "errors": 0,
+      "artifacts": []
+    },
+    {
+      "testDisplayName": "calibrate_requires_enough_anchors",
+      "fullTestPath": "LASAA.Calibration.calibrate_requires_enough_anchors",
+      "tags": [],
+      "state": "Success",
+      "deviceInstance": [
+        "8FF561C74FA2DA5C98FE17AC336A243D"
+      ],
+      "duration": 3.6507627964019775,
+      "dateTime": "2026.06.26-03.54.43",
+      "entries": [
+        {
+          "event": {
+            "type": "Warning",
+            "message": "LogEditorServer: Can't find file 'Y:/Development/WORK/nitrode_ue_lasaa/Content/Maps/Prep.umap'",
+            "context": "log",
+            "artifact": "00000000000000000000000000000000"
+          },
+          "filename": "",
+          "lineNumber": -1,
+          "timestamp": "2026.06.26-03.54.43"
+        }
+      ],
+      "warnings": 1,
+      "errors": 0,
+      "artifacts": []
+    },
+    {
+      "testDisplayName": "change_calibration_toggles_files",
+      "fullTestPath": "LASAA.Calibration.change_calibration_toggles_files",
+      "tags": [],
+      "state": "Success",
+      "deviceInstance": [
+        "8FF561C74FA2DA5C98FE17AC336A243D"
+      ],
+      "duration": 3.1895134449005127,
+      "dateTime": "2026.06.26-03.54.46",
+      "entries": [
+        {
+          "event": {
+            "type": "Warning",
+            "message": "LogEditorServer: Can't find file 'Y:/Development/WORK/nitrode_ue_lasaa/Content/Maps/Prep.umap'",
+            "context": "log",
+            "artifact": "00000000000000000000000000000000"
+          },
+          "filename": "",
+          "lineNumber": -1,
+          "timestamp": "2026.06.26-03.54.47"
+        },
+        {
+          "event": {
+            "type": "Warning",
+            "message": "LogStreaming: Failed to open ANSI TEXT file Y:/Development/WORK/nitrode_ue_lasaa/Plugins/LASAA/controllerCalibrate.txt",
+            "context": "log",
+            "artifact": "00000000000000000000000000000000"
+          },
+          "filename": "",
+          "lineNumber": -1,
+          "timestamp": "2026.06.26-03.54.50"
+        }
+      ],
+      "warnings": 2,
+      "errors": 0,
+      "artifacts": []
+    },
+    {
+      "testDisplayName": "eigen_to_unreal_roundtrip",
+      "fullTestPath": "LASAA.Calibration.eigen_to_unreal_roundtrip",
+      "tags": [],
+      "state": "Success",
+      "deviceInstance": [
+        "8FF561C74FA2DA5C98FE17AC336A243D"
+      ],
+      "duration": 0.009945999830961227,
+      "dateTime": "2026.06.26-03.54.50",
+      "entries": [],
+      "warnings": 0,
+      "errors": 0,
+      "artifacts": []
+    },
+    {
+      "testDisplayName": "extrinsic_from_rt_structure",
+      "fullTestPath": "LASAA.Calibration.extrinsic_from_rt_structure",
+      "tags": [],
+      "state": "Success",
+      "deviceInstance": [
+        "8FF561C74FA2DA5C98FE17AC336A243D"
+      ],
+      "duration": 0.008999302983283997,
+      "dateTime": "2026.06.26-03.54.50",
+      "entries": [],
+      "warnings": 0,
+      "errors": 0,
+      "artifacts": []
+    },
+    {
+      "testDisplayName": "icp_fewer_than_3_points",
+      "fullTestPath": "LASAA.Calibration.icp_fewer_than_3_points",
+      "tags": [],
+      "state": "Success",
+      "deviceInstance": [
+        "8FF561C74FA2DA5C98FE17AC336A243D"
+      ],
+      "duration": 0.00897429883480072,
+      "dateTime": "2026.06.26-03.54.50",
+      "entries": [],
+      "warnings": 0,
+      "errors": 0,
+      "artifacts": []
+    },
+    {
+      "testDisplayName": "icp_identity_points",
+      "fullTestPath": "LASAA.Calibration.icp_identity_points",
+      "tags": [],
+      "state": "Success",
+      "deviceInstance": [
+        "8FF561C74FA2DA5C98FE17AC336A243D"
+      ],
+      "duration": 0.007915802299976349,
+      "dateTime": "2026.06.26-03.54.50",
+      "entries": [],
+      "warnings": 0,
+      "errors": 0,
+      "artifacts": []
+    },
+    {
+      "testDisplayName": "icp_known_rotation",
+      "fullTestPath": "LASAA.Calibration.icp_known_rotation",
+      "tags": [],
+      "state": "Success",
+      "deviceInstance": [
+        "8FF561C74FA2DA5C98FE17AC336A243D"
+      ],
+      "duration": 0.008371900767087936,
+      "dateTime": "2026.06.26-03.54.50",
+      "entries": [],
+      "warnings": 0,
+      "errors": 0,
+      "artifacts": []
+    },
+    {
+      "testDisplayName": "icp_reflection_fix",
+      "fullTestPath": "LASAA.Calibration.icp_reflection_fix",
+      "tags": [],
+      "state": "Success",
+      "deviceInstance": [
+        "8FF561C74FA2DA5C98FE17AC336A243D"
+      ],
+      "duration": 0.008434299379587173,
+      "dateTime": "2026.06.26-03.54.50",
+      "entries": [],
+      "warnings": 0,
+      "errors": 0,
+      "artifacts": []
+    },
+    {
+      "testDisplayName": "opencv_axes_mapping",
+      "fullTestPath": "LASAA.Calibration.opencv_axes_mapping",
+      "tags": [],
+      "state": "Success",
+      "deviceInstance": [
+        "8FF561C74FA2DA5C98FE17AC336A243D"
+      ],
+      "duration": 0.008833799511194229,
+      "dateTime": "2026.06.26-03.54.50",
+      "entries": [],
+      "warnings": 0,
+      "errors": 0,
+      "artifacts": []
+    },
+    {
+      "testDisplayName": "reset_calibration_clears_state",
+      "fullTestPath": "LASAA.Calibration.reset_calibration_clears_state",
+      "tags": [],
+      "state": "Success",
+      "deviceInstance": [
+        "8FF561C74FA2DA5C98FE17AC336A243D"
+      ],
+      "duration": 3.668048858642578,
+      "dateTime": "2026.06.26-03.54.50",
+      "entries": [
+        {
+          "event": {
+            "type": "Warning",
+            "message": "LogEditorServer: Can't find file 'Y:/Development/WORK/nitrode_ue_lasaa/Content/Maps/Prep.umap'",
+            "context": "log",
+            "artifact": "00000000000000000000000000000000"
+          },
+          "filename": "",
+          "lineNumber": -1,
+          "timestamp": "2026.06.26-03.54.50"
+        }
+      ],
+      "warnings": 1,
+      "errors": 0,
+      "artifacts": []
+    },
+    {
+      "testDisplayName": "rodrigues_nonzero_is_rotation",
+      "fullTestPath": "LASAA.Calibration.rodrigues_nonzero_is_rotation",
+      "tags": [],
+      "state": "Success",
+      "deviceInstance": [
+        "8FF561C74FA2DA5C98FE17AC336A243D"
+      ],
+      "duration": 0.00918559730052948,
+      "dateTime": "2026.06.26-03.54.54",
+      "entries": [],
+      "warnings": 0,
+      "errors": 0,
+      "artifacts": []
+    },
+    {
+      "testDisplayName": "rodrigues_zero_is_identity",
+      "fullTestPath": "LASAA.Calibration.rodrigues_zero_is_identity",
+      "tags": [],
+      "state": "Success",
+      "deviceInstance": [
+        "8FF561C74FA2DA5C98FE17AC336A243D"
+      ],
+      "duration": 0.008588597178459167,
+      "dateTime": "2026.06.26-03.54.54",
+      "entries": [],
+      "warnings": 0,
+      "errors": 0,
+      "artifacts": []
+    },
+    {
+      "testDisplayName": "unreal_to_opencv_roundtrip",
+      "fullTestPath": "LASAA.Calibration.unreal_to_opencv_roundtrip",
+      "tags": [],
+      "state": "Success",
+      "deviceInstance": [
+        "8FF561C74FA2DA5C98FE17AC336A243D"
+      ],
+      "duration": 0.00898750126361847,
+      "dateTime": "2026.06.26-03.54.54",
+      "entries": [],
+      "warnings": 0,
+      "errors": 0,
+      "artifacts": []
+    },
+    {
+      "testDisplayName": "variance_computation",
+      "fullTestPath": "LASAA.Calibration.variance_computation",
+      "tags": [],
+      "state": "Success",
+      "deviceInstance": [
+        "8FF561C74FA2DA5C98FE17AC336A243D"
+      ],
+      "duration": 0.008409198373556137,
+      "dateTime": "2026.06.26-03.54.54",
+      "entries": [],
+      "warnings": 0,
+      "errors": 0,
+      "artifacts": []
+    },
+    {
+      "testDisplayName": "write_load_roundtrip",
+      "fullTestPath": "LASAA.Calibration.write_load_roundtrip",
+      "tags": [],
+      "state": "Success",
+      "deviceInstance": [
+        "8FF561C74FA2DA5C98FE17AC336A243D"
+      ],
+      "duration": 3.65899920463562,
+      "dateTime": "2026.06.26-03.54.54",
+      "entries": [
+        {
+          "event": {
+            "type": "Warning",
+            "message": "LogEditorServer: Can't find file 'Y:/Development/WORK/nitrode_ue_lasaa/Content/Maps/Prep.umap'",
+            "context": "log",
+            "artifact": "00000000000000000000000000000000"
+          },
+          "filename": "",
+          "lineNumber": -1,
+          "timestamp": "2026.06.26-03.54.54"
+        },
+        {
+          "event": {
+            "type": "Warning",
+            "message": "LogStreaming: Failed to open ANSI TEXT file Y:/Development/WORK/nitrode_ue_lasaa/Plugins/LASAA/controllerCalibrate.txt",
+            "context": "log",
+            "artifact": "00000000000000000000000000000000"
+          },
+          "filename": "",
+          "lineNumber": -1,
+          "timestamp": "2026.06.26-03.54.57"
+        }
+      ],
+      "warnings": 2,
+      "errors": 0,
+      "artifacts": []
+    }
+  ],
+  "filter": "LASAA.Calibration",
+  "succeeded": 16,
+  "failed": 0
+}

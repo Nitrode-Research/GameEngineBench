@@ -1,0 +1,3 @@
+#include "/Engine/Public/Platform.ush"
+StructuredBuffer<uint> VisibleSplatCount; RWStructuredBuffer<uint> IndirectDispatchArgs; RWStructuredBuffer<uint> IndirectDrawArgs; RWStructuredBuffer<uint> SortIndirectArgs; RWStructuredBuffer<uint> SortParamsBuffer; uint ComputeThreadGroupSize;
+[numthreads(1,1,1)] void MainCS(uint3 DispatchThreadId : SV_DispatchThreadID) { IndirectDispatchArgs[0] = 1; IndirectDrawArgs[1] = 0; SortParamsBuffer[0] = 0; }

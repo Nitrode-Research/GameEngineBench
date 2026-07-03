@@ -1,0 +1,81 @@
+task_id: ue_task_0024
+title: Data Assets Loader Runtime
+tier: hard
+
+instruction: |
+  The Bomber project uses the DataAssetsLoader plugin to centralize runtime access to primary data assets and Data Registry rows. Implement the runtime data-asset loader behavior in the task-owned files.
+
+  Systems must be able to register loaded primary data assets, query them by class, listen for assets that are already available, wait for assets that will be registered later, and receive a single completion signal after multiple requested asset classes are available.
+
+  The implementation must preserve the existing plugin architecture:
+
+  - `UDalPrimaryDataAsset` self-registers and unregisters with the engine subsystem through the loader path.
+  - `UDalSubsystem` caches assets by concrete class and stores weak references so unloaded game-feature assets can be collected.
+  - Listener callbacks must fire immediately when the requested asset is already registered.
+  - Pending listeners must be weak-owner safe and fire exactly once when their requested asset class is registered.
+  - Multi-asset listeners must wait for every requested class before firing their aggregate callback.
+  - Begin-play and game-feature loading hooks must drive Asset Manager loading without duplicating active load handles.
+  - Registry-row helpers must bind owners to Data Registry cache changes, load soft references, and notify row listeners only when referenced assets are resolved.
+
+  Do not replace this with hard-coded Bomber data asset globals. Use the existing `UDalSubsystem`, `UDalPrimaryDataAsset`, `UDalRegistrySubsystem`, `FDalRegistryRow`, and utility-library architecture.
+
+files_to_edit:
+  - Plugins/DataAssetsLoader/Source/DataAssetsLoader/Private/DalSubsystem.cpp
+  - Plugins/DataAssetsLoader/Source/DataAssetsLoader/Private/DalPrimaryDataAsset.cpp
+  - Plugins/DataAssetsLoader/Source/DataAssetsLoader/Private/DalRegistrySubsystem.cpp
+  - Plugins/DataAssetsLoader/Source/DataAssetsLoader/Private/DalRegistryRow.cpp
+  - Plugins/DataAssetsLoader/Source/DataAssetsLoader/Private/DalUtilsLibrary.cpp
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "Bomber.DataAssetsLoaderRuntime"
+
+hidden_requirements:
+  R1:
+    text: RegisterDataAsset must cache a valid data asset under its concrete class and GetDataAsset must return that same instance.
+    category: core_logic
+  R2:
+    text: UnregisterDataAsset must remove the cached class entry so future lookups return null.
+    category: cleanup
+  R3:
+    text: ListenForDataAsset must fire immediately when the requested asset class is already registered.
+    category: listener_lifecycle
+  R4:
+    text: ListenForDataAsset must queue weak-owner-safe pending callbacks when the requested class is not registered yet.
+    category: listener_lifecycle
+  R5:
+    text: RegisterDataAsset must notify and consume pending listeners for the registered class exactly once.
+    category: listener_lifecycle
+  R6:
+    text: ListenForDataAssets must wait for all requested classes before firing the aggregate callback.
+    category: listener_lifecycle
+  R7:
+    text: UDalPrimaryDataAsset PostLoad and BeginDestroy must route registration and unregistration through UDalSubsystem.
+    category: object_lifecycle
+  R8:
+    text: TryLoadDataAssetsOnce must use Asset Manager primary asset loading and avoid duplicate active load handles.
+    category: asset_loading
+  R9:
+    text: Game-feature loading and unloading must load and unload primary data assets discovered under the plugin root.
+    category: modular_features
+  R10:
+    text: Data Registry bindings must subscribe owners to registry cache changes, gather soft references, async-load them, and mark the owner loaded only after references resolve.
+    category: data_registry
+  R11:
+    text: Data Registry row listeners must fire only when the target row exists and all soft references in that row are loaded, and must be removed after firing.
+    category: data_registry
+
+test_requirements:
+  Bomber.DataAssetsLoaderRuntime.register_lookup_unregister:
+    - R1
+    - R2
+  Bomber.DataAssetsLoaderRuntime.immediate_and_pending_asset_listeners:
+    - R3
+    - R4
+    - R5
+  Bomber.DataAssetsLoaderRuntime.multi_asset_listener_waits_for_all_classes:
+    - R1
+    - R5
+    - R6

@@ -1,0 +1,83 @@
+task_id: ue_task_0072
+title: DataConfig JSON SerDe
+tier: hard
+
+instruction: |
+  You are working in an Unreal Engine 5 project that uses the DataConfig plugin.
+  Restore the behavior of the DataConfig JSON SerDe system in the task-owned files.
+  
+  The project already contains the public API surface, assets, build/module wiring, and surrounding gameplay or plugin integration points.
+  
+  Implement the following behavior:
+  
+  - JSON objects, arrays, scalars, strings, booleans, and null-like semantics should be parsed through the plugin’s existing reader model.
+  - Property reading must traverse the existing Unreal property/state machinery rather than replacing it with a toy parser.
+  - Property writing must preserve the existing type-aware writer path rather than bypassing it with ad hoc conversions.
+  - String escaping, numeric parsing, and scalar/container boundary handling should work through the repo’s existing diagnostic rules. Scalar coercion is type-partitioned: a numeric token reads into numeric scalar properties, and a string token reads into string, name, or text properties.
+  - Beyond the usual fixed-width four-hex unicode escape, this project's reader also accepts a braced form of the unicode escape, where the code point's hex digits are written between the braces. It must decode the denoted code point into the resulting string value. Only malformed syntax (such as empty braces) or a value that cannot be represented at all is an error.
+  - The implementation must fit the current `DataConfigCore` architecture and compile without the removed test modules.
+
+files_to_edit:
+  - "Plugins/DataConfig/Source/DataConfigCore/Private/DataConfig/Json/DcJsonReader.cpp"
+  - "Plugins/DataConfig/Source/DataConfigCore/Private/DataConfig/Property/DcPropertyReader.cpp"
+  - "Plugins/DataConfig/Source/DataConfigCore/Private/DataConfig/Property/DcPropertyWriter.cpp"
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "DataConfig.JsonSerDe"
+
+hidden_requirements:
+  R1:
+    text: DcJsonReader must classify and read boolean scalar tokens through the existing DataConfig reader model.
+    category: core_logic
+  R2:
+    text: DcJsonReader must handle numeric, string, and null scalar tokens with the plugin's diagnostics, using type-partitioned scalar coercion (numeric tokens coerce only among numeric scalar types; string tokens coerce to name/text).
+    category: core_logic
+  R3:
+    text: DcJsonReader must handle array and map root/end boundaries while preserving nested container state.
+    category: core_logic
+  R4:
+    text: DcJsonReader must enforce complete input consumption through FinishRead.
+    category: core_logic
+  R5:
+    text: DcPropertyWriter must traverse reflected struct properties by name and write type-aware scalar values into the target object.
+    category: reflection_system
+  R6:
+    text: DcPropertyWriter must validate property-state transitions and report diagnostics through the DataConfig writer path.
+    category: reflection_system
+  R7:
+    text: DcPropertyReader must traverse reflected struct properties by name and read type-aware scalar values from the source object.
+    category: reflection_system
+  R8:
+    text: DcPropertyReader must preserve struct root/end and field-iteration state through the DataConfig property reader machinery.
+    category: reflection_system
+  R9:
+    text: The implementation must fit the DataConfigCore reader/writer architecture and must not replace it with a toy parser or removed test-only modules.
+    category: subsystem_architecture
+  R10:
+    text: "DcJsonReader must support a braced extended unicode escape (one to six hex digits) in string parsing, and it must handle code-point VALUES consistently with the existing fixed-width \\uXXXX escape, which does no scalar-value validation. Basic-plane values are emitted as a single code unit and values above U+FFFF as a correct UTF-16 surrogate pair; surrogate-range values (U+D800..U+DFFF) must be ACCEPTED and emitted exactly as the fixed-width escape does (the braced form must NOT add its own validity rejection). Only malformed syntax (empty/over-long braces) and code points that cannot be represented at all (above U+10FFFF) are errors."
+    category: core_logic
+  R11:
+    text: "Scalar token coercion is type-partitioned and strict. A numeric token may be read only as a numeric scalar type and must NOT be stringified: reading a numeric token through ReadString must fail with a no-coercion diagnostic (this project does not carry stock DataConfig's lenient number->string coercion). A string token may still be read as name or text, and numeric tokens still read into any numeric scalar type."
+    category: core_logic
+
+test_requirements:
+  DataConfig.JsonSerDe.json_reader_parses_array_and_map_boundaries:
+    - R3
+    - R4
+  DataConfig.JsonSerDe.json_reader_parses_basic_scalar_tokens:
+    - R1
+    - R4
+  DataConfig.JsonSerDe.json_reader_decodes_braced_astral_escape:
+    - R10
+  DataConfig.JsonSerDe.json_reader_enforces_scalar_coercion_rules:
+    - R2
+    - R11
+  DataConfig.JsonSerDe.property_reader_reads_struct_scalar_fields:
+    - R7
+    - R8
+  DataConfig.JsonSerDe.property_writer_sets_struct_scalar_fields:
+    - R5
+    - R6

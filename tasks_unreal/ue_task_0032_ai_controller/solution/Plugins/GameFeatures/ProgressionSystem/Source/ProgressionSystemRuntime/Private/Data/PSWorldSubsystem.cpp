@@ -1,0 +1,507 @@
+// Copyright (c) Valerii Rotermel & Yevhenii Selivanov
+
+#include "Data/PSWorldSubsystem.h"
+
+// PS
+#include "Components/PSHUDComponent.h"
+#include "Components/PSSpotComponent.h"
+#include "Data/PSDataAsset.h"
+#include "Data/PSSaveGameData.h"
+#include "LevelActors/PSStarActor.h"
+#include "PsGameplayTags.h"
+
+// Bomber
+#include "Actors/BmrPawn.h"
+#include "Components/BmrSkeletalMeshComponent.h"
+#include "GameFramework/BmrPlayerState.h"
+#include "MyDataTable/MyDataTable.h"
+#include "MyUtilsLibraries/SaveUtilsLibrary.h"
+#include "MyUtilsLibraries/UtilsLibrary.h"
+#include "PoolManagerSubsystem.h"
+#include "Structures/BmrGameStateTag.h"
+#include "Structures/BmrGameplayTags.h"
+#include "Subsystems/GlobalMessageSubsystem.h"
+#include "UtilityLibraries/BmrBlueprintFunctionLibrary.h"
+
+// UE
+#include "Components/StaticMeshComponent.h"
+#include "Engine/Engine.h"
+#include "Engine/StaticMesh.h"
+#include "Engine/World.h"
+#include "Kismet/GameplayStatics.h"
+#include "Materials/MaterialInstanceDynamic.h"
+
+#include UE_INLINE_GENERATED_CPP_BY_NAME(PSWorldSubsystem)
+
+// Returns this Subsystem, is checked and will crash if it can't be obtained
+UPSWorldSubsystem& UPSWorldSubsystem::Get()
+{
+	const UWorld* World = UUtilsLibrary::GetPlayWorld();
+	checkf(World, TEXT("%s: 'World' is null"), *FString(__FUNCTION__));
+	UPSWorldSubsystem* ThisSubsystem = World->GetSubsystem<ThisClass>();
+	checkf(ThisSubsystem, TEXT("%s: 'ProgressionSubsystem' is null"), *FString(__FUNCTION__));
+	return *ThisSubsystem;
+}
+
+// Returns this Subsystem, is checked and will crash if it can't be obtained
+UPSWorldSubsystem& UPSWorldSubsystem::Get(const UObject& WorldContextObject)
+{
+	const UWorld* World = GEngine->GetWorldFromContextObjectChecked(&WorldContextObject);
+	checkf(World, TEXT("%s: 'World' is null"), *FString(__FUNCTION__));
+	UPSWorldSubsystem* ThisSubsystem = World->GetSubsystem<ThisClass>();
+	checkf(ThisSubsystem, TEXT("%s: 'ProgressionSubsystem' is null"), *FString(__FUNCTION__));
+	return *ThisSubsystem;
+}
+
+// Returns this Subsystem or nullptr if not available
+UPSWorldSubsystem* UPSWorldSubsystem::GetSubsystem()
+{
+	const UWorld* World = UUtilsLibrary::GetPlayWorld();
+	return World ? World->GetSubsystem<ThisClass>() : nullptr;
+}
+
+// Set current row of progression system by tag
+void UPSWorldSubsystem::SetCurrentRowByTag(FBmrPlayerTag NewRowPlayerTag)
+{
+	const FPSSettingsRow& CurrentSettingsRowData = GetCurrentProgressionSettingsRow();
+	const FBmrPlayerTag& PreviousPlayerTag = CurrentSettingsRowData.Character;
+
+	// Already on this row: skip to avoid re-entry via OnActorTypeChanged -> OnChosenMeshDataChanged -> SetCurrentRowByTag
+	if (PreviousPlayerTag == NewRowPlayerTag)
+	{
+		// Row state already correct, just notify listeners, so skin-driven updates can reevaluate
+		OnCurrentActiveSaveRowChanged.Broadcast(NewRowPlayerTag, PreviousPlayerTag);
+		return;
+	}
+
+	for (const TTuple<FName, FPSSettingsRow>& KeyValue : ProgressionSettingsDataInternal)
+	{
+		const FPSSettingsRow& RowData = KeyValue.Value;
+
+		if (RowData.Character == NewRowPlayerTag)
+		{
+			CurrentRowNameInternal = KeyValue.Key;
+			OnCurrentActiveSaveRowChanged.Broadcast(NewRowPlayerTag, PreviousPlayerTag);
+			// Only spawn stars if current spot is already registered, otherwise RegisterSpotComponent will trigger it later when spot arrives
+			if (SpotComponentsMapInternal.Contains(CurrentRowNameInternal))
+			{
+				UpdateProgressionStarActors();
+			}
+			return; // Exit immediately after finding the match
+		}
+	}
+}
+
+//  Returns a current save to disk row name
+FName UPSWorldSubsystem::GetFirstSaveToDiskRowName() const
+{
+	if (!ensureMsgf(SaveGameDataInternal, TEXT("ASSERT: [%i] %hs:\n'SaveGameDataInternal' is empty!"), __LINE__, __FUNCTION__))
+	{
+		return NAME_None;
+	}
+	return SaveGameDataInternal->GetSavedProgressionRowByIndex(0);
+}
+
+//  Returns a current save to disk row by name
+const FPSSaveToDiskData& UPSWorldSubsystem::GetCurrentSaveToDiskRowByName() const
+{
+	if (!ensureMsgf(SaveGameDataInternal, TEXT("ASSERT: [%i] %hs:\n'SaveGameDataInternal' is empty!"), __LINE__, __FUNCTION__))
+	{
+		return FPSSaveToDiskData::EmptyData;
+	}
+	return SaveGameDataInternal->GetSaveToDiskDataByName(CurrentRowNameInternal);
+}
+
+// Returns a current progression settings data row
+const FPSSettingsRow& UPSWorldSubsystem::GetCurrentProgressionSettingsRow() const
+{
+	if (const FPSSettingsRow* FoundRow = ProgressionSettingsDataInternal.Find(CurrentRowNameInternal))
+	{
+		return *FoundRow;
+	}
+
+	return FPSSettingsRow::EmptyData;
+}
+
+// Returns a current progression settings data row by name
+const FPSSettingsRow& UPSWorldSubsystem::GetSettingsRowByName(FName CurrentRowName) const
+{
+	if (const FPSSettingsRow* FoundRow = ProgressionSettingsDataInternal.Find(CurrentRowName))
+	{
+		return *FoundRow;
+	}
+
+	return FPSSettingsRow::EmptyData;
+}
+
+// Set the progression system component
+void UPSWorldSubsystem::SetHUDComponent(UPSHUDComponent* MyHUDComponent)
+{
+	if (!ensureMsgf(MyHUDComponent, TEXT("ASSERT: [%i] %hs:\n'MyHUDComponent' is null!"), __LINE__, __FUNCTION__))
+	{
+		return;
+	}
+	HUDComponentInternal = MyHUDComponent;
+}
+
+// Set the progression system spot component
+void UPSWorldSubsystem::RegisterSpotComponent(UPSSpotComponent* MySpotComponent)
+{
+	if (!ensureMsgf(MySpotComponent, TEXT("ASSERT: [%i] %hs:\n'MyHUDComponent' is null!"), __LINE__, __FUNCTION__))
+	{
+		return;
+	}
+
+	for (const TTuple<FName, FPSSettingsRow>& RowData : ProgressionSettingsDataInternal)
+	{
+		if (RowData.Value.Character == MySpotComponent->GetMeshChecked().GetPlayerTag())
+		{
+			SpotComponentsMapInternal.Add(RowData.Key, MySpotComponent);
+
+			// Spawn stars now since current row spot is available: it's earliest point to spawn
+			if (RowData.Key == CurrentRowNameInternal)
+			{
+				UpdateProgressionStarActors();
+			}
+		}
+	}
+}
+
+// Called when progression module ready
+void UPSWorldSubsystem::OnInitialized_Implementation()
+{
+	UMaterialInterface* StarMaterial = UPSDataAsset::Get().GetBombDynamicProgressionOverlayMaterial();
+
+	if (!ensureMsgf(StarMaterial, TEXT("ASSERT: [%i] %hs:\n'StarMaterial' is null!"), __LINE__, __FUNCTION__))
+	{
+		return;
+	}
+
+	StarDynamicProgressMaterial = UMaterialInstanceDynamic::Create(StarMaterial, this);
+	StarLockedProgressMaterial = UMaterialInstanceDynamic::Create(StarMaterial, this);
+	StarUnLockedProgressMaterial = UMaterialInstanceDynamic::Create(StarMaterial, this);
+
+	// Subscribe events on player type changed and Character spawned
+	UGlobalMessageSubsystem::CallOrStartListeningForGlobalMessage(BmrGameplayTags::Event::Player_LocalPawnReady, this, &ThisClass::OnLocalPawnReady);
+	UGlobalMessageSubsystem::CallOrStartListeningForGlobalMessage(BmrGameplayTags::Event::GameState_Changed, this, &ThisClass::OnGameStateChanged);
+}
+
+// Clears all transient data created by this subsystem
+void UPSWorldSubsystem::OnGameFeatureDeinitialize_Implementation()
+{
+	UGlobalMessageSubsystem::StopListeningForAllGlobalMessages(this);
+
+	UGlobalMessageSubsystem::ClearCachedMessages(PsGameplayTags::Event::ProgressionSystemInitialized, this);
+
+	PerformCleanUp();
+}
+
+// Is called to initialize the world subsystem. It's a BeginPlay logic for the PS module
+void UPSWorldSubsystem::OnWorldSubSystemInitialize_Implementation()
+{
+	// Load save game data of the Progression system
+	FAsyncLoadGameFromSlot AsyncLoadGameFromSlotDelegate;
+	AsyncLoadGameFromSlotDelegate.BindUObject(this, &ThisClass::OnAsyncLoadGameFromSlotCompleted);
+	USaveUtilsLibrary::AsyncLoadGameFromSlot(this, UPSSaveGameData::GetSaveSlotName(SaveFileVersionExtensionInternal), UPSSaveGameData::GetSaveSlotIndex(), AsyncLoadGameFromSlotDelegate);
+}
+
+// Is called when a player character is ready
+void UPSWorldSubsystem::OnLocalPawnReady_Implementation(const FGameplayEventData& Payload)
+{
+	const ABmrPawn* PlayerCharacter = Cast<ABmrPawn>(Payload.Instigator);
+	ABmrPlayerState* PlayerState = PlayerCharacter ? PlayerCharacter->GetPlayerState<ABmrPlayerState>() : nullptr;
+	checkf(PlayerState, TEXT("ERROR: [%i] %hs:\n'PlayerState' is null!"), __LINE__, __FUNCTION__);
+	PlayerState->OnEndGameStateChanged.AddUniqueDynamic(this, &ThisClass::OnEndGameStateChanged);
+	PlayerState->OnChosenMeshDataChanged.AddUniqueDynamic(this, &ThisClass::OnChosenMeshDataChanged);
+}
+
+// Is called when a player has been changed
+void UPSWorldSubsystem::OnChosenMeshDataChanged_Implementation(const FBmrMeshData& NewMeshData)
+{
+	const ABmrPlayerState* PlayerState = UBmrBlueprintFunctionLibrary::GetLocalPlayerState();
+	if (ensureMsgf(PlayerState, TEXT("ASSERT: [%i] %hs:\n'PlayerState' is invalid!"), __LINE__, __FUNCTION__))
+	{
+		SetCurrentRowByTag(PlayerState->GetPlayerTag());
+	}
+}
+
+// Listen to react when entered the Menu state
+void UPSWorldSubsystem::OnGameStateChanged_Implementation(const FGameplayEventData& Payload)
+{
+	// Refreshes star actors when returning to the Menu
+	if (Payload.InstigatorTags.HasTag(FBmrGameStateTag::Menu)
+	    && !SpotComponentsMapInternal.IsEmpty())
+	{
+		UpdateProgressionStarActors();
+	}
+}
+
+// Called when the end game state was changed to recalculate progression according to endgame (win, loss etc.)
+void UPSWorldSubsystem::OnEndGameStateChanged_Implementation(EBmrEndGameState EndGameState)
+{
+	if (EndGameState != EBmrEndGameState::None)
+	{
+		SavePoints(EndGameState);
+	}
+}
+
+// Save the progression depends on EBmrEndGameState.
+void UPSWorldSubsystem::SavePoints(EBmrEndGameState EndGameState)
+{
+	if (!ensureMsgf(SaveGameDataInternal, TEXT("ASSERT: [%i] %hs:\n'SaveGameDataInternal' is null!"), __LINE__, __FUNCTION__))
+	{
+		return;
+	}
+	SaveGameDataInternal->SavePoints(EndGameState);
+}
+
+// Always set first levels as unlocked on begin play
+void UPSWorldSubsystem::SetFirstElementAsCurrent()
+{
+	FName FirstSaveToDiskRow = GetFirstSaveToDiskRowName();
+
+	// early return if first element is not valid
+	if (!ensureMsgf(!FirstSaveToDiskRow.IsNone(), TEXT("ASSERT: [%i] %hs:\n'FirstSaveToDiskRow' is not valid!"), __LINE__, __FUNCTION__))
+	{
+		return;
+	}
+	if (!ensureMsgf(SaveGameDataInternal, TEXT("ASSERT: [%i] %hs:\n'SaveGameDataInternal' is not valid!"), __LINE__, __FUNCTION__))
+	{
+		return;
+	}
+
+	CurrentRowNameInternal = FirstSaveToDiskRow;
+	SaveGameDataInternal->UnlockLevelByName(CurrentRowNameInternal);
+	ABmrPlayerState* PlayerState = UBmrBlueprintFunctionLibrary::GetLocalPlayerState();
+
+	if (!ensureMsgf(PlayerState, TEXT("ASSERT: [%i] %hs:\n'PlayerState' is not valid!"), __LINE__, __FUNCTION__))
+	{
+		return;
+	}
+	const FBmrPlayerTag& PlayerTag = PlayerState->GetPlayerTag();
+	SetCurrentRowByTag(PlayerTag);
+	SaveDataAsync();
+}
+
+// Spawn/add the stars actors for a spot
+void UPSWorldSubsystem::UpdateProgressionStarActors()
+{
+	// Return to Pool Manager the list of handles which is not needed (if there are any)
+
+	if (!PoolActorHandlersInternal.IsEmpty())
+	{
+		UPoolManagerSubsystem::Get().ReturnToPoolArray(PoolActorHandlersInternal);
+		PoolActorHandlersInternal.Empty();
+	}
+	// --- Prepare spawn request
+	const TWeakObjectPtr<ThisClass> WeakThis = this;
+	const FOnSpawnAllCallback OnTakeActorsFromPoolCompleted = [WeakThis](const TArray<FPoolObjectData>& CreatedObjects)
+	{
+		if (UPSWorldSubsystem* This = WeakThis.Get())
+		{
+			This->OnTakeActorsFromPoolCompleted(CreatedObjects);
+		}
+	};
+
+	// --- Spawn actors
+	const FPSSettingsRow& CurrentSettingsRowData = GetCurrentProgressionSettingsRow();
+	if (CurrentSettingsRowData.PointsToUnlock)
+	{
+		UPoolManagerSubsystem::Get().TakeFromPoolArray(PoolActorHandlersInternal, UPSDataAsset::Get().GetStarActorClass(), CurrentSettingsRowData.PointsToUnlock, OnTakeActorsFromPoolCompleted, ESpawnRequestPriority::High);
+	}
+}
+
+// Dynamically adds Star actors which representing unlocked and locked progression above the character
+void UPSWorldSubsystem::OnTakeActorsFromPoolCompleted(const TArray<FPoolObjectData>& CreatedObjects)
+{
+	const FPSSettingsRow& CurrentSettingsRowData = GetCurrentProgressionSettingsRow();
+	const FPSSaveToDiskData& CurrentSaveToDiskRowData = GetCurrentSaveToDiskRowByName();
+
+	float CurrentAmountOfUnlocked = CurrentSaveToDiskRowData.CurrentLevelProgression;
+
+	FVector PreviousActorLocation = FVector::Zero();
+
+	// Setup spawned widget
+	for (const FPoolObjectData& CreatedObject : CreatedObjects)
+	{
+		APSStarActor& SpawnedActor = CreatedObject.GetChecked<APSStarActor>();
+
+		float StarAmount = FMath::Clamp(CurrentAmountOfUnlocked, 0.0f, 1.0f);
+		if (CurrentAmountOfUnlocked > 0)
+		{
+			SpawnedActor.UpdateStarActorProgressMeshMaterial(StarAmount, EPSStarActorState::Unlocked);
+		}
+		else
+		{
+			SpawnedActor.UpdateStarActorProgressMeshMaterial(1, EPSStarActorState::Locked);
+		}
+
+		CurrentAmountOfUnlocked -= StarAmount;
+
+		SpawnedActor.OnInitialized(PreviousActorLocation);
+		PreviousActorLocation = SpawnedActor.GetActorLocation();
+	}
+}
+
+// Find a spot component element by row name
+class UPSSpotComponent* UPSWorldSubsystem::FindSpotByRowName(FName RowName) const
+{
+	const TObjectPtr<UPSSpotComponent>* FoundSpotPtr = SpotComponentsMapInternal.Find(RowName);
+	return FoundSpotPtr ? *FoundSpotPtr : nullptr;
+}
+
+// Returns Progression Star Dynamic Material by state
+UMaterialInstanceDynamic* UPSWorldSubsystem::GetStarProgressionDynamicMaterial(EPSStarActorState StarState)
+{
+	switch (StarState)
+	{
+		case EPSStarActorState::Locked:
+			return StarLockedProgressMaterial;
+		case EPSStarActorState::Unlocked:
+			return StarUnLockedProgressMaterial;
+		case EPSStarActorState::Partial:
+			return StarDynamicProgressMaterial;
+		default:
+			return nullptr;
+	}
+}
+
+// Is called from AsyncLoadGameFromSlot once Save Game is loaded, or null if it failed to load.
+void UPSWorldSubsystem::OnAsyncLoadGameFromSlotCompleted_Implementation(USaveGame* SaveGame)
+{
+	// load from data table
+	const UDataTable* ProgressionDataTable = UPSDataAsset::Get().GetProgressionDataTable();
+	if (!ensureMsgf(ProgressionDataTable, TEXT("ASSERT: [%i] %hs:\n'ProgressionDataTable' is not valid!"), __LINE__, __FUNCTION__))
+	{
+		return;
+	}
+	UMyDataTable::GetRows(*ProgressionDataTable, ProgressionSettingsDataInternal);
+
+	SaveGameDataInternal = Cast<UPSSaveGameData>(SaveGame);
+
+	if (!SaveGameDataInternal)
+	{
+		//  there is no save game file, or it is corrupted, create a new one
+		SaveGameDataInternal = Cast<UPSSaveGameData>(UGameplayStatics::CreateSaveGameObject(UPSSaveGameData::StaticClass()));
+
+		if (SaveGameDataInternal)
+		{
+			for (const TTuple<FName, FPSSettingsRow>& Row : ProgressionSettingsDataInternal)
+			{
+				SaveGameDataInternal->SetProgressionMap(Row.Key, FPSSaveToDiskData::EmptyData);
+			}
+		}
+	}
+
+	SetFirstElementAsCurrent();
+	OnInitialized();
+
+	// Broadcast initialization
+	FGameplayEventData InitializedData;
+	InitializedData.EventTag = PsGameplayTags::Event::ProgressionSystemInitialized;
+	UGlobalMessageSubsystem::BroadcastGlobalMessage(InitializedData);
+}
+
+// Destroy all star actors that should not be available by other objects anymore.
+void UPSWorldSubsystem::PerformCleanUp()
+{
+	HUDComponentInternal = nullptr;
+	SpotComponentsMapInternal.Empty();
+
+	// Saves clean up
+	if (SaveGameDataInternal)
+	{
+		SaveGameDataInternal->ConditionalBeginDestroy();
+		SaveGameDataInternal = nullptr;
+	}
+
+	ProgressionSettingsDataInternal.Empty();
+	CurrentRowNameInternal = NAME_None;
+
+	// Destroying Star Actors
+	if (!PoolActorHandlersInternal.IsEmpty())
+	{
+		UPoolManagerSubsystem::Get().ReturnToPoolArray(PoolActorHandlersInternal);
+		PoolActorHandlersInternal.Empty();
+	}
+
+	if (StarDynamicProgressMaterial)
+	{
+		StarDynamicProgressMaterial->ConditionalBeginDestroy();
+		StarDynamicProgressMaterial = nullptr;
+	}
+
+	if (StarLockedProgressMaterial)
+	{
+		StarLockedProgressMaterial->ConditionalBeginDestroy();
+		StarLockedProgressMaterial = nullptr;
+	}
+
+	if (StarUnLockedProgressMaterial)
+	{
+		StarUnLockedProgressMaterial->ConditionalBeginDestroy();
+		StarUnLockedProgressMaterial = nullptr;
+	}
+}
+
+// Saves the progression to the local files
+void UPSWorldSubsystem::SaveDataAsync()
+{
+	if (!ensureMsgf(SaveGameDataInternal, TEXT("ASSERT: [%i] %hs:\n'SaveGameDataInternal' is null!"), __LINE__, __FUNCTION__))
+	{
+		return;
+	}
+	const FPSSaveToDiskData& CurrenSaveToDiskDataRow = GetCurrentSaveToDiskRowByName();
+	const FPSSettingsRow& CurrenProgressionSettingsRow = GetCurrentProgressionSettingsRow();
+
+	OnCurrentScoreChanged.Broadcast(CurrenSaveToDiskDataRow, CurrenProgressionSettingsRow);
+
+	UGameplayStatics::AsyncSaveGameToSlot(SaveGameDataInternal, UPSSaveGameData::GetSaveSlotName(SaveFileVersionExtensionInternal), SaveGameDataInternal->GetSaveSlotIndex());
+}
+
+// Removes all saved data of the Progression system and creates a new empty data
+void UPSWorldSubsystem::ResetSaveGameData()
+{
+	const FString& SlotName = UPSSaveGameData::GetSaveSlotName(SaveFileVersionExtensionInternal);
+	const int32 UserIndex = UPSSaveGameData::GetSaveSlotIndex();
+
+	SaveGameDataInternal = USaveUtilsLibrary::ResetSaveGameData<UPSSaveGameData>(SaveGameDataInternal, SlotName, UserIndex);
+	checkf(SaveGameDataInternal, TEXT("ERROR: [%i] %hs:\n'SaveGameDataInternal' is null!"), __LINE__, __FUNCTION__);
+
+	// load from data table
+	const UDataTable* ProgressionDataTable = UPSDataAsset::Get().GetProgressionDataTable();
+	if (!ensureMsgf(ProgressionDataTable, TEXT("ASSERT: [%i] %hs:\n'ProgressionDataTable' is not valid!"), __LINE__, __FUNCTION__))
+	{
+		return;
+	}
+	UMyDataTable::GetRows(*ProgressionDataTable, ProgressionSettingsDataInternal);
+
+	for (const TTuple<FName, FPSSettingsRow>& Row : ProgressionSettingsDataInternal)
+	{
+		SaveGameDataInternal->SetProgressionMap(Row.Key, FPSSaveToDiskData::EmptyData);
+	}
+
+	OnReset.Broadcast();
+	// Re-load save game object. Load game from save file or if there is no such creates a new one
+	SetFirstElementAsCurrent();
+}
+
+// Unlocks all levels of the Progression System
+void UPSWorldSubsystem::UnlockAllLevels()
+{
+	if (!ensureMsgf(SaveGameDataInternal, TEXT("ASSERT: [%i] %hs:\n'SaveGameDataInternal' is not valid!"), __LINE__, __FUNCTION__))
+	{
+		return;
+	}
+	SaveGameDataInternal->UnlockAllLevels();
+
+	ABmrPlayerState* PlayerState = UBmrBlueprintFunctionLibrary::GetLocalPlayerState();
+
+	if (!ensureMsgf(PlayerState, TEXT("ASSERT: [%i] %hs:\n'PlayerState' is not valid!"), __LINE__, __FUNCTION__))
+	{
+		return;
+	}
+	const FBmrPlayerTag& PlayerTag = PlayerState->GetPlayerTag();
+	SetCurrentRowByTag(PlayerTag);
+	SaveDataAsync();
+}

@@ -1,0 +1,66 @@
+task_id: ue_task_0055
+title: ALS-Refactored Camera
+tier: hard
+
+instruction: |
+  You are working in an Unreal Engine 5 third-person character project that uses the ALS-Refactored plugin.
+  Implement the camera system in AlsCameraComponent.cpp.
+
+  The component manages the camera tick and update pipeline, first-person and third-person pivot and
+  location solving, the obstruction trace and final camera placement, movement-base-relative rotation
+  handling, lag and interpolation behavior, and camera animation-instance state refresh tied to view
+  mode and locomotion state.
+
+  The project already contains:
+  - The public camera component API and settings assets
+  - The camera animation instance class surface
+  - Debug-only helpers and unrelated ALS gameplay systems
+  - Existing view-mode and locomotion tags
+
+  Implement the following behavior:
+
+  - The camera resolves correct first-person and third-person positions using the existing ALS architecture.
+  - Third-person camera traces against the environment and avoids obvious clipping.
+  - Camera lag and interpolation behave consistently instead of snapping directly to the target.
+  - Movement-base-relative handling keeps the camera stable on moving platforms or bases.
+  - Camera animation state stays synchronized with the owning character's locomotion and view mode.
+  - Camera behavior adapts when camera settings data is modified — spring arm length, lag speeds, and FOV take effect without code changes.
+
+hidden_requirements:
+  R1:
+    text: The camera must resolve finite first-person and third-person view locations that track the owning character through the existing ALS camera pipeline.
+    category: core_logic
+  R2:
+    text: Third-person camera placement must trace against the environment and avoid obvious clipping.
+    category: core_logic
+  R3:
+    text: Camera lag and interpolation must update over time instead of snapping directly to the target.
+    category: core_logic
+  R4:
+    text: Camera rotation and placement must remain stable when the character stands on a moving base.
+    category: object_lifecycle
+  R5:
+    text: Camera animation-instance state must stay synchronized with the owning character's locomotion state and view mode.
+    category: integration
+  R6:
+    text: Camera settings changes, including spring arm length, lag speeds, and field of view, must affect runtime camera behavior without code changes.
+    category: configuration
+  R7:
+    text: "The solved camera view must apply this project's specific constant post-process blend weight each tick, rather than leaving the camera's post-process weight at the stock plugin's zero."
+    category: core_logic
+
+test_requirements:
+  ALS.Camera.camera_location_tracks_owner:
+    - R1
+    - R7
+  ALS.Camera.field_of_view_follows_configuration:
+    - R6
+
+files_to_edit:
+  - Plugins/ALS-Refactored/Source/ALSCamera/Private/AlsCameraComponent.cpp
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "ALS.Camera"

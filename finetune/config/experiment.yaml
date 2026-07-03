@@ -1,0 +1,17 @@
+agent: openhands
+
+task_list: tasks_medium.yaml
+benchmark_runner: unrealbench/src/benchmark_runner.py
+
+shared_flags:
+  use_runtime_video: false
+  enable_mcp: false
+  skip_display: false
+  debug: false
+
+baseline_model: openai/o3-mini
+tuned_model: openai/ft:gpt-4o-mini-2024-07-18:your-org:unrealbench:replace_me
+
+outputs:
+  report_path: finetune/reports/latest_ab_report.json
+  summary_path: finetune/reports/latest_ab_summary.md

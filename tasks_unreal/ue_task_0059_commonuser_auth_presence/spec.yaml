@@ -1,0 +1,61 @@
+task_id: ue_task_0059
+title: CommonUser Auth And Presence
+tier: hard
+
+instruction: |
+  You are working in an Unreal Engine 5 project that uses the CommonUser plugin.
+  Implement the behavior of the CommonUser Auth And Presence system in the task-owned files.
+  
+  The project already contains the public API surface, assets, build/module wiring, and surrounding gameplay or plugin integration points.
+  
+  Implement the following behavior:
+  
+  - Local player initialization follows the existing subsystem path and reports meaningful success or failure.
+  - Login/auth state and privilege results are cached and exposed through the existing user-info API.
+  - Presence initialization and updates run through the provided presence classes instead of a parallel one-off path.
+  - The subsystem resolves the intended online context correctly rather than hardcoding a single backend or cache bucket.
+  - User-facing async results and delegate notifications remain informative and arrive through the expected subsystem flow.
+
+files_to_edit:
+  - "Plugins/CommonUser/Source/CommonUser/Private/CommonUserSubsystem.cpp"
+  - "Plugins/CommonUser/Source/CommonUser/Public/CommonUserSubsystem.h"
+  - "Plugins/CommonUser/Source/CommonUser/Private/CommonUserBasicPresence.cpp"
+  - "Plugins/CommonUser/Source/CommonUser/Public/CommonUserBasicPresence.h"
+  - "Plugins/CommonUser/Source/CommonUser/Private/CommonUserTypes.cpp"
+  - "Plugins/CommonUser/Source/CommonUser/Public/CommonUserTypes.h"
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "CommonUser.AuthPresence"
+
+hidden_requirements:
+  R1:
+    text: Local player initialization follows the subsystem path and reports meaningful success or failure through expected callbacks.
+    category: subsystem_architecture
+  R2:
+    text: Login, authentication, and privilege results are cached and exposed through the user-info API.
+    category: runtime_integration
+  R3:
+    text: Presence initialization subscribes to session-information changes and uses the provided presence implementation.
+    category: subsystem_architecture
+  R4:
+    text: Presence updates map session states to the configured backend status keys.
+    category: configuration
+  R5:
+    text: Online context resolution maps to valid user-info cache buckets instead of hardcoding one backend or cache.
+    category: core_logic
+  R6:
+    text: OSSv2 login initialization completes and notifies delegates even when the privileges interface is unavailable.
+    category: runtime_integration
+  R7:
+    text: Online-play login requires a fully logged-in online identity while local-profile status only satisfies local play.
+    category: core_logic
+  R8:
+    text: User-facing async results and delegate notifications remain informative and flow through the CommonUser subsystem.
+    category: runtime_integration
+
+test_requirements:
+  CommonUser.AuthPresence.session_state_maps_to_configured_backend_key:
+    - R4

@@ -1,0 +1,54 @@
+task_id: ue_task_0066
+title: EOSIntegrationKit Session And Lobby Flow
+tier: hard
+
+instruction: |
+  You are working in an Unreal Engine 5 project that uses the EOSIntegrationKit plugin.
+  Implement the behavior of the EOSIntegrationKit Session And Lobby Flow system in the task-owned files.
+  
+  The project already contains the public API surface, assets, build/module wiring, and surrounding gameplay or plugin integration points.
+  
+  Implement the following behavior:
+  
+  - Hosting a session or lobby goes through the existing EOSIntegrationKit flow and produces a usable online session object.
+  - Searching returns real results through the existing result-building path instead of placeholder data.
+  - Joining and leaving update session state correctly and report completion through the existing async callbacks and delegates.
+  - Destroying a session cleans up internal state rather than leaving stale registrations or half-open lobby data.
+  - Invite, friend-session, and LAN-vs-EOS routing continue to use the repo’s existing decision paths.
+
+files_to_edit:
+  - "Plugins/EOSIntegrationKit/Source/OnlineSubsystemEIK/Private/OnlineSessionEOS.cpp"
+  - "Plugins/EOSIntegrationKit/Source/OnlineSubsystemEIK/Private/OnlineSessionEOS.h"
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "EOSIntegrationKit.SessionLobby"
+
+hidden_requirements:
+  R1:
+    text: Hosting a session or lobby must use the real EOSIntegrationKit session creation path and create or track a named online session object.
+    category: subsystem_architecture
+  R2:
+    text: Session search must build real online session search results from the EOS lobby or session result data rather than returning placeholder data.
+    category: core_logic
+  R3:
+    text: Join and leave operations must update named session state and report completion through the existing async delegates.
+    category: object_lifecycle
+  R4:
+    text: End or destroy operations must clean up session state, lobby handles, registrations, and callbacks so stale lobby data is not left behind.
+    category: object_lifecycle
+  R5:
+    text: Session-invite paths must iterate the requested friends and route through the existing per-friend invite implementation; an empty friend list should complete successfully without disabling the flow.
+    category: subsystem_architecture
+  R6:
+    text: LAN, EOS session, and EOS lobby routing must follow the session settings and existing decision paths rather than a hardcoded branch.
+    category: core_logic
+  R7:
+    text: Failure cases must report through the established delegate or logging path instead of silently returning placeholder results.
+    category: core_logic
+
+test_requirements:
+  EOSIntegrationKit.SessionLobby.send_invite_to_empty_friend_list_succeeds_through_real_loop:
+    - R5

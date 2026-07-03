@@ -1,0 +1,169 @@
+task_id: ue_task_0014
+title: Monster Corpse System
+tier: medium
+
+instruction: |
+  # Corpse System
+
+  This repository is a third-person action roguelike built in Unreal Engine.
+  When an enemy dies it should not vanish instantly — it leaves a ragdoll
+  "corpse" that flops to the ground, can be knocked around by further hits,
+  lingers briefly, then is quietly recycled. To stay cheap under load the system
+  reuses a fixed set of corpse actors instead of spawning and destroying them,
+  and never keeps more than a small number around at once.
+
+  Two pieces are incomplete and must be implemented: the corpse actor
+  `ARogueMonsterCorpse` and the world subsystem `URogueMonsterCorpseSubsystem`
+  that produces and reaps them. Their members and helper types are already
+  declared in the headers — read them first; they tell you what state you have
+  to work with (the active-corpse counter, the maximum, the minimum age, the
+  pending-corpse queue, the bone-remap map, and the declared pose-snapshot name).
+
+  ## Behavior
+
+  **A new corpse must look exactly like the enemy did at the instant it died.**
+  It takes the dead character's skeletal mesh and animation setup, stands in the
+  same place and orientation, and is frozen in the death pose rather than
+  snapping to a default T-pose. Reproducing the death pose means snapshotting the
+  live character's current pose and applying it to the corpse, stored under the
+  snapshot name the corpse already declares. Because the source character's mesh
+  carries a baked local offset (skeletal meshes here typically sit at roughly
+  -90° yaw), the corpse's mesh must inherit that same local position and rotation
+  offset or it will sink into the floor or face the wrong way. Once configured
+  the body goes limp under full-body ragdoll physics, and it adopts the monster's
+  hit-flash look so later impacts can make it flash.
+
+  **A corpse can still be hit after death.** A hit delivers an impulse at a
+  world-space location on a named bone. Some monsters need certain bones
+  redirected to others for the ragdoll to react correctly, and that remapping
+  must be honored before the impulse is applied. Each hit also flashes the body:
+  the flash is driven by writing the current world time into the mesh's first
+  custom-primitive-data float (channel 0), which the hit-flash overlay material
+  reads — and the flash should switch itself back off a short time afterward. A
+  hit that is handled reports back that it was handled.
+
+  **The subsystem owns the lifecycle.** On startup it pre-warms the reuse pool so
+  the maximum number of corpses is ready before gameplay needs them. When an
+  enemy dies, it takes a recycled corpse, positions it where the enemy fell,
+  configures it from the dead character and its monster data, records it as a
+  live corpse (keeping the active count and respecting the hard cap), and hands
+  the corpse back to the caller.
+
+  **Reaping is deliberately gentle.** Each frame the subsystem considers only the
+  single oldest corpse. A corpse becomes eligible only after it has lived a
+  minimum amount of time; past that, it is reclaimed when it is off-screen (not
+  recently rendered), or reclaimed unconditionally if the population is over the
+  hard cap — so the cap is never exceeded even when a corpse is still visible.
+  Reclaiming returns the actor to the reuse pool and drops it from tracking,
+  decrementing the active count. At most one corpse is reclaimed per frame; the
+  queue must never be drained in a single tick.
+
+  ## Notes
+
+  - A project-wide actor-pooling subsystem already provides the
+    acquire / release / pre-warm operations — find it and use it. Do not spawn or
+    destroy corpse actors directly.
+  - No new classes, assets, or files are required. Work within the existing files
+    and the members already declared on these classes.
+
+  ## Quality Bar
+
+  Corpses are recycled through the pool, never spawned or destroyed ad hoc. The
+  active-corpse count is tracked and the hard cap is never exceeded. Cleanup
+  reclaims at most one corpse per frame and only after the minimum age, gating on
+  off-screen status or the hard cap. A corpse starts in the dead enemy's exact
+  pose and orientation under ragdoll physics, carries the source mesh's local
+  offset, adopts the hit-flash overlay material, and flashes via custom primitive
+  data when it is hit. A handled hit honors bone remapping and reports success.
+
+hidden_requirements:
+  R1:
+    text: The corpse actor must copy the source character's skeletal mesh asset and corpse animation instance class from the monster data.
+    category: core_logic
+  R2:
+    text: The corpse mesh must preserve the source mesh's relative location and rotation offsets so the ragdoll aligns with the dead character.
+    category: object_lifecycle
+  R3:
+    text: The corpse actor must snapshot the live character pose into the corpse animation instance so the corpse starts in the death pose instead of a default pose.
+    category: object_lifecycle
+  R4:
+    text: The corpse actor must create a skeletal mesh component as its root and enable full-body physics simulation after corpse properties are applied.
+    category: object_lifecycle
+  R5:
+    text: The corpse actor must apply the hit-flash overlay material supplied by monster data.
+    category: defaults
+  R6:
+    text: Impulses must use the monster data's impulse bone remapping before dispatching to the skeletal mesh.
+    category: core_logic
+  R7:
+    text: AddImpulseAtLocationCustom must apply the impulse at the supplied world location and return true when it handles the impulse.
+    category: core_logic
+  R8:
+    text: AddImpulseAtLocationCustom must update custom primitive data so the corpse hit-flash material can observe a new hit timestamp.
+    category: core_logic
+  R9:
+    text: AddImpulseAtLocationCustom must start a timer that disables or hides the hit-flash overlay after the short flash window.
+    category: object_lifecycle
+  R10:
+    text: The corpse subsystem must prewarm the actor pool with the corpse class up to the configured maximum corpse count during initialization.
+    category: object_lifecycle
+  R11:
+    text: FetchCorpse must acquire a corpse from the pooling subsystem at the dead actor's location and rotation.
+    category: object_lifecycle
+  R12:
+    text: FetchCorpse must configure the pooled corpse using the dead actor's skeletal mesh and monster data.
+    category: core_logic
+  R13:
+    text: FetchCorpse must enqueue the corpse for cleanup tracking and update the current corpse count.
+    category: object_lifecycle
+  R14:
+    text: FetchCorpse must return the configured pooled corpse actor to the caller.
+    category: core_logic
+  R15:
+    text: CleanupNextAvailableCorpse must inspect only the oldest queued corpse and respect the minimum-age gate before cleanup.
+    category: object_lifecycle
+  R16:
+    text: CleanupNextAvailableCorpse must release an eligible corpse back to the pool when it is off-screen or the corpse count exceeds the hard limit.
+    category: object_lifecycle
+  R17:
+    text: CleanupNextAvailableCorpse must remove at most one corpse per call.
+    category: object_lifecycle
+  R18:
+    text: Tick must call the cleanup routine once per frame.
+    category: object_lifecycle
+
+test_requirements:
+  ActionRoguelike.CorpseSystem.CDOChecks:
+    - R1
+    - R4
+    - R5
+    - R6
+  ActionRoguelike.CorpseSystem.RuntimeBehaviors:
+    - R1
+    - R2
+    - R3
+    - R4
+    - R5
+    - R6
+    - R7
+    - R8
+    - R9
+    - R10
+    - R11
+    - R12
+    - R13
+    - R14
+    - R15
+    - R16
+    - R17
+    - R18
+
+files_to_edit:
+  - Source/ActionRoguelike/World/RogueMonsterCorpse.cpp
+  - Source/ActionRoguelike/Subsystems/RogueMonsterCorpseSubsystem.cpp
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "ActionRoguelike.CorpseSystem"

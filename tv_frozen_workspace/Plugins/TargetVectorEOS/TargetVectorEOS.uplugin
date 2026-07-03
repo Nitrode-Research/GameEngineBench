@@ -1,0 +1,24 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "Target Vector EOS",
+	"Description": "Blueprint nodes for Epic Online Services",
+	"Category": "Online Platform",
+	"CreatedBy": "VOIDWARE Prohibited",
+	"CreatedByURL": "https://github.com/Voidware-Prohibited",
+	"DocsURL": "https://github.com/Voidware-Prohibited/TargetVectorEOS",
+	"MarketplaceURL": "",
+	"SupportURL": "https://github.com/Voidware-Prohibited/TargetVectorEOS",
+	"CanContainContent": true,
+	"IsBetaVersion": false,
+	"IsExperimentalVersion": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "TargetVectorEOS",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}
+	]
+}

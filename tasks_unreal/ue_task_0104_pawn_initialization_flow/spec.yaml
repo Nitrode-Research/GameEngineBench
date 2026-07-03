@@ -1,0 +1,80 @@
+task_id: ue_task_0104
+title: Implement pawn extension and player initialization flow
+tier: hard
+
+instruction: |
+  Implement the pawn initialization flow so player-controlled pawns receive the
+  correct data, components, abilities, input, and ready-state transitions.
+  
+  Expected behavior:
+  - Pawn extension components coordinate initialization state across pawn, controller, player state, and ability system.
+  - Pawn data is applied at the correct lifecycle point for both initially spawned and respawned pawns.
+  - Ability system ownership and avatar actor references are initialized and cleared correctly.
+  - Default abilities, input bindings, camera setup, and gameplay components are granted only when prerequisites are ready.
+  - Client and server initialization paths converge without duplicate grants or missing client-side setup.
+  - Possession, unpossession, death, respawn, and seamless travel do not leave stale initialization state.
+  - Initialization state changes notify dependent components through the existing component manager pattern.
+  - The implementation must compile and fit the existing pawn, hero component, player controller, player state, and GAS architecture.
+  
+  Constraints:
+  - Use the repository to infer lifecycle state names, component manager usage, pawn data flow, and authority/client responsibilities.
+  - Do not collapse initialization into BeginPlay-only setup.
+  - Do not require new assets or hidden manual setup.
+  
+  Quality bar:
+  The implementation must be lifecycle-correct. It should handle possession and
+  respawn paths without double-granting abilities, missing input on clients, or
+  leaving stale ability system avatar references.
+
+files_to_edit:
+  - Source/ECR/Private/Gameplay/Character/ECRPawnData.cpp
+  - Source/ECR/Private/Gameplay/Character/ECRPawnExtensionComponent.cpp
+  - Source/ECR/Public/Gameplay/Character/ECRHeroComponent.cpp
+  - Source/ECR/Private/Gameplay/Player/ECRPlayerState.cpp
+  - Source/ECR/Public/Gameplay/Character/ECRPawnData.h
+  - Source/ECR/Public/Gameplay/Character/ECRPawnExtensionComponent.h
+  - Source/ECR/Public/Gameplay/Character/ECRHeroComponent.h
+  - Source/ECR/Public/Gameplay/Player/ECRPlayerState.h
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "ECR.PawnInitialization"
+
+hidden_requirements:
+  R1:
+    text: Pawn extension components coordinate initialization state across pawn, controller, player state, and ability system.
+    category: lifecycle
+  R2:
+    text: Pawn data is applied at the correct lifecycle point for both initially spawned and respawned pawns.
+    category: lifecycle
+  R3:
+    text: Ability system ownership and avatar actor references are initialized and cleared correctly.
+    category: lifecycle
+  R4:
+    text: Default abilities, input bindings, camera setup, and gameplay components are granted only when prerequisites are ready.
+    category: ui
+  R5:
+    text: Client and server initialization paths converge without duplicate grants or missing client-side setup.
+    category: replication
+  R6:
+    text: Possession, unpossession, death, respawn, and seamless travel do not leave stale initialization state.
+    category: replication
+  R7:
+    text: Initialization state changes notify dependent components through the existing component manager pattern.
+    category: lifecycle
+  R8:
+    text: The implementation must compile and fit the existing pawn, hero component, player controller, player state, and GAS architecture.
+    category: ui
+
+test_requirements:
+  ECR.PawnInitialization.source_contract_tokens_present:
+    - R1
+    - R2
+    - R3
+    - R4
+    - R5
+    - R6
+    - R7
+    - R8

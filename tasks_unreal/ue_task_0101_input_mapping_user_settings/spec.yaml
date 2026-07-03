@@ -1,0 +1,85 @@
+task_id: ue_task_0101
+title: Implement input mapping registration and user settings
+tier: hard
+
+instruction: |
+  Implement the input mapping and user settings integration so player controls,
+  rebinding, and platform-specific input configuration behave correctly.
+  
+  Expected behavior:
+  - Default mappable input configs register with local settings and apply to the local player at the correct pawn initialization point.
+  - Active and inactive input configs are tracked consistently by input type and config identity.
+  - Mapping contexts are added to Enhanced Input with the intended priorities and removed cleanly when no longer active.
+  - User-remapped keys are saved, restored, and applied without losing default mappings.
+  - Invalid configs, missing mapping contexts, duplicate registrations, and unavailable user settings fail safely.
+  - CommonGame input-key display data reflects current mappings and platform-specific key glyph rules.
+  - Pawn possession, respawn, and local-player changes do not duplicate mappings or leave stale contexts.
+  - The implementation must compile and fit the existing Enhanced Input, local settings, pawn control, and CommonGame input architecture.
+  
+  Constraints:
+  - Use the repository to infer mappable config pairs, local settings storage, key display behavior, and pawn initialization timing.
+  - Do not hardcode key bindings or bypass Enhanced Input user settings.
+  - Do not require new assets or hidden manual setup.
+  
+  Quality bar:
+  The implementation must preserve user customization and lifecycle correctness.
+  A solution that only applies default mappings but loses remaps, duplicates
+  contexts, or breaks key display is not sufficient.
+
+files_to_edit:
+  - Source/ECR/Private/Input/ECRInputComponent.cpp
+  - Source/ECR/Private/Input/ECRInputConfig.cpp
+  - Source/ECR/Private/Input/ECRAimSensitivityData.cpp
+  - Source/ECR/Private/Input/ECRInputModifiers.cpp
+  - Source/ECR/Private/Input/ECRMappableConfigPair.cpp
+  - Source/ECR/Private/Settings/ECRSettingsLocal.cpp
+  - Source/ECR/Private/Settings/ECRSettingsShared.cpp
+  - Plugins/CommonGame/Source/Private/CommonPlayerInputKey.cpp
+  - Source/ECR/Public/Input/ECRInputComponent.h
+  - Source/ECR/Public/Input/ECRInputConfig.h
+  - Source/ECR/Public/Input/ECRMappableConfigPair.h
+  - Source/ECR/Public/Settings/ECRSettingsLocal.h
+  - Source/ECR/Public/Settings/ECRSettingsShared.h
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "ECR.InputSettings"
+
+hidden_requirements:
+  R1:
+    text: Default mappable input configs register with local settings and apply to the local player at the correct pawn initialization point.
+    category: lifecycle
+  R2:
+    text: Active and inactive input configs are tracked consistently by input type and config identity.
+    category: input
+  R3:
+    text: Mapping contexts are added to Enhanced Input with the intended priorities and removed cleanly when no longer active.
+    category: input
+  R4:
+    text: User-remapped keys are saved, restored, and applied without losing default mappings.
+    category: input
+  R5:
+    text: Invalid configs, missing mapping contexts, duplicate registrations, and unavailable user settings fail safely.
+    category: input
+  R6:
+    text: CommonGame input-key display data reflects current mappings and platform-specific key glyph rules.
+    category: input
+  R7:
+    text: Pawn possession, respawn, and local-player changes do not duplicate mappings or leave stale contexts.
+    category: replication
+  R8:
+    text: The implementation must compile and fit the existing Enhanced Input, local settings, pawn control, and CommonGame input architecture.
+    category: input
+
+test_requirements:
+  ECR.InputSettings.source_contract_tokens_present:
+    - R1
+    - R2
+    - R3
+    - R4
+    - R5
+    - R6
+    - R7
+    - R8

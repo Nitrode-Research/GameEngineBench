@@ -1,0 +1,87 @@
+task_id: ue_task_0090
+title: Implement actor indicator projection and screen-space layout
+tier: hard
+
+instruction: |
+  Implement the actor indicator system so world actors can drive correct
+  screen-space UI indicators.
+  
+  Expected behavior:
+  - Gameplay code can register, update, and remove actor indicators through the existing manager component.
+  - Indicators project actor or component world positions to screen space using the local player's view.
+  - On-screen indicators are positioned, aligned, clamped, and layered according to descriptor settings.
+  - Off-screen or edge-clamped indicators remain stable and point toward the relevant world target when configured.
+  - Hidden, destroyed, unregistered, or invalid targets stop producing visible indicators without crashes.
+  - Indicator widgets receive descriptor data needed for distance, visibility, and target-specific presentation.
+  - Multiple indicators can coexist and stay stable when the same target is registered more than once.
+  - The implementation must compile and fit the existing UI extension, local player, and widget architecture.
+  
+  Constraints:
+  - Use the repository to infer descriptor fields, Slate layout behavior, projection math, manager ownership, and widget lifecycle.
+  - Do not implement a separate HUD-only indicator list that bypasses descriptors.
+  - Do not require new assets or hidden manual setup.
+  
+  Quality bar:
+  The implementation must be UI-lifecycle-safe and viewport-correct. A solution
+  that only places widgets in the happy path but fails off-screen projection,
+  target teardown, or multiple indicators is not sufficient.
+
+files_to_edit:
+  - Source/ECR/Private/GUI/IndicatorSystem/ECRIndicatorManagerComponent.cpp
+  - Source/ECR/Private/GUI/IndicatorSystem/IndicatorDescriptor.cpp
+  - Source/ECR/Public/GUI/IndicatorSystem/IndicatorLayer.cpp
+  - Source/ECR/Public/GUI/IndicatorSystem/IndicatorLibrary.cpp
+  - Source/ECR/Public/GUI/IndicatorSystem/SActorCanvas.cpp
+  - Source/ECR/Public/GUI/IndicatorSystem/ECRIndicatorManagerComponent.h
+  - Source/ECR/Public/GUI/IndicatorSystem/IndicatorDescriptor.h
+  - Source/ECR/Public/GUI/IndicatorSystem/IndicatorLayer.h
+  - Source/ECR/Public/GUI/IndicatorSystem/IndicatorLibrary.h
+  - Source/ECR/Public/GUI/IndicatorSystem/SActorCanvas.h
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "ECR.ActorIndicator"
+
+hidden_requirements:
+  R1:
+    text: Gameplay code can register, update, and remove actor indicators through the existing manager component.
+    category: ui
+  R2:
+    text: Indicators project actor or component world positions to screen space using the local player's view.
+    category: ui
+  R3:
+    text: On-screen indicators are positioned, aligned, clamped, and layered according to descriptor settings.
+    category: ui
+  R4:
+    text: Off-screen or edge-clamped indicators remain stable and point toward the relevant world target when configured.
+    category: ui
+  R5:
+    text: Hidden, destroyed, unregistered, or invalid targets stop producing visible indicators without crashes.
+    category: lifecycle
+  R6:
+    text: Indicator widgets receive descriptor data needed for distance, visibility, and target-specific presentation.
+    category: ui
+  R7:
+    text: >-
+      Multiple indicators can coexist without z-order or clipping problems, and the
+      manager must register each descriptor into its tracked indicator list using the
+      project's unique-add registration convention (AddUnique), so that registering the
+      same descriptor more than once cannot double-add it. A plain append (Add) that can
+      duplicate entries is a failure.
+    category: ui
+  R8:
+    text: The implementation must compile and fit the existing UI extension, local player, and widget architecture.
+    category: ui
+
+test_requirements:
+  ECR.ActorIndicator.source_contract_tokens_present:
+    - R1
+    - R2
+    - R3
+    - R4
+    - R5
+    - R6
+    - R7
+    - R8

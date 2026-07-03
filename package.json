@@ -1,0 +1,6 @@
+{
+  "name": "unrealbench",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.80.0"
+  }
+}

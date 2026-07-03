@@ -1,0 +1,138 @@
+task_id: ue_task_0018
+title: Significance / LOD System
+tier: hard
+
+instruction: |
+  # Significance / LOD System
+
+  This repository is a third-person action roguelike built in Unreal Engine. A significance manager controls level-of-detail for AI characters, VFX, and other expensive actors. Actors closer to a player viewpoint receive high significance (full fidelity); distant actors receive low significance (reduced tick rates, simplified animation, etc.). Implement the significance / LOD system so actors correctly downgrade their fidelity based on distance.
+
+  ## Expected Behaviors
+
+  ### Significance Component
+
+  **Constructor defaults:**
+  - Tick is disabled on the component.
+  - Registration is deferred by one frame so the component does not register during the owning actor's spawn frame.
+  - The component defaults to actively managing significance; if the opt-in flag is cleared, it becomes inert.
+  - The current significance is initialized to a sentinel value so the first update always triggers a change notification.
+  - A default distance threshold is added for the highest tier up to a moderate world-unit radius.
+  - Hidden actors are treated as insignificant by default.
+  - Particle systems on the owner are managed by default.
+
+  **BeginPlay:**
+  - If the component is not opted in to managing significance, do nothing.
+  - Cache whether the owner implements the optional significance interface.
+  - Either register with the manager immediately or defer registration by one tick, depending on the deferred flag.
+
+  **Registration:**
+  - Look up the world's significance manager; if none exists, return.
+  - Register this component with the manager, supplying callbacks for both significance calculation and post-update notification.
+
+  **EndPlay:**
+  - If managing significance, unregister from the significance manager if it still exists.
+
+  **Significance calculation:**
+  - If a global debug override is active, return the forced value immediately.
+  - If the actor is hidden and the hidden-actors-are-insignificant flag is set, return the hidden tier.
+  - If the owner implements the optional interface, give it the chance to override either the computed significance value or the origin location used for distance measurement.
+  - Compute the distance from the actor's location (or the overridden origin) to the viewpoint, then map that distance through the configured threshold table.
+
+  **Post-update notification:**
+  - If the significance changed from the stored value — or if this is the first update (stored value is still the sentinel) — record the new value, log the change, and broadcast the significance-changed delegate.
+  - If particle management is enabled, update particle significance accordingly.
+
+  **Distance-to-tier mapping:**
+  - If the threshold table is empty, log a warning and return the highest tier.
+  - If the distance exceeds all configured thresholds, return the lowest tier.
+  - Otherwise return the tier of the first threshold whose maximum distance covers the input distance.
+
+  ## Quality Bar
+
+  All actors with a significance component must register with the world's significance manager on begin-play and receive significance updates as their distance to the player changes. A console variable must allow forcing all significance values to a fixed tier for performance comparison. The significance-changed delegate must fire on the first update even though no previous value existed. Registration must be deferred by one frame when the deferred flag is set. No new classes or assets are required — implement the behavior within the existing file structure.
+
+hidden_requirements:
+  R1:
+    text: The significance component must disable its own tick and default to active significance management.
+    category: defaults
+  R2:
+    text: The significance component must default to one-frame deferred registration and avoid immediate manager registration while that flag is set.
+    category: object_lifecycle
+  R3:
+    text: The significance component must initialize current significance to an invalid sentinel so the first update triggers notification.
+    category: defaults
+  R4:
+    text: The significance component must provide a default highest-tier distance threshold in a moderate world-unit radius.
+    category: defaults
+  R5:
+    text: Hidden actors must default to the hidden significance tier when the hidden-actor flag is enabled.
+    category: core_logic
+  R6:
+    text: Owner particle significance management must be enabled by default and routed through the component's post-update path.
+    category: defaults
+  R7:
+    text: BeginPlay must do nothing when significance management is disabled.
+    category: object_lifecycle
+  R8:
+    text: BeginPlay must cache whether the owner implements the optional significance interface.
+    category: initialization
+  R9:
+    text: BeginPlay must register immediately or defer registration by one tick depending on the deferred-registration flag.
+    category: object_lifecycle
+  R10:
+    text: RegisterWithManager must look up the world's significance manager and register calculation and post-update callbacks.
+    category: initialization
+  R11:
+    text: EndPlay must unregister managed components from the significance manager.
+    category: object_lifecycle
+  R12:
+    text: Significance calculation must honor the global force-significance CVar before distance logic.
+    category: core_logic
+  R13:
+    text: Significance calculation must allow owner interface overrides for significance value and measurement origin.
+    category: core_logic
+  R14:
+    text: Distance-to-tier mapping must return highest for an empty table, lowest beyond all thresholds, and the first threshold that covers the distance otherwise.
+    category: core_logic
+  R15:
+    text: Post-update handling must update stored significance, log, and broadcast the changed delegate when the value changes or the previous value is invalid.
+    category: core_logic
+  R16:
+    text: The custom significance manager must be available as the world's significance manager.
+    category: initialization
+  R17:
+    text: The custom significance manager must track registered tags and notify owners that implement the significance interface when LOD buckets change.
+    category: core_logic
+
+test_requirements:
+  ActionRoguelike.SignificanceLOD.CDOChecks:
+    - R1
+    - R2
+    - R3
+    - R4
+    - R5
+    - R6
+    - R12
+    - R14
+  ActionRoguelike.SignificanceLOD.RuntimeBehaviors:
+    - R2
+    - R3
+    - R5
+    - R7
+    - R9
+    - R10
+    - R11
+    - R12
+    - R14
+    - R15
+    - R16
+
+files_to_edit:
+  - Source/ActionRoguelike/Performance/RogueSignificanceComponent.cpp
+  - Source/ActionRoguelike/Performance/RogueSignificanceManager.cpp
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "ActionRoguelike.SignificanceLOD"

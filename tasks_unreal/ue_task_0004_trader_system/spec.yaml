@@ -1,0 +1,110 @@
+task_id: ue_task_0004
+title: Trader System
+tier: hard
+
+instruction: |
+  # Task: Trader System
+
+  ## Context
+
+  You are working on a cooperative horde-survival game built in Unreal Engine 5
+  with C++. The game supports 1–4 players on a dedicated server.
+
+  The following behaviors must work correctly in multiplayer.
+
+  ## What must work
+
+  ### Trader interaction
+
+  - The trader is a world actor that players can interact with.
+  - On first interaction, the trader plays a welcome animation and sound
+    visible and audible to all connected players.
+  - Interacting opens a purchase UI on the local player's screen only.
+    Other players are not affected.
+  - The trader is only interactable during the pause phase between rounds.
+    During an active round, the interaction prompt must reflect that it is
+    unavailable.
+
+  ### Purchase flow
+
+  - The purchase UI displays available items with their prices.
+  - The player's current money balance is visible in the UI.
+  - When the player selects an item to buy, the request goes to the server.
+  - The server validates that the player has sufficient funds and that the
+    match is in the correct phase.
+  - A valid purchase deducts the cost from the player's money and adds the
+    item to their inventory. Both operations happen on the server.
+  - If the player cannot afford an item, nothing happens.
+
+  ### Lobby character trade
+
+  - During the lobby, players can initiate a character swap with another
+    player. A pending trade shows both players' character portraits and a
+    countdown timer. The target player can accept or decline.
+
+  ## Quality bar
+
+  - Interacting with the trader during a pause phase opens the UI for the
+    local player; no other player's screen is affected.
+  - Buying an item the player can afford deducts money and adds the item;
+    buying one they cannot afford has no effect on money or inventory.
+  - The trader UI shows the correct current money balance.
+  - Interacting during an active round does not open the UI.
+  - The lobby character trade widget shows the correct character portraits
+    and countdown for both players involved in the trade.
+
+hidden_requirements:
+  R1:
+    text: Trader money and trade state must replicate, purchase and trade requests must be server RPCs, and welcome feedback must multicast to clients.
+    category: replication
+  R2:
+    text: Trader interaction info must advertise talking to the trader and require a timed hold.
+    category: core_logic
+  R3:
+    text: Affordable purchases must deduct the item price and add the item, while unaffordable purchases must leave money and inventory unchanged.
+    category: authority
+  R4:
+    text: Character trades must record instigator and target, start a countdown, support accept and decline paths, and clear state after completion.
+    category: object_lifecycle
+  R5:
+    text: Expired character trades must abort and reset timer, instigator, target, and countdown state.
+    category: object_lifecycle
+  R6:
+    text: Zombie kill rewards must add the correct money amount, track total kills, and track headshots separately.
+    category: core_logic
+
+test_requirements:
+  HordeTemplate.Trader.replication_surface:
+    - R1
+  HordeTemplate.Trader.interaction_info:
+    - R2
+  HordeTemplate.Trader.buy_item_affordable_and_unaffordable:
+    - R3
+  HordeTemplate.Trader.character_trade_lifecycle:
+    - R4
+  HordeTemplate.Trader.character_trade_timeout_aborts:
+    - R5
+  HordeTemplate.Trader.kill_rewards_money_and_tracks_kills:
+    - R6
+
+files_to_edit:
+  - Source/HordeTemplateV2Native/Public/Misc/HordeTrader.h
+  - Source/HordeTemplateV2Native/Private/Misc/HordeTrader.cpp
+  - Source/HordeTemplateV2Native/Public/HUD/Widgets/PlayerTraderWidget.h
+  - Source/HordeTemplateV2Native/Private/HUD/Widgets/PlayerTraderWidget.cpp
+  - Source/HordeTemplateV2Native/Public/HUD/Widgets/TraderItemWidget.h
+  - Source/HordeTemplateV2Native/Private/HUD/Widgets/TraderItemWidget.cpp
+  - Source/HordeTemplateV2Native/Public/HUD/Widgets/LobbyCharacterTradeWidget.h
+  - Source/HordeTemplateV2Native/Private/HUD/Widgets/LobbyCharacterTradeWidget.cpp
+  - Source/HordeTemplateV2Native/Public/Gameplay/HordePlayerState.h
+  - Source/HordeTemplateV2Native/Private/Gameplay/HordePlayerState.cpp
+  - Source/HordeTemplateV2Native/Public/Character/HordeBaseCharacter.h
+  - Source/HordeTemplateV2Native/Private/Character/HordeBaseCharacter.cpp
+  - Source/HordeTemplateV2Native/Public/AI/ZedPawn.h
+  - Source/HordeTemplateV2Native/Private/AI/ZedPawn.cpp
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "HordeTemplate.Trader.buy_item_affordable_and_unaffordable"

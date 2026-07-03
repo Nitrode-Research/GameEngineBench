@@ -1,0 +1,113 @@
+task_id: ue_task_0001
+title: Zombie System
+tier: hard
+
+instruction: |
+  You are working in a multiplayer horde-survival game built with Unreal Engine 5 native C++.
+  Implement the following zombie AI system.
+
+  The project already contains:
+  - a functional round-based game mode
+  - player characters with health and damage systems
+  - player states that handle score / kill tracking
+  - spawn points and patrol-tagged AI points placed in levels
+  - the visual and audio assets needed for zombie presentation
+
+  The game mode expects to spawn zombies, track how many are alive, and use that count to drive round and game-over progression.
+
+  You may modify or extend the provided header files and implement the corresponding .cpp files.
+  Implement the zombie AI decision-making in native C++ within the editable classes in this task
+  rather than delegating the logic to external Behavior Tree or Blackboard assets.
+
+  The zombie system must satisfy these behavioral requirements:
+
+  Spawning and round integration:
+  - Zombies must be spawnable by the existing game flow. The game mode manages spawn points in
+    the level; zombies should appear at those points when a round starts.
+  - When a zombie spawns, the game's alive-zombie counter must increase. When a zombie dies,
+    it must decrease. Round and game-over progression depends on this count reaching zero.
+  - The counter must reflect the correct count within approximately one second of the zombie
+    spawning, not necessarily in the same frame as BeginPlay.
+
+  Health and death:
+  - Zombies have health and die when it reaches zero.
+  - Dead zombies must immediately stop all activity and no longer act as enemies.
+  - After death, the zombie corpse must remain in the world for at least 10 seconds
+    before being automatically destroyed.
+
+  Player detection and pursuit:
+  - Zombies detect and chase living player characters when they are within a practical gameplay range.
+  - If a targeted player dies or becomes otherwise invalid, the zombie must stop pursuing them.
+  - When no valid target exists, zombies patrol or wander using the spawn/patrol tags in the level.
+
+  Melee attack:
+  - When close enough to a living player, the zombie performs a melee attack.
+  - The attack applies damage through the server-authoritative damage path only.
+  - Zombies must not damage players from outside melee range.
+
+  Kill rewards:
+  - Killing a zombie awards points to the responsible player through the existing player state system.
+  - Headshot kills must award a distinct (higher) point value than body shot kills.
+
+  Multiplayer:
+  - All AI logic runs on the server. Clients must not process AI decisions.
+  - Attack feedback and death feedback must be visible to clients through replicated state
+    or replicated audiovisual cues.
+
+  Map integration:
+  - Zombies must respect the spawn and patrol tag data placed on spawn points in the level.
+
+hidden_requirements:
+  R1:
+    text: Zombies spawned through the game-mode flow must appear at selected AI spawn points, inherit the spawn point patrol tag, and update the alive-zombie counter.
+    category: core_logic
+  R2:
+    text: Zombie health must decrease from damage, death must stop enemy activity, and dead zombie bodies must remain briefly before cleanup.
+    category: object_lifecycle
+  R3:
+    text: Zombies must detect, focus, and pursue living players within gameplay range.
+    category: core_logic
+  R4:
+    text: Zombies must clear dead or invalid targets and fall back to patrol behavior using level patrol tags.
+    category: object_lifecycle
+  R5:
+    text: Zombie melee attacks must apply damage only through the server-authoritative path and only within melee range.
+    category: authority
+  R6:
+    text: Zombie kills must award player-state score, with headshots awarding a higher value than body shots.
+    category: core_logic
+  R7:
+    text: Zombie AI decisions must run only on authoritative server instances, while attack and death feedback replicate to clients.
+    category: replication
+
+test_requirements:
+  HordeTemplate.Zombie.spawn_round_integration_and_patrol_tags:
+    - R1
+  HordeTemplate.Zombie.health_and_death_stop_enemy_activity:
+    - R2
+  HordeTemplate.Zombie.detects_and_chases_living_players:
+    - R3
+  HordeTemplate.Zombie.invalid_targets_clear_and_patrol_fallback_uses_tags:
+    - R4
+  HordeTemplate.Zombie.melee_range_is_enforced:
+    - R5
+  HordeTemplate.Zombie.kill_rewards_and_headshot_bonus:
+    - R6
+  HordeTemplate.Zombie.server_ai_only_and_feedback_replicates:
+    - R7
+
+files_to_edit:
+  - Source/HordeTemplateV2Native/Public/AI/ZedPawn.h
+  - Source/HordeTemplateV2Native/Private/AI/ZedPawn.cpp
+  - Source/HordeTemplateV2Native/Public/AI/ZedAIController.h
+  - Source/HordeTemplateV2Native/Private/AI/ZedAIController.cpp
+  - Source/HordeTemplateV2Native/Public/AI/AICorePoint.h
+  - Source/HordeTemplateV2Native/Private/AI/AICorePoint.cpp
+  - Source/HordeTemplateV2Native/Public/AI/AISpawnPoint.h
+  - Source/HordeTemplateV2Native/Private/AI/AISpawnPoint.cpp
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "HordeTemplate.Zombie"

@@ -1,0 +1,65 @@
+task_id: ue_task_0061
+title: ALS-Refactored Footstep Effects
+tier: hard
+
+instruction: |
+  You are working in an Unreal Engine 5 project that uses the ALS-Refactored plugin.
+  Implement the behavior of the ALS-Refactored Footstep Effects system in the task-owned files.
+  
+  The project already contains the public API surface, assets, build/module wiring, and surrounding gameplay or plugin integration points.
+  
+  Implement the following behavior:
+  
+  - Triggering the notify performs the existing ground trace from the correct foot and resolves the relevant effect set.
+  - Sound, decal, and particle effects are chosen from the configured settings rather than hardcoded defaults.
+  - Spawned effects use the correct world-space placement and orientation for the footstep hit.
+  - Missing or invalid settings fail safely without crashes or persistent leaked components.
+  - Cosmetic behavior remains data-driven through the existing settings assets and physical-surface routing.
+
+files_to_edit:
+  - "Plugins/ALS-Refactored/Source/ALS/Private/Notifies/AlsAnimNotify_FootstepEffects.cpp"
+  - "Plugins/ALS-Refactored/Source/ALS/Public/Notifies/AlsAnimNotify_FootstepEffects.h"
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "ALSRefactored.Footsteps"
+
+hidden_requirements:
+  R1:
+    text: The notify must resolve the correct foot bone, derive the foot transform, and trace from that foot toward the ground using the configured trace channel and distance.
+    category: runtime_integration
+  R2:
+    text: The trace result must choose the effect settings through the configured physical-surface routing, falling back safely when the hit surface has no specific entry.
+    category: runtime_integration
+  R3:
+    text: Enabled decal effects must spawn from the configured decal material, size, duration, placement mode, offsets, and surface-angle gate.
+    category: runtime_integration
+  R4:
+    text: Enabled sound effects must spawn from configured sound assets and parameters instead of hardcoded defaults.
+    category: runtime_integration
+  R5:
+    text: Enabled particle effects must spawn from configured Niagara assets, with the requested foot-relative or hit-relative placement.
+    category: runtime_integration
+  R6:
+    text: Spawned effects must use world-space hit position, hit normal, foot rotation, side-specific offsets, and mesh scale consistently.
+    category: core_logic
+  R7:
+    text: Missing meshes, invalid settings, missing effect assets, in-air skip conditions, and failed traces must exit safely without crashes or persistent leaked components.
+    category: object_lifecycle
+  R8:
+    text: The implementation must remain data-driven through existing settings assets rather than introducing task-specific constants or one-off content assumptions.
+    category: runtime_integration
+  R9:
+    text: Spawned footstep decals must be given the configured non-default render sort order so they layer correctly beneath other gameplay decals, rather than being left at the engine-default sort order.
+    category: runtime_integration
+
+test_requirements:
+  ALSRefactored.Footsteps.notify_traces_and_spawns_configured_decal:
+    - R1
+    - R2
+    - R3
+    - R6
+    - R7
+    - R9

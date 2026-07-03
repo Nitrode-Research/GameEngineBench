@@ -1,0 +1,81 @@
+task_id: ue_task_0023
+title: Pool Manager Runtime
+tier: hard
+
+instruction: |
+  The Bomber project uses a PoolManager plugin to reuse frequently spawned runtime objects instead of repeatedly constructing and destroying them. Implement the runtime PoolManager behavior in the task-owned files.
+
+  Gameplay systems must be able to request objects by class, receive existing inactive objects when available, create new objects when a pool is empty, return active objects to their pool, and query pool state reliably.
+
+  The implementation must preserve the existing plugin architecture:
+
+  - The world subsystem owns pool containers and factory registration.
+  - Factories handle object-type-specific creation, destruction, activation, deactivation, and callbacks.
+  - Handles identify pending and registered objects even when spawning is deferred.
+  - Single-object and array checkout paths should share the same state model.
+  - Returned objects should become inactive and reusable rather than accumulating fresh instances.
+  - Pool queries must report registered, active, inactive/free, and class-level counts accurately.
+  - Clearing pools must destroy or discard managed objects and queued requests cleanly.
+  - Game-feature deactivation must remove pools for classes owned by the deactivating plugin.
+
+  Do not replace the plugin with a separate toy pool. Use the existing `FPoolContainer`, `FPoolObjectData`, `FPoolObjectHandle`, `FSpawnRequest`, and factory types.
+
+files_to_edit:
+  - Plugins/PoolManager/Source/PoolManager/Private/PoolManagerSubsystem.cpp
+  - Plugins/PoolManager/Source/PoolManager/Private/Factories/PoolFactory_UObject.cpp
+  - Plugins/PoolManager/Source/PoolManager/Private/Factories/PoolFactory_Actor.cpp
+  - Plugins/PoolManager/Source/PoolManager/Private/Factories/PoolFactory_UserWidget.cpp
+  - Plugins/PoolManager/Source/PoolManager/Private/Data/PoolContainer.cpp
+  - Plugins/PoolManager/Source/PoolManager/Private/Data/PoolObjectData.cpp
+  - Plugins/PoolManager/Source/PoolManager/Private/Data/PoolObjectHandle.cpp
+  - Plugins/PoolManager/Source/PoolManager/Private/Data/SpawnRequest.cpp
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "Bomber.PoolManagerRuntime"
+
+hidden_requirements:
+  R1:
+    text: The subsystem must initialize and register factories so UObject, Actor, and Widget-derived classes are routed to the nearest compatible factory.
+    category: initialization
+  R2:
+    text: Taking an object from an empty pool must create a new object, register it in the appropriate pool, mark it active, return a valid handle, and invoke completion callbacks.
+    category: core_logic
+  R3:
+    text: Returning an active object must mark it inactive/free, run the factory return/deactivation path, and leave it available for reuse.
+    category: object_lifecycle
+  R4:
+    text: Taking from a pool with an inactive object must reuse that object, apply the requested activation payload, mark it active, and avoid creating a duplicate.
+    category: core_logic
+  R5:
+    text: Pool state queries must correctly report registered objects, active objects, free objects, class containment, object containment, and handle/object lookup.
+    category: api_contract
+  R6:
+    text: Array checkout paths must first consume free objects, then create only the missing remainder, and must deliver the aggregate callback when all requested objects are available.
+    category: core_logic
+  R7:
+    text: Spawn requests must preserve valid handles, priority ordering, deferred processing, cancellation by handle, and callback order.
+    category: object_lifecycle
+  R8:
+    text: Emptying one pool or all pools must clear queued requests, deactivate or destroy managed objects through the matching factory, and remove pool containers.
+    category: cleanup
+  R9:
+    text: Factory implementations must perform type-specific spawn, destroy, take, return, and state-change behavior for UObject, Actor, and UserWidget classes.
+    category: subsystem_architecture
+  R10:
+    text: Game-feature deactivation must empty pools whose object classes belong to the deactivating plugin.
+    category: cleanup
+
+test_requirements:
+  Bomber.PoolManagerRuntime.uobject_checkout_return_and_reuse:
+    - R1
+    - R2
+    - R3
+    - R4
+    - R5
+  Bomber.PoolManagerRuntime.array_checkout_and_empty_pool_state:
+    - R5
+    - R6
+    - R8

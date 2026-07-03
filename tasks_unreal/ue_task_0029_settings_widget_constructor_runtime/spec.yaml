@@ -1,0 +1,62 @@
+task_id: ue_task_0029
+title: Settings Widget Constructor Runtime
+tier: hard
+
+instruction: |
+  Bomber's SettingsWidgetConstructor plugin builds runtime settings UI from data-table rows and binds each setting to its owner functions, current value, UI subwidget, and config persistence path. Implement the core runtime methods in the task-owned files.
+
+  Settings rows must be cached, settings must be applied/saved, UI controls must update their backing data and setter delegates, and visible subwidgets must stay synchronized with configuration values.
+
+  The implementation must satisfy the following behavior:
+
+  - Settings rows must be generated from the settings data source, cached internally, and replaced cleanly when recached.
+  - Saving settings must apply runtime game-user settings and save each valid setting owner config.
+  - Updating by tag must lazily cache rows, match gameplay tags, optionally reload owner config, read current values through the selected setting data object, and write the value back into the setting.
+  - Button, checkbox, combobox, and slider setters must update backing row data, execute the proper setter delegate, update dependent settings, synchronize the matching subwidget, notify `OnAnySettingSet`, and play UI click feedback where applicable.
+  - Slider values must be clamped to the supported normalized range before being stored and propagated.
+  - Runtime construction must cache rows, bind setting owners/getters/setters, create subwidgets, update from config, size scroll boxes, and apply settings.
+
+files_to_edit:
+  - Plugins/SettingsWidgetConstructor/Source/SettingsWidgetConstructor/Private/UI/SettingsWidget.cpp
+  - Plugins/SettingsWidgetConstructor/Source/SettingsWidgetConstructor/Private/UI/SettingSubWidget.cpp
+  - Plugins/SettingsWidgetConstructor/Source/SettingsWidgetConstructor/Public/UI/SettingsWidget.h
+  - Plugins/SettingsWidgetConstructor/Source/SettingsWidgetConstructor/Public/UI/SettingSubWidget.h
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "Bomber.SettingsWidgetConstructor"
+
+hidden_requirements:
+  R1:
+    text: Settings rows must be generated, cached, cleared, reserved, and emplaced from the settings data source.
+    category: data_cache
+  R2:
+    text: SaveSettings must apply current game-user settings and save each valid owner config.
+    category: persistence
+  R3:
+    text: UpdateSettingsByTags must match requested gameplay tags, optionally reload configs, use chosen setting data, and propagate current values.
+    category: settings_update
+  R4:
+    text: Button settings must execute their delegate, update dependent settings, notify setting changes, and play click feedback.
+    category: ui_events
+  R5:
+    text: Checkbox, combobox, and slider setters must update row data, execute setter delegates, synchronize subwidgets, and notify setting changes.
+    category: ui_events
+  R6:
+    text: Slider setters must clamp input before storing and propagating values.
+    category: value_validation
+  R7:
+    text: Runtime construction must cache rows, bind and add settings, update from config, update scroll box height, and apply settings.
+    category: construction
+
+test_requirements:
+  Bomber.SettingsWidgetConstructor.source_contract:
+    - R1
+    - R2
+    - R3
+    - R4
+    - R5
+    - R6
+    - R7

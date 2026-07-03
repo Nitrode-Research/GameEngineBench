@@ -1,0 +1,96 @@
+task_id: ue_task_0100
+title: Implement health, death, and damage execution flow
+tier: hard
+
+instruction: |
+  Implement the health, death, and damage flow so characters and damageable
+  actors react correctly to gameplay effects in multiplayer.
+  
+  Expected behavior:
+  - Health initializes from the existing attribute set and broadcasts usable initial values to interested systems.
+  - Damage and healing effects update health through the existing Gameplay Ability System path.
+  - Damage execution accounts for source, target, tags, team or friendly-fire rules, and gameplay effect context.
+  - Health changes notify UI, gameplay messages, death checks, and other listeners consistently on server and clients.
+  - Reaching zero health starts the existing death flow exactly once and prevents duplicate death handling.
+  - Death disables or changes gameplay capability as expected, including movement, ability activation, and interaction with equipment.
+  - Respawn or reinitialization restores health state without preserving stale death delegates or old instigator data.
+  - Vehicle or non-character health variants continue to work with the same component and attribute patterns.
+  - The implementation must compile and fit the existing GAS, pawn, player state, message, and replication architecture.
+  
+  Constraints:
+  - Use the repository to infer attribute sets, effect contexts, gameplay tags, death state transitions, and listener behavior.
+  - Do not replace GAS damage with direct health variable mutation.
+  - Do not require new assets or hidden manual setup.
+  
+  Quality bar:
+  The implementation must be authoritative, replicated, and lifecycle-safe.
+  Correctness requires health UI updates, single-shot death handling, effect
+  context preservation, and clean respawn/reinitialization behavior.
+
+files_to_edit:
+  - Source/ECR/Private/Gameplay/GAS/Attributes/ECRHealthSet.cpp
+  - Source/ECR/Private/Gameplay/GAS/Attributes/ECRCharacterHealthSet.cpp
+  - Source/ECR/Private/Gameplay/GAS/Attributes/ECRVehicleHealthSet.cpp
+  - Source/ECR/Public/Gameplay/GAS/Attributes/ECRSimpleVehicleHealthSet.cpp
+  - Source/ECR/Private/Gameplay/GAS/Components/ECRHealthComponent.cpp
+  - Source/ECR/Private/Gameplay/GAS/Components/ECRCharacterHealthComponent.cpp
+  - Source/ECR/Private/Gameplay/GAS/Executions/ECRDamageExecution.cpp
+  - Source/ECR/Public/Gameplay/GAS/Attributes/ECRHealthSet.h
+  - Source/ECR/Public/Gameplay/GAS/Attributes/ECRCharacterHealthSet.h
+  - Source/ECR/Public/Gameplay/GAS/Attributes/ECRVehicleHealthSet.h
+  - Source/ECR/Public/Gameplay/GAS/Components/ECRHealthComponent.h
+  - Source/ECR/Public/Gameplay/GAS/Components/ECRCharacterHealthComponent.h
+  - Source/ECR/Public/Gameplay/GAS/Executions/ECRDamageExecution.h
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "ECR.HealthDamage"
+
+hidden_requirements:
+  R1:
+    text: Health initializes from the existing attribute set and broadcasts usable initial values to interested systems.
+    category: lifecycle
+  R2:
+    text: Damage and healing effects update health through the existing Gameplay Ability System path.
+    category: damage
+  R3:
+    text: Damage execution accounts for source, target, tags, team or friendly-fire rules, and gameplay effect context.
+    category: damage
+  R4:
+    text: Health changes notify UI, gameplay messages, death checks, and other listeners consistently on server and clients.
+    category: replication
+  R5:
+    text: Reaching zero health starts the existing death flow exactly once and prevents duplicate death handling.
+    category: damage
+  R6:
+    text: Death disables or changes gameplay capability as expected, including movement, ability activation, and interaction with equipment.
+    category: ui
+  R7:
+    text: Respawn or reinitialization restores health state without preserving stale death delegates or old instigator data.
+    category: lifecycle
+  R8:
+    text: Vehicle or non-character health variants continue to work with the same component and attribute patterns.
+    category: damage
+  R9:
+    text: The implementation must compile and fit the existing GAS, pawn, player state, message, and replication architecture.
+  R10:
+    text: "The ReducedDamage special rule reduces damage for only ONE attack: after applying the reduced multiplier, the source's ReducedDamage-granting effect must be consumed via RemoveActiveEffectsWithGrantedTags so subsequent attacks deal full damage. Leaving the reduction to persist on every attack is a failure."
+  R11:
+    text: "Damage mitigation must route armor penetration through the project's armor-penetration attenuation helper (CalculateDamageAttenuationForArmorPenetration over the captured ArmorPenetration / Toughness / Armor), not a hand-rolled armor formula that ignores armor penetration."
+    category: ui
+
+test_requirements:
+  ECR.HealthDamage.source_contract_tokens_present:
+    - R1
+    - R2
+    - R3
+    - R4
+    - R5
+    - R6
+    - R7
+    - R8
+    - R9
+    - R10
+    - R11

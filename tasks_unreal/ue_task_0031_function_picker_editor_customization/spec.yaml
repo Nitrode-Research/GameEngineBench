@@ -1,0 +1,43 @@
+task_id: ue_task_0031
+title: Function Picker Editor Customization
+tier: medium
+
+instruction: |
+  Bomber's FunctionPicker editor plugin customizes details-panel properties so designers can choose a compatible UFunction from a selected class. Implement function discovery, searchable combo-box property rows, property-handle accessors, and metadata helpers in the task-owned files.
+
+  Function picker properties must discover compatible functions, build searchable property rows, update the selected function name, and read/write property handle metadata correctly.
+
+files_to_edit:
+  - Plugins/FunctionPicker/Source/FunctionPickerEditor/Private/FunctionPickerType/FunctionPickerCustomization.cpp
+  - Plugins/FunctionPicker/Source/FunctionPickerEditor/Private/FunctionPickerType/FunctionPickerCustomization.h
+  - Plugins/FunctionPicker/Source/FunctionPickerEditor/Private/MyPropertyType/MyPropertyTypeCustomization.cpp
+  - Plugins/FunctionPicker/Source/FunctionPickerEditor/Private/MyPropertyType/MyPropertyTypeCustomization.h
+  - Plugins/FunctionPicker/Source/FunctionPickerEditor/Private/MyPropertyType/PropertyData.cpp
+  - Plugins/FunctionPicker/Source/FunctionPickerEditor/Private/MyPropertyType/PropertyData.h
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "Bomber.FunctionPickerEditor"
+
+hidden_requirements:
+  R1:
+    text: Function discovery must read the chosen class property, handle class/template changes, invalidate invalid state, and repopulate the searchable list.
+    category: function_discovery
+  R2:
+    text: Function discovery must iterate only functions declared on the chosen class, optionally require static functions, filter out the template function, and validate signatures.
+    category: function_discovery
+  R3:
+    text: The generic property customization must create a searchable combo-box row, keep the row text in sync, handle selection changes, and preserve a clearable None option.
+    category: editor_ui
+  R4:
+    text: PropertyData must read names, values, value pointers, write FName values, and inspect metadata through property handles safely.
+    category: property_handles
+
+test_requirements:
+  Bomber.FunctionPickerEditor.source_contract:
+    - R1
+    - R2
+    - R3
+    - R4

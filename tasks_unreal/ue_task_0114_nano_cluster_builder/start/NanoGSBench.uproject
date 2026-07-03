@@ -1,0 +1,19 @@
+{
+    "FileVersion": 3,
+    "EngineAssociation": "5.7",
+    "Category": "",
+    "Description": "Minimal UnrealBench host project for plugin reimplementation tasks.",
+    "Modules": [
+        {
+            "Name": "NanoGSBench",
+            "Type": "Runtime",
+            "LoadingPhase": "Default"
+        }
+    ],
+    "Plugins": [
+        {
+            "Name": "NanoGS",
+            "Enabled": true
+        }
+    ]
+}

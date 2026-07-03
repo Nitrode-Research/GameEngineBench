@@ -1,0 +1,27 @@
+﻿// Copyright (c) Yevhenii Selivanov.
+
+#include "Bomber.h"
+
+// UE
+#include "Kismet/GameplayStatics.h"
+#include "Modules/ModuleManager.h"
+
+#include UE_INLINE_GENERATED_CPP_BY_NAME(Bomber)
+
+IMPLEMENT_PRIMARY_GAME_MODULE(FDefaultGameModuleImpl, Bomber, "Bomber");
+
+DEFINE_LOG_CATEGORY(LogBomber);
+
+bool FTransientChecker::IsTransient(const UObject* Obj)
+{
+	return !IsValid(Obj)
+	       || !(Obj)->IsValidLowLevelFast()
+	       || (Obj)->HasAllFlags(RF_ClassDefaultObject)
+	       || IsTransientLevel(Obj);
+}
+
+bool FTransientChecker::IsTransientLevel(const UObject* Obj)
+{
+	static const FString TransientLevelName = TEXT("Transient");
+	return UGameplayStatics::GetCurrentLevelName(Obj) == TransientLevelName;
+}

@@ -1,0 +1,4 @@
+#include "/Engine/Public/Platform.ush"
+RWStructuredBuffer<uint4> ViewDataBuffer;
+uint SplatCount;
+[numthreads(256,1,1)] void MainCS(uint3 DispatchThreadId : SV_DispatchThreadID) { if (DispatchThreadId.x < SplatCount) { ViewDataBuffer[DispatchThreadId.x] = uint4(0,0,0,0); } }

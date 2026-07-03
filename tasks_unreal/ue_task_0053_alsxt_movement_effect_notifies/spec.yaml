@@ -1,0 +1,88 @@
+task_id: ue_task_0053
+title: ALSXT Movement Effect Notifies
+tier: hard
+
+instruction: |
+  TargetVector's ALSXT plugin includes movement-effect animation notifies for footsteps, hand plants, and slide effects. Implement these notifies in the task-owned files.
+
+  Movement animations must be able to trace against the world, select surface-specific effect settings, and spawn the appropriate gameplay audio, footstep decal, and Niagara effects.
+
+  The implementation must satisfy the following behavior:
+
+  - Footstep, hand-plant, and slide notifies must validate mesh/settings inputs and avoid spawning effects when the character is in air where configured.
+  - Notifies must trace from the configured foot/hand socket using settings-driven axes, trace distance, trace channel, and physical material return.
+  - Surface selection must use hit physical materials or surface type and fall back to the first configured effect entry when no exact match exists.
+  - Footstep notifies must support ALSXT-specific footwear details, including footwear type matching and sole texture parameters.
+  - Footstep notifies must support vertex-paint physical-material lookup through the ALSXT vertex function library.
+  - Sound spawning must honor animation curve blocking, volume/pitch multipliers, editor preview behavior, and attached-vs-hit-location modes.
+  - Niagara systems must spawn at trace-hit locations or attach to the configured bone with settings-driven offsets, scale, rotation, and pooling.
+  - Footstep decals must spawn at trace-hit locations or attach to the hit component with settings-driven materials, offsets, scale, rotation, and dynamic material parameters.
+  - Hand-plant settings must propagate nested editor changes and disable dedicated-server triggering when created in editor.
+
+  Do not replace these notifies with generic footsteps or no-op `Notify` methods.
+
+files_to_edit:
+  - Plugins/ALSXT/Source/ALSXT/Private/Notify/AlsxtAnimNotify_FootstepEffects.cpp
+  - Plugins/ALSXT/Source/ALSXT/Private/Notify/AlsxtAnimNotify_HandPlantEffects.cpp
+  - Plugins/ALSXT/Source/ALSXT/Private/Notify/AlsxtAnimNotify_SlideEffects.cpp
+  - Plugins/ALSXT/Source/ALSXT/Public/Notify/AlsxtAnimNotify_FootstepEffects.h
+  - Plugins/ALSXT/Source/ALSXT/Public/Notify/AlsxtAnimNotify_HandPlantEffects.h
+  - Plugins/ALSXT/Source/ALSXT/Public/Notify/AlsxtAnimNotify_SlideEffects.h
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "TargetVector.ALSXTMovementEffects"
+
+hidden_requirements:
+  R1:
+    text: Notifies must validate mesh/settings and skip configured effects while the character is in air.
+    category: validation
+  R2:
+    text: Notifies must trace from configured sockets using settings axes, trace distances, trace channels, and physical material queries.
+    category: tracing
+  R3:
+    text: Surface effect selection must use physical surface data and fall back to the first configured effect entry.
+    category: surface_selection
+  R4:
+    text: Footstep effects must use ALSXT character interface data including gait, stance, footwear type, and sole textures.
+    category: alsxt_integration
+  R5:
+    text: Footstep effects must support vertex-paint physical-material lookup.
+    category: rendering
+  R6:
+    text: Sound effects must honor curve-based blocking, editor preview behavior, volume/pitch multipliers, and attached-vs-location spawn modes.
+    category: audio
+  R7:
+    text: Niagara effects must spawn attached or at trace-hit locations using settings offsets, rotations, scale, and pooling.
+    category: vfx
+  R8:
+    text: Footstep decals must spawn with settings-driven material, size, offset, attachment mode, and dynamic material parameters.
+    category: rendering
+  R9:
+    text: Hand-plant settings must propagate editor changes and disable dedicated-server triggering for editor-created notifies.
+    category: editor_lifecycle
+
+test_requirements:
+  TargetVector.ALSXTMovementEffects.footstep_source:
+    - R1
+    - R2
+    - R3
+    - R4
+    - R5
+    - R6
+    - R7
+    - R8
+  TargetVector.ALSXTMovementEffects.handplant_source:
+    - R1
+    - R2
+    - R3
+    - R6
+    - R9
+  TargetVector.ALSXTMovementEffects.slide_source:
+    - R1
+    - R2
+    - R3
+    - R6
+    - R7

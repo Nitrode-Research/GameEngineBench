@@ -1,0 +1,80 @@
+task_id: ue_task_0065
+title: Modular Feature Extra Actions
+tier: hard
+
+instruction: |
+  You are working in an Unreal Engine 5 project that uses the UEModularFeatures_ExtraActions plugin.
+  Restore the behavior of the Modular Feature Extra Actions system in the task-owned files.
+  
+  The project already contains the public API surface, assets, build/module wiring, and surrounding gameplay or plugin integration points.
+  
+  Implement the following behavior:
+  
+  - Activating a game feature hooks the expected worlds and actor-extension events through the existing pattern.
+  - The add-abilities action hooks the pawn classes it is configured for — its primary target class together with its additional configured list — registering an actor-extension handler for each distinct configured class so that every configured class is covered.
+  - Supported actions grant and later cleanly remove abilities, inputs, attributes, effects, or spawned actors as configured.
+  - Deactivation tears down added state instead of leaking abilities, bindings, effects, or actors.
+  - Actor-extension event handling follows the repo’s `GameFrameworkComponentManager` lifecycle rather than custom polling.
+  - Input-binding behavior remains aligned with the existing ability-input interface and enhanced-input subsystem integration.
+
+files_to_edit:
+  - "Plugins/UEModularFeatures_ExtraActions/Source/Private/Actions/GameFeatureAction_AddAbilities.cpp"
+  - "Plugins/UEModularFeatures_ExtraActions/Source/Public/Actions/GameFeatureAction_AddAbilities.h"
+  - "Plugins/UEModularFeatures_ExtraActions/Source/Private/Actions/GameFeatureAction_AddInputs.cpp"
+  - "Plugins/UEModularFeatures_ExtraActions/Source/Public/Actions/GameFeatureAction_AddInputs.h"
+  - "Plugins/UEModularFeatures_ExtraActions/Source/Private/Actions/GameFeatureAction_AddAttribute.cpp"
+  - "Plugins/UEModularFeatures_ExtraActions/Source/Public/Actions/GameFeatureAction_AddAttribute.h"
+  - "Plugins/UEModularFeatures_ExtraActions/Source/Private/Actions/GameFeatureAction_AddEffects.cpp"
+  - "Plugins/UEModularFeatures_ExtraActions/Source/Public/Actions/GameFeatureAction_AddEffects.h"
+  - "Plugins/UEModularFeatures_ExtraActions/Source/Private/Actions/GameFeatureAction_SpawnActors.cpp"
+  - "Plugins/UEModularFeatures_ExtraActions/Source/Public/Actions/GameFeatureAction_SpawnActors.h"
+  - "Plugins/UEModularFeatures_ExtraActions/Source/Private/Actions/GameFeatureAction_WorldActionBase.cpp"
+  - "Plugins/UEModularFeatures_ExtraActions/Source/Public/Actions/GameFeatureAction_WorldActionBase.h"
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "MFEA.Actions"
+
+hidden_requirements:
+  R1:
+    text: Activating a world action must register game-instance and world handlers through the existing game-feature lifecycle.
+    category: subsystem_architecture
+  R2:
+    text: AddAbilities must register an actor-extension handler with GameFrameworkComponentManager for the configured pawn class.
+    category: subsystem_architecture
+  R3:
+    text: Actor-extension callbacks must grant abilities only for valid ready actors that satisfy required tags and have authority.
+    category: authority
+  R4:
+    text: Granted abilities must use the configured ability class, level, input id, and ability-system component, then track spec handles for later removal.
+    category: runtime_integration
+  R5:
+    text: Removing actor extensions or deactivating the feature must remove granted abilities and clear tracked handles without leaks.
+    category: object_lifecycle
+  R6:
+    text: AddInputs must add and later remove enhanced-input mappings through the local-player enhanced-input subsystem.
+    category: runtime_integration
+  R7:
+    text: AddAttribute and AddEffects actions must apply configured attribute sets and gameplay effects and clean them up on removal.
+    category: runtime_integration
+  R8:
+    text: SpawnActors must spawn configured actors only in the target game world and destroy tracked actors on deactivation.
+    category: object_lifecycle
+  R9:
+    text: World-action teardown must remove start-game-instance delegates and active extension requests when deactivated or reset.
+    category: object_lifecycle
+  R10:
+    text: Soft references for pawn classes, abilities, input enums, attributes, effects, levels, and actor classes must be loaded only when needed and handled safely when missing.
+    category: runtime_integration
+  R11:
+    text: "AddToWorld must register an actor-extension handler for each DISTINCT configured pawn class — the target pawn class together with each class in the additional configured list — de-duplicating a class that is listed more than once. Each distinct configured class is hooked independently and on equal footing: when both a base class and a subclass of it are configured, each is hooked in its own right (the grant path is idempotent per actor), so configured subclasses must NOT be collapsed into or skipped in favor of a configured base class."
+    category: core_logic
+
+test_requirements:
+  MFEA.Actions.add_to_world_registers_actor_extension_handler:
+    - R1
+    - R2
+    - R9
+    - R11

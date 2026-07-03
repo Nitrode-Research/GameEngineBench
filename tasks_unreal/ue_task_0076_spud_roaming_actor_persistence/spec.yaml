@@ -1,0 +1,61 @@
+task_id: ue_task_0076
+title: SPUD Roaming Actor Persistence
+tier: hard
+
+instruction: |
+  You are working in an Unreal Engine 5 project that uses the SPUD runtime save plugin.
+  Implement the behavior of SPUD's roaming actor persistence system in the task-owned files.
+
+  The project already contains the public API surface, build/module wiring, and surrounding SPUD save/load integration points.
+
+  Implement the following behavior:
+
+  - Runtime-spawned persistent actors that opt into roaming support are tracked only on the authority and can move between World Partition runtime cells.
+  - Tracked actors are associated with the World Partition cell they physically occupy, falling back to their last valid cell when they are outside all cached cell bounds.
+  - When a roaming actor enters an inactive or unloading cell, its state is stored into that cell before it is safely destroyed.
+  - Actors restored by a cell load should not duplicate an already-existing actor with the same persistent identity.
+  - Cell cache state should stay synchronized with streaming load/unload notifications, including cells that are pending unload.
+  - Actors restored near a cell boundary should be kept inside the target cell so they do not immediately trigger another unload handoff.
+  - The implementation must fit the existing SPUD subsystem and state architecture rather than introducing a parallel persistence system.
+
+files_to_edit:
+  - "Plugins/SPUD/Source/SPUD/Public/SpudRoamingActorSubsystem.h"
+  - "Plugins/SPUD/Source/SPUD/Private/SpudRoamingActorSubsystem.cpp"
+  - "Plugins/SPUD/Source/SPUD/Public/SpudRuntimeStoredActorComponent.h"
+  - "Plugins/SPUD/Source/SPUD/Private/SpudRuntimeStoredActorComponent.cpp"
+  - "Plugins/SPUD/Source/SPUD/Public/SpudSubsystem.h"
+  - "Plugins/SPUD/Source/SPUD/Private/SpudSubsystem.cpp"
+  - "Plugins/SPUD/Source/SPUD/Private/SpudState.cpp"
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "SPUD.RoamingActors"
+
+hidden_requirements:
+  R1:
+    text: Roaming actor cell lookup must choose the most specific cached World Partition cell containing the actor location and report whether that cell is activated.
+    category: core_logic
+  R2:
+    text: Streaming pre-unload notifications must preserve cached cell entries and mark matching cells as pending unload so actors can still be stored into those cells.
+    category: runtime_integration
+  R3:
+    text: Roaming actor registration must dedupe repeated registrations and unregister actors cleanly without leaving stale tracked entries.
+    category: object_lifecycle
+  R4:
+    text: Restored roaming actors must be clamped inside the target cell bounds with an inset so boundary restores do not immediately hand off again.
+    category: core_logic
+  R5:
+    text: Roaming persistence must fit the existing SPUD roaming actor subsystem and runtime actor component flow rather than adding a parallel persistence registry.
+    category: subsystem_architecture
+
+test_requirements:
+  SPUD.RoamingActors.finds_most_specific_cell_and_reports_activation:
+    - R1
+  SPUD.RoamingActors.tracks_pending_unload_state:
+    - R2
+  SPUD.RoamingActors.registers_and_unregisters_unique_actors:
+    - R3
+  SPUD.RoamingActors.clamps_actor_inside_target_cell:
+    - R4

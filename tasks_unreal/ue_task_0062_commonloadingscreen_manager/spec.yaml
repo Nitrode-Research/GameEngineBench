@@ -1,0 +1,62 @@
+task_id: ue_task_0062
+title: CommonLoadingScreen Manager
+tier: hard
+
+instruction: |
+  You are working in an Unreal Engine 5 project that uses the CommonLoadingScreen plugin.
+  Implement the behavior of the CommonLoadingScreen Manager system in the task-owned files.
+  
+  The project already contains the public API surface, assets, build/module wiring, and surrounding gameplay or plugin integration points.
+  
+  Implement the following behavior:
+  
+  - The loading screen appears when the existing processors or map-loading conditions require it.
+  - The loading screen hides again when those conditions clear, without getting stuck visible or stuck hidden.
+  - Multiple processors can register demand independently and unregister cleanly.
+  - Blocking input starts only while the loading screen is active and stops on cleanup.
+  - Map travel and startup paths still route through the existing subsystem lifecycle rather than ad hoc widget code.
+
+files_to_edit:
+  - "Plugins/CommonLoadingScreen/Source/CommonLoadingScreen/Private/LoadingScreenManager.cpp"
+  - "Plugins/CommonLoadingScreen/Source/CommonLoadingScreen/Public/LoadingScreenManager.h"
+  - "Plugins/CommonLoadingScreen/Source/CommonLoadingScreen/Public/LoadingProcessTask.cpp"
+  - "Plugins/CommonLoadingScreen/Source/CommonLoadingScreen/Public/LoadingProcessTask.h"
+  - "Plugins/CommonLoadingScreen/Source/CommonLoadingScreen/Public/LoadingProcessInterface.h"
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "CommonLoadingScreen.Manager"
+
+hidden_requirements:
+  R1:
+    text: Registered loading processors that report demand must cause the manager's show decision to become true.
+    category: subsystem_architecture
+  R2:
+    text: "The manager must preserve and expose the reason supplied by the processor that requires the loading screen, prefixing that reason to mark its origin as a registered external processor rather than forwarding the raw processor string."
+    category: runtime_integration
+  R3:
+    text: Multiple processors must register independently, unregister cleanly, and avoid stale demand after removal.
+    category: object_lifecycle
+  R4:
+    text: The loading screen must hide when all processor, travel, and startup conditions clear, without becoming stuck visible or hidden.
+    category: object_lifecycle
+  R5:
+    text: Map loading, pending travel, startup loading, and configured command-line conditions must route through the manager's normal decision path.
+    category: subsystem_architecture
+  R6:
+    text: Showing the loading screen must add the configured viewport widget, change loading-screen performance settings, and broadcast visibility changes.
+    category: runtime_integration
+  R7:
+    text: Hiding the loading screen must remove the viewport widget, restore performance settings, stop blocking input, and release widget state.
+    category: object_lifecycle
+  R8:
+    text: Input blocking must be registered only while the loading screen is active and unregistered on cleanup.
+    category: object_lifecycle
+
+test_requirements:
+  CommonLoadingScreen.Manager.registered_processor_drives_show_decision:
+    - R1
+    - R2
+    - R3

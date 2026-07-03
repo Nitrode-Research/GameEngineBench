@@ -1,0 +1,84 @@
+task_id: ue_task_0094
+title: Implement CommonSession search, join, quickplay, and invites
+tier: hard
+
+instruction: |
+  Implement CommonSession search, join, quickplay, and invite handling so players
+  can discover and enter sessions through the existing online flow.
+  
+  Expected behavior:
+  - Search requests query the correct online mode and populate wrapped search results for UI and gameplay code.
+  - Search result accessors expose description, custom settings, open connection counts, max players, and ping safely.
+  - Quickplay first searches with the intended filters and hosts a fallback session only when joining is not possible.
+  - Joining a session registers the local player, resolves the connect string or lobby target, and travels correctly.
+  - Join, search, quickplay, and invite/session-request failures broadcast useful result information.
+  - Accepted platform invites or lobby join requests notify listeners with the correct platform user and requested session data.
+  - Cleanup, map travel failure, and post-load handling do not leave stale pending join/search state.
+  - The implementation must compile and fit the existing CommonSession, online subsystem, UI, and travel architecture.
+  
+  Constraints:
+  - Use the repository to infer search settings, result wrapping, quickplay fallback logic, join completion delegates, and invite handling.
+  - Do not implement a toy direct-IP join path or always-host quickplay.
+  - Do not require new assets or hidden manual setup.
+  
+  Quality bar:
+  The implementation must handle real online-session lifecycle behavior. It
+  should be correct for empty search results, failed joins, accepted invites,
+  travel failures, and cleanup after map loads.
+
+files_to_edit:
+  - Plugins/CommonUser/Source/CommonUser/Private/CommonSessionSubsystem.cpp
+  - Plugins/CommonUser/Source/CommonUser/Public/CommonSessionSubsystem.h
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "ECR.CommonSessionSearch"
+
+hidden_requirements:
+  R1:
+    text: Search requests query the correct online mode and populate wrapped search results for UI and gameplay code.
+    category: replication
+  R2:
+    text: Search result accessors expose description, custom settings, open connection counts, max players, and ping safely.
+    category: replication
+  R3:
+    text: Quickplay first searches with the intended filters and hosts a fallback session only when joining is not possible.
+    category: replication
+  R4:
+    text: Joining a session registers the local player, resolves the connect string or lobby target, and travels correctly.
+    category: replication
+  R5:
+    text: Join, search, quickplay, and invite/session-request failures broadcast useful result information.
+    category: replication
+  R6:
+    text: Accepted platform invites or lobby join requests notify listeners with the correct platform user and requested session data.
+    category: replication
+  R7:
+    text: Cleanup, map travel failure, and post-load handling do not leave stale pending join/search state.
+    category: lifecycle
+  R8:
+    text: The implementation must compile and fit the existing CommonSession, online subsystem, UI, and travel architecture.
+    category: replication
+  R9:
+    text: >-
+      Online delegate setup (OSSv1) must register an accepted-invite handler on the
+      session interface (AddOnSessionUserInviteAcceptedDelegate_Handle) so that accepted
+      platform invites / external join requests are received and surfaced to listeners
+      with the correct platform user and requested session. A reconstruction that binds
+      the create/find/join delegates but omits the invite-accepted delegate never
+      receives invites and fails this requirement.
+    category: subsystem_architecture
+
+test_requirements:
+  ECR.CommonSessionSearch.source_contract_tokens_present:
+    - R1
+    - R2
+    - R3
+    - R4
+    - R5
+    - R6
+    - R7
+    - R8
+    - R9

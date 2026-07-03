@@ -1,0 +1,71 @@
+task_id: ue_task_0069
+title: TTToolbox Rig Tools
+tier: hard
+
+instruction: |
+  You are working in an Unreal Engine 5 project that uses the TTToolbox plugin.
+  Implement the behavior of the TTToolbox Rig Tools system in the task-owned files.
+  
+  The project already contains the public API surface, assets, build/module wiring, and surrounding gameplay or plugin integration points.
+  
+  Implement the following behavior:
+  
+  - The Blueprint tooling helpers continue to inspect and mutate skeleton/rig data through the existing TTToolbox path rather than ad hoc editor hacks.
+  - Add/dump/check helpers remain consistent with the repo’s existing data conventions for skeleton curves, sockets, bone chains, and related metadata.
+  - The IKRig constraint solver continues to initialize and apply constraints through the repo’s current solver model.
+  - Tool operations fail safely and report useful failure conditions instead of silently succeeding.
+
+files_to_edit:
+  - "Plugins/TTToolbox/Source/TTToolbox/Private/TTToolboxBlueprintLibrary.cpp"
+  - "Plugins/TTToolbox/Source/TTToolbox/Public/TTToolboxBlueprintLibrary.h"
+  - "Plugins/TTToolbox/Source/TTToolbox/Private/IKRig_ConstraintBones.cpp"
+  - "Plugins/TTToolbox/Source/TTToolbox/Public/IKRig_ConstraintBones.h"
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "TTToolbox.RigTools"
+
+hidden_requirements:
+  R1:
+    text: The constraint solver must report goals as connected because this solver does not consume IK goals directly.
+    category: subsystem_architecture
+  R2:
+    text: The constraint solver must report a bone as affected only when it is configured as a modified bone in a constraint entry.
+    category: core_logic
+  R3:
+    text: The constraint solver must report a warning only when it lacks configured constraints; a configured solver should not warn.
+    category: core_logic
+  R4:
+    text: Solver initialization must resolve constraint and modified bone indices from the IKRig skeleton and fail safely when a configured bone is invalid.
+    category: initialization
+  R5:
+    text: Solver execution must copy the constraint bone global pose to the modified bone and propagate the updated pose below the modified bone.
+    category: core_logic
+  R6:
+    text: Blueprint helper functions must validate skeleton, skeletal mesh, and rig inputs and report useful errors instead of silently mutating invalid assets.
+    category: subsystem_architecture
+  R7:
+    text: Virtual-bone, socket, curve, and bone-chain helpers must preserve the TTToolbox naming and data conventions and avoid duplicate or inconsistent entries.
+    category: core_logic
+  R8:
+    text: AddUnweightedBone must position newly added bones from the configured constraint or reference-pose transform.
+    category: core_logic
+  R9:
+    text: AddUnweightedBone must update skeletal mesh LOD/import data and rebuild skeleton linkup after inserting unweighted bones.
+    category: object_lifecycle
+  R10:
+    text: AddRootBone must adjust bone-indexed skeletal mesh metadata, including import data and skin-weight data, when inserting a new root bone before existing bones.
+    category: object_lifecycle
+  R11:
+    text: IK rig and retarget helpers must modify rig controllers through the official editor APIs rather than ad hoc asset mutation.
+    category: subsystem_architecture
+
+test_requirements:
+  TTToolbox.RigTools.solver_affects_configured_constraint_bone:
+    - R2
+  TTToolbox.RigTools.solver_reports_goal_connected:
+    - R1
+  TTToolbox.RigTools.solver_warning_reflects_constraint_state:
+    - R3

@@ -1,0 +1,109 @@
+task_id: ue_task_0079
+title: SPUD Streaming Level Persistence
+tier: hard
+
+instruction: |
+  You are working in an Unreal Engine 5 project that uses the SPUD runtime save plugin.
+  Implement SPUD's streaming-level persistence lifecycle.
+
+  Streaming areas must remain stable when more than one system is interested in the same level. Levels must not unload immediately after a single requester leaves, must cancel pending unloads instead of issuing redundant loads, and streaming-volume pawns must keep levels alive only when they are valid controlled players. Level state also has to be restored and stored at the right points in Unreal's streaming callbacks so actor transforms, physics state, destruction records, and Blueprint lifecycle delegates remain consistent.
+
+  Implement this behavior within the existing SPUD subsystem and streaming volume design. Keep the public API intact. Do not replace SPUD's streaming path with a separate loader; handle the request tracking, possession filtering, load/restore ordering, unload/store ordering, and level object subscription behavior in the task-owned files.
+
+files_to_edit:
+  - "Plugins/SPUD/Source/SPUD/Public/SpudSubsystem.h"
+  - "Plugins/SPUD/Source/SPUD/Private/SpudSubsystem.cpp"
+  - "Plugins/SPUD/Source/SPUD/Public/SpudStreamingVolume.h"
+  - "Plugins/SPUD/Source/SPUD/Private/SpudStreamingVolume.cpp"
+  - "Plugins/SPUD/Source/SPUD/Private/SpudState.cpp"
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "SPUD.StreamingLevelPersistence"
+
+hidden_requirements:
+  R1:
+    text: Streaming level load requests must be tracked per requester without overwriting existing requesters for the same level.
+    category: core_logic
+  R2:
+    text: Withdrawing the final requester must mark the level pending unload, start the delayed-unload timer, and avoid immediate unload thrash.
+    category: runtime_integration
+  R3:
+    text: A new request for a level that is pending unload must cancel the pending unload and clear its expiry timestamp without issuing another load request.
+    category: runtime_integration
+  R4:
+    text: The delayed unload scan must unload only levels with no requesters whose grace period has elapsed, and stop its timer when nothing remains pending.
+    category: runtime_integration
+  R5:
+    text: Streaming volumes must ignore unpossessed or non-player-controlled pawns so AI or inactive pawns cannot keep streaming levels loaded.
+    category: gameplay_integration
+  R6:
+    text: Non-pawn camera-like overlap actors should remain valid streaming-volume requesters.
+    category: gameplay_integration
+  R7:
+    text: Streaming-level load and unload callbacks must preserve SPUD's existing restore/store ordering and level object event subscription behavior.
+    category: object_lifecycle
+  R8:
+    text: Map travel must clear pending streaming requests, stop delayed-unload polling, and forget monitored streaming-level wrappers.
+    category: object_lifecycle
+  R9:
+    text: Explicit streaming loads must initially keep the level hidden, then make it visible only as part of the post-load restore handoff.
+    category: runtime_integration
+  R10:
+    text: Excluded level name patterns must suppress streaming-level persistence, and destroyed-actor delegates must only attach to persistent level-authored actors.
+    category: runtime_integration
+  R11:
+    text: Streaming volumes must subscribe to pawn possession changes, track every overlapping pawn, and add or remove already-overlapping pawns when possession changes their relevance.
+    category: gameplay_integration
+  R12:
+    text: Streaming volumes must deduplicate relevant overlap actors, request streaming loads only when transitioning from zero to one relevant actor, and withdraw requests only when the last relevant actor leaves.
+    category: gameplay_integration
+  R13:
+    text: The first explicit streaming load after map travel must be forced blocking, then clear that first-load flag while still using the normal latent streaming path.
+    category: runtime_integration
+  R14:
+    text: External streaming notifications must route through the same SPUD load and unload lifecycle handlers as SPUD-requested streaming levels.
+    category: runtime_integration
+  R15:
+    text: Streaming unload completion must consume pending unload latent bookkeeping and dispatch post-unload notification work on the game thread.
+    category: runtime_integration
+  R16:
+    text: World Partition streaming-level wrappers must bind shown/hidden delegates, clean those bindings up, and forward visibility changes through SPUD's normal restore/store lifecycle.
+    category: runtime_integration
+
+test_requirements:
+  SPUD.StreamingLevelPersistence.refcounts_requests_and_delays_unload:
+    - R1
+    - R2
+    - R4
+  SPUD.StreamingLevelPersistence.cancels_pending_unload_without_reloading:
+    - R1
+    - R3
+  SPUD.StreamingLevelPersistence.streaming_volume_ignores_unpossessed_pawns:
+    - R5
+    - R6
+  SPUD.StreamingLevelPersistence.streaming_volume_tracks_possession_changes_for_overlapping_pawns:
+    - R11
+  SPUD.StreamingLevelPersistence.streaming_volume_refcounts_relevant_actors_before_requesting_levels:
+    - R12
+  SPUD.StreamingLevelPersistence.restores_loaded_level_before_subscription:
+    - R7
+  SPUD.StreamingLevelPersistence.stores_level_before_streaming_unload:
+    - R7
+  SPUD.StreamingLevelPersistence.map_travel_clears_streaming_request_state:
+    - R8
+    - R13
+  SPUD.StreamingLevelPersistence.first_stream_request_after_map_load_blocks_and_resets:
+    - R13
+  SPUD.StreamingLevelPersistence.external_streaming_notifications_route_through_lifecycle:
+    - R14
+  SPUD.StreamingLevelPersistence.world_partition_wrappers_bind_and_forward_visibility_events:
+    - R16
+  SPUD.StreamingLevelPersistence.unload_completion_runs_on_game_thread_and_broadcasts:
+    - R15
+  SPUD.StreamingLevelPersistence.keeps_streaming_level_hidden_until_restore_callback:
+    - R9
+  SPUD.StreamingLevelPersistence.filters_excluded_levels_and_runtime_actor_delegates:
+    - R10

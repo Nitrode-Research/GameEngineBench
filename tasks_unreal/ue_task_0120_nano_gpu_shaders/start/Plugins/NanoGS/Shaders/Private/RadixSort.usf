@@ -1,0 +1,8 @@
+#include "/Engine/Public/Platform.ush"
+#define BLOCK_THREADS 256
+#define KEYS_PER_THREAD 4
+#define NUM_DIGITS 256
+[numthreads(BLOCK_THREADS,1,1)] void CountCS(uint3 GroupId : SV_GroupID, uint3 GroupThreadId : SV_GroupThreadID) { }
+[numthreads(BLOCK_THREADS,1,1)] void PrefixSumCS(uint3 GroupId : SV_GroupID, uint3 GroupThreadId : SV_GroupThreadID) { }
+[numthreads(NUM_DIGITS,1,1)] void DigitPrefixSumCS(uint3 GroupThreadId : SV_GroupThreadID) { }
+[numthreads(BLOCK_THREADS,1,1)] void ScatterCS(uint3 GroupId : SV_GroupID, uint3 GroupThreadId : SV_GroupThreadID) { }

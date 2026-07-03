@@ -1,0 +1,55 @@
+task_id: ue_task_0068
+title: EOSIntegrationKit Voice Chat User
+tier: hard
+
+instruction: |
+  You are working in an Unreal Engine 5 project that uses the EOSIntegrationKit plugin.
+  Implement the behavior of the EOSIntegrationKit Voice Chat User system in the task-owned files.
+  
+  The project already contains the public API surface, assets, build/module wiring, and surrounding gameplay or plugin integration points.
+  
+  Implement the following behavior:
+  
+  - Voice login and logout follow the existing EOS voice-user flow and update internal state correctly.
+  - Joining and leaving channels updates membership and completion callbacks through the current implementation path.
+  - Device selection, mute, and volume state continue to route through the existing storage and EOS-backed behavior.
+  - Channel and player mute/volume controls remain channel-aware where the original implementation is channel-aware.
+  - Delegate registration and teardown do not leak callbacks after logout or object destruction.
+
+files_to_edit:
+  - "Plugins/EOSIntegrationKit/Source/EIKVoiceChat/Private/EOSVoiceChatUser.cpp"
+  - "Plugins/EOSIntegrationKit/Source/EIKVoiceChat/Public/EOSVoiceChatUser.h"
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "EOSIntegrationKit.VoiceChat"
+
+hidden_requirements:
+  R1:
+    text: Voice login and logout must manage the EOS voice-user session state and notification handles through the existing flow.
+    category: object_lifecycle
+  R2:
+    text: Joining and leaving channels must update channel membership and fire the expected completion callbacks.
+    category: subsystem_architecture
+  R3:
+    text: Transmit-mode APIs must update the stored transmit mode and apply the correct sending behavior to the relevant voice channels.
+    category: core_logic
+  R4:
+    text: Input and output device selection, mute state, and volume state must route through the existing stored device and EOS audio option paths.
+    category: subsystem_architecture
+  R5:
+    text: Channel and player mute, block, and volume controls must remain channel-aware where the original implementation is channel-aware.
+    category: core_logic
+  R6:
+    text: Logout and destruction must remove voice delegate and notification handles so stale callbacks do not fire after the user object is gone.
+    category: object_lifecycle
+  R7:
+    text: "A freshly constructed voice user must begin in this project's default transmit state before any transmit-mode API is called; this project does not adopt the stock plugin's transmit-to-everyone starting default."
+    category: core_logic
+
+test_requirements:
+  EOSIntegrationKit.VoiceChat.transmit_to_all_channels_updates_transmit_mode:
+    - R3
+    - R7

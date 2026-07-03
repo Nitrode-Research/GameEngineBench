@@ -1,0 +1,4 @@
+#include "/Engine/Public/Platform.ush"
+struct VSOut { float4 Position : SV_POSITION; float2 UV : TEXCOORD0; };
+VSOut MainVS(uint VertexID : SV_VertexID) { VSOut O; O.Position = float4(0,0,0,1); O.UV = float2(0,0); return O; }
+float4 MainPS(VSOut In) : SV_Target0 { return float4(0,0,0,0); }

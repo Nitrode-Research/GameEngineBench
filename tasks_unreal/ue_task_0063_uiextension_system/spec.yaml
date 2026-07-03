@@ -1,0 +1,84 @@
+task_id: ue_task_0063
+title: UIExtension System
+tier: hard
+
+instruction: |
+  You are working in an Unreal Engine 5 project that uses the UIExtension plugin.
+  Implement the behavior of the UIExtension System system in the task-owned files.
+  
+  The project already contains the public API surface, assets, build/module wiring, and surrounding gameplay or plugin integration points.
+  
+  Implement the following behavior:
+  
+  - Extension points can register for a gameplay tag and optionally a context object.
+  - Widget and data extensions become visible to matching extension points through the existing request structure.
+  - Registering or unregistering either side updates listeners cleanly without stale handles.
+  - `UUIExtensionPointWidget` rebuilds and tracks its extensions through the subsystem rather than bespoke widget logic.
+  - Contract checks continue to reject incompatible data/widget registrations instead of silently accepting everything.
+
+files_to_edit:
+  - "Plugins/UIExtension/Source/Private/UIExtensionSystem.cpp"
+  - "Plugins/UIExtension/Source/Public/UIExtensionSystem.h"
+  - "Plugins/UIExtension/Source/Private/Widgets/UIExtensionPointWidget.cpp"
+  - "Plugins/UIExtension/Source/Public/Widgets/UIExtensionPointWidget.h"
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "UIExtension.System"
+
+hidden_requirements:
+  R1:
+    text: Extension points must validate gameplay tags, bound callbacks, and allowed data contracts before registering.
+    category: subsystem_architecture
+  R2:
+    text: Extension points must support exact and partial gameplay-tag matching.
+    category: runtime_integration
+  R3:
+    text: Context matching must distinguish explicitly null context, matching object context, and stale weak object context.
+    category: runtime_integration
+  R4:
+    text: Compatible widget/data extensions must notify matching extension points through the existing request structure with handle, tag, priority, data, and context preserved.
+    category: runtime_integration
+  R5:
+    text: Contract checks must accept class objects, object instances, subclass relationships, and implemented interfaces when they satisfy the allowed data classes.
+    category: core_logic
+  R6:
+    text: Incompatible data or widget registrations must be rejected instead of silently notifying extension points.
+    category: core_logic
+  R7:
+    text: Registering an extension point must notify it about already-registered matching extensions.
+    category: runtime_integration
+  R8:
+    text: Registering an extension must notify already-registered matching extension points.
+    category: runtime_integration
+  R9:
+    text: Unregistering extension handles and extension-point handles must remove only their own entries and clean empty tracking maps.
+    category: object_lifecycle
+  R10:
+    text: Removed extensions must send removal notifications to matching points before being erased.
+    category: object_lifecycle
+  R11:
+    text: Notification must remain safe if callbacks unregister extension points or extensions during registration or removal callbacks.
+    category: object_lifecycle
+  R12:
+    text: UUIExtensionPointWidget must rebuild and track its extensions through the subsystem rather than maintaining a separate incompatible registry.
+    category: runtime_integration
+  R13:
+    text: The subsystem must keep referenced extension data and allowed contract classes alive for garbage collection while registered.
+    category: object_lifecycle
+
+test_requirements:
+  UIExtension.System.contract_matching_accepts_valid_widget_data_and_context:
+    - R1
+    - R3
+    - R5
+    - R6
+  UIExtension.System.registering_point_and_data_produces_valid_handles_and_callback:
+    - R1
+    - R4
+    - R8
+  UIExtension.System.unregistering_handles_cleans_extension_maps:
+    - R4
+    - R9

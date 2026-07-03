@@ -1,0 +1,50 @@
+task_id: ue_task_0117
+title: Gaussian Splat Asset Management
+tier: hard
+instruction: "Implement the Gaussian Splat Asset system \u2014 manages compressed splat data with\nbulk data serialization,\
+  \ Morton-swizzled texture generation, chunk quantization,\nand Nanite cluster hierarchy integration. Handles asset lifecycle\
+  \ from PLY import\nthrough GPU upload.\n\nExpected behaviors:\n\nAsset initialization:\n- Read raw splat data from PLY file\n\
+  - Calculate bounding box\n- Compress position data based on quality level\n- Compress rotation/scale data\n- Create color\
+  \ texture data with Morton swizzling\n- Compress SH data if bands > 0\n- Calculate chunk quantization bounds\n- Generate\
+  \ thumbnail (editor only)\n- Fire OnAssetChanged delegate\n\nCompression quality levels:\n- VeryHigh (~48 bytes/splat)\n\
+  - High (~24 bytes/splat)\n- Medium (~12 bytes/splat)\n- Low (~8 bytes/splat)\n- VeryLow (~4 bytes/splat)\n\nSerialization:\n\
+  - Custom FArchive operator for Gaussian splat data\n- Proper byte ordering and size validation\n\nNanite integration:\n\
+  - BuildNaniteClusterHierarchy \u2014 re-read source PLY and build cluster data\n- ClearNaniteClusterHierarchy \u2014 remove\
+  \ cluster data and LOD splats\n- bEnableNanite \u2014 per-asset setting for Nanite-style LOD/culling\n\nEdge cases:\n- Empty\
+  \ splat array \u2014 return false from InitializeFromSplatData\n- Quality level not supported \u2014 clamp to nearest valid\
+  \ level\n- Source file not found \u2014 return false from BuildNaniteClusterHierarchy\n- Cluster hierarchy already built\
+  \ \u2014 clear before rebuilding\n- Thumbnail data corrupted \u2014 recreate from splat data in PostLoad\n- Bulk data size\
+  \ mismatch \u2014 validate during serialization\n\nQuality bar:\n- The implementation must compile as part of the NanoGaussianSplatting\
+  \ UE5 plugin\n- Follow the existing C++ conventions, macro usage, and naming patterns\n- All public-facing methods must\
+  \ use the appropriate UFUNCTION macros\n- No new assets or classes outside the listed files\n- Must integrate with asset\
+  \ lifecycle, compression, and cluster builder systems\n"
+hidden_requirements:
+  R1:
+    text: Asset initialization must read PLY data, calculate bounds, compress data, create textures, and fire delegates.
+    category: core_logic
+  R2:
+    text: Compression quality levels must support 5 levels with appropriate byte counts per splat.
+    category: core_logic
+  R3:
+    text: Serialization must use custom FArchive operator with proper byte ordering and validation.
+    category: core_logic
+  R4:
+    text: Nanite integration must support build/clear hierarchy and per-asset enable setting.
+    category: core_logic
+  R5:
+    text: Edge cases must handle empty array, invalid quality, missing file, rebuild, corrupted thumbnail, size mismatch.
+    category: core_logic
+test_requirements:
+  Nano.AssetManagement.InitializeBuildsCompressedData:
+  - R1
+  - R2
+  - R3
+  - R4
+files_to_edit:
+- Plugins\NanoGS\Source\NanoGS\Public\GaussianSplatAsset.h
+- Plugins\NanoGS\Source\NanoGS\Private\GaussianSplatAsset.cpp
+tests:
+  runner: ue_automation
+  mode: editor
+  num_clients: 0
+  filter: Nano.AssetManagement

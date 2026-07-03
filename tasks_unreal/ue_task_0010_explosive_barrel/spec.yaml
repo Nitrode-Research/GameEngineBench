@@ -1,0 +1,86 @@
+task_id: ue_task_0010
+title: Explosive Barrel
+tier: easy
+
+instruction: |
+  # Explosive Barrel
+
+  This repository is a third-person action roguelike built in Unreal Engine. The explosive barrel is an actor that reacts to incoming damage and eventually explodes, applying radial force to nearby physics objects and triggering VFX. Implement the explosive barrel behavior.
+
+  ## Expected Behaviors
+
+  **Constructor:**
+  - The radial force component should affect actors within a large radius, apply a strong outward impulse that ignores mass, and affect dynamic world objects in addition to physics-simulating actors.
+  - The VFX components should not auto-play on spawn.
+  - The explosion delay should be a couple of seconds.
+
+  **PostInitializeComponents:**
+  - Subscribe to the barrel's health attribute change notification so the barrel reacts whenever it takes damage.
+
+  **OnHealthAttributeChanged:**
+  - Implement a two-hit fuse: the first time health drops, start a delayed explosion timer and activate the fire VFX. The second hit cancels the timer and triggers an immediate explosion.
+  - Guard against reacting after the barrel has already exploded.
+
+  **Explode:**
+  - Mark the barrel as exploded so it cannot explode again.
+  - Deactivate the fire VFX.
+  - Fire the radial impulse to launch nearby physics objects.
+  - Activate the explosion VFX.
+
+  ## Quality Bar
+
+  The two-hit fuse must work correctly — first hit starts the countdown, second hit skips it. The explosion must be guarded so it only fires once. The explosion must visibly launch nearby physics objects. VFX must not play on spawn. No new classes or assets are required — implement the behavior within the existing file structure.
+
+hidden_requirements:
+  R1:
+    text: The radial force component must be configured with a large radius, strong mass-independent impulse, and dynamic-world collision support so nearby physics objects can be launched.
+    category: defaults
+  R2:
+    text: Fire and explosion visual-effect components must not auto-play when the barrel spawns.
+    category: defaults
+  R3:
+    text: The barrel must subscribe to its health attribute change delegate during component initialization so damage drives the fuse behavior.
+    category: object_lifecycle
+  R4:
+    text: The first health drop must increment the hit counter, start a delayed explosion timer with a roughly two-second delay, activate the fire effect, and not explode immediately.
+    category: core_logic
+  R5:
+    text: The delayed fuse timer must invoke Explode when it expires.
+    category: object_lifecycle
+  R6:
+    text: The second health drop before the fuse expires must cancel the delayed timer and trigger an immediate explosion.
+    category: core_logic
+  R7:
+    text: Explode must be idempotent; once exploded, later damage must not increment the hit counter, re-arm timers, or trigger another explosion.
+    category: edge_case
+  R8:
+    text: Explode must mark the barrel exploded, deactivate the fire effect, fire the radial impulse, and activate the explosion effect.
+    category: core_logic
+  R9:
+    text: The explosion delay must be a short gameplay fuse rather than zero or an unbounded timer.
+    category: defaults
+
+test_requirements:
+  ActionRoguelike.ExplosiveBarrel.VFXNotActiveOnSpawn:
+    - R2
+  ActionRoguelike.ExplosiveBarrel.ExplosionEffects:
+    - R1
+    - R6
+    - R8
+  ActionRoguelike.ExplosiveBarrel.DamageFuseAndExplode:
+    - R3
+    - R4
+    - R5
+    - R6
+    - R7
+    - R8
+    - R9
+
+files_to_edit:
+  - Source/ActionRoguelike/World/RogueExplosiveBarrel.cpp
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "ActionRoguelike.ExplosiveBarrel"

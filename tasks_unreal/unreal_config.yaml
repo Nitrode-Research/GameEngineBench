@@ -1,0 +1,42 @@
+# engine_root: must be set via UE_ENGINE_ROOT environment variable.
+# No default — the runner will exit with a clear error if unset.
+# Examples:
+#   Mac:   export UE_ENGINE_ROOT="/Users/Shared/Epic Games/UE_5.7"
+#   Win64: $env:UE_ENGINE_ROOT="C:/Program Files/Epic Games/UE_5.7"
+
+# platform: auto-detected from sys.platform (Mac / Win64 / Linux).
+# Override via UE_PLATFORM env var if needed.
+
+# Shared plugin volume for TargetVector tasks (ue_task_0047-0056).
+# Relative paths are resolved from this config file's directory.
+# Override via UE_TV_PLUGINS_DIR env var.
+tv_plugins_dir: "../tv_frozen_workspace/Plugins"
+
+configuration: "Development"
+
+# Build/test wall-clock caps (seconds). Cold TargetVector+ALSXT builds take
+# ~25-40 min, so the compile default is generous. With --warm-cache, only the
+# one-time base build needs this headroom; incremental recompiles are minutes.
+compile_timeout_seconds: 3600
+test_timeout_seconds: 1800
+
+build_script_templates:
+  Mac: "{engine_root}/Engine/Build/BatchFiles/Mac/Build.sh"
+  Win64: "{engine_root}/Engine/Build/BatchFiles/Build.bat"
+  Linux: "{engine_root}/Engine/Build/BatchFiles/Linux/Build.sh"
+
+editor_binary_templates:
+  Mac: "{engine_root}/Engine/Binaries/Mac/UnrealEditor"
+  Win64: "{engine_root}/Engine/Binaries/Win64/UnrealEditor.exe"
+  Linux: "{engine_root}/Engine/Binaries/Linux/UnrealEditor"
+
+# Phase 2A: chongdashu/unreal-mcp integration
+# Repo cloned at: /Users/brianla/Documents/GitHub/unreal-mcp
+# Server is started with: uv run unreal_mcp_server.py (from the Python/ directory)
+# Connects to UE editor plugin via TCP socket on localhost:55557
+# See: https://github.com/chongdashu/unreal-mcp
+mcp:
+  server_command: "/Users/brianla/.local/bin/uv"
+  server_args: ["run", "unreal_mcp_server.py"]
+  server_cwd: "/Users/brianla/Documents/GitHub/unreal-mcp/Python"
+  editor_startup_wait_seconds: 90  # max seconds to wait; runner now proceeds as soon as MCP is ready

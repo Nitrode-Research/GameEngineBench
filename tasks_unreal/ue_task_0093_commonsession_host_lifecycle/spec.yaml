@@ -1,0 +1,74 @@
+task_id: ue_task_0093
+title: Implement CommonSession host lifecycle
+tier: hard
+
+instruction: |
+  Implement CommonSession host lifecycle behavior so players can create,
+  advertise, start, travel to, and clean up hosted sessions.
+  
+  Expected behavior:
+  - Host session requests validate required map, mode, online mode, and player capacity data.
+  - Hosting creates the correct local or online session using the existing online subsystem path.
+  - Session settings include the expected public/private connection counts, presence/lobby flags, and custom settings.
+  - Successful creation starts the session and travels to the requested map URL with the correct options.
+  - Creation, start, update, end, destroy, and travel failures broadcast useful results and do not leave stale pending sessions.
+  - Cleanup destroys or ends existing sessions without racing against in-progress creation.
+  - The subsystem binds and unbinds online delegates safely across initialize/deinitialize.
+  - The implementation must compile and fit the existing CommonSession, GameInstanceSubsystem, online subsystem, and travel architecture.
+  
+  Constraints:
+  - Use the repository to infer host request fields, session settings, delegate ordering, travel URL construction, and cleanup flow.
+  - Do not replace hosting with direct map travel only.
+  - Do not require new assets or hidden manual setup.
+  
+  Quality bar:
+  The implementation must be online-lifecycle-safe. It should handle failure and
+  cleanup paths as carefully as the happy path, without stale delegates or
+  orphaned sessions.
+
+files_to_edit:
+  - Plugins/CommonUser/Source/CommonUser/Private/CommonSessionSubsystem.cpp
+  - Plugins/CommonUser/Source/CommonUser/Public/CommonSessionSubsystem.h
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "ECR.CommonSessionHost"
+
+hidden_requirements:
+  R1:
+    text: Host session requests validate required map, mode, online mode, and player capacity data.
+    category: replication
+  R2:
+    text: Hosting creates the correct local or online session using the existing online subsystem path.
+    category: replication
+  R3:
+    text: Session settings include the expected public/private connection counts, presence/lobby flags, and custom settings.
+    category: replication
+  R4:
+    text: Successful creation starts the session and travels to the requested map URL with the correct options.
+    category: replication
+  R5:
+    text: Creation, start, update, end, destroy, and travel failures broadcast useful results and do not leave stale pending sessions.
+    category: replication
+  R6:
+    text: Cleanup destroys or ends existing sessions without racing against in-progress creation.
+    category: replication
+  R7:
+    text: The subsystem binds and unbinds online delegates safely across initialize/deinitialize.
+    category: replication
+  R8:
+    text: The implementation must compile and fit the existing CommonSession, GameInstanceSubsystem, online subsystem, and travel architecture.
+    category: replication
+
+test_requirements:
+  ECR.CommonSessionHost.source_contract_tokens_present:
+    - R1
+    - R2
+    - R3
+    - R4
+    - R5
+    - R6
+    - R7
+    - R8

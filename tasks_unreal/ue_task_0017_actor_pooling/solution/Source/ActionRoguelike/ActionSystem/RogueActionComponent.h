@@ -1,0 +1,133 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "Components/ActorComponent.h"
+#include "GameplayTagContainer.h"
+#include "RogueAttributeSet.h"
+#include "RogueActionComponent.generated.h"
+
+class URogueActionComponent;
+class URogueAction;
+
+
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnActionStateChanged, URogueActionComponent*, OwningComp, URogueAction*, Action);
+
+
+UCLASS(ClassGroup=(RogueGame), meta=(BlueprintSpawnableComponent))
+class ACTIONROGUELIKE_API URogueActionComponent : public UActorComponent
+{
+	GENERATED_BODY()
+
+public:
+
+	static URogueActionComponent* GetActionComponent(AActor* FromActor);
+
+	UPROPERTY(Transient, EditAnywhere, BlueprintReadWrite, Category = "Tags")
+	FGameplayTagContainer ActiveGameplayTags;
+
+	UFUNCTION(BlueprintCallable, Category = "Actions")
+	void AddAction(AActor* Instigator, TSubclassOf<URogueAction> ActionClass);
+
+	UFUNCTION(BlueprintCallable, Category = "Actions")
+	void RemoveAction(URogueAction* ActionToRemove);
+
+	/* Returns first occurrence of action matching the class provided */
+	UFUNCTION(BlueprintCallable, Category = "Actions")
+	URogueAction* GetAction(TSubclassOf<URogueAction> ActionClass) const;
+
+	UFUNCTION(BlueprintCallable, Category = "Actions")
+	bool StartActionByName(AActor* Instigator, FGameplayTag ActionName);
+
+	UFUNCTION(BlueprintCallable, Category = "Actions")
+	bool StopActionByName(AActor* Instigator, FGameplayTag ActionName);
+
+	/* Stop every action, for example during death */
+	void StopAllActions();
+
+	FRogueAttribute* GetAttribute(FGameplayTag InAttributeTag);
+
+	float GetAttributeValue(FGameplayTag InAttributeTag);
+
+	//UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = Attributes, meta = (Keywords = "Add, Set"))
+	bool ApplyAttributeChange(const FAttributeModification& Modification);
+
+	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = Attributes, meta = (Keywords = "Add, Set"))
+	bool ApplyAttributeChange(FGameplayTag InAttributeTag, float InMagnitude, AActor* Instigator, EAttributeModifyType ModType, FGameplayTagContainer InContextTags = FGameplayTagContainer());
+
+	/* Provide a default attribute set type for (base) classes, blueprint can set this via the details panel instead */
+	void SetDefaultAttributeSet(const TSubclassOf<URogueAttributeSet>& InNewClass);
+
+	/*
+	 * Retrieve the delegate to bind attribute change events, will create new entry in the Map if not currently present
+	 */
+	FAttributeChangedSignature& GetAttributeListenerDelegate(FGameplayTag InTag);
+
+	UFUNCTION(BlueprintCallable, DisplayName="Add Attribute Listener", meta = (Keywords="event,delegate"))
+	void AddDynamicAttributeListener(FAttributeChangedDynamicSignature Event, FGameplayTag InTag, bool bCallImmediately = false);
+
+	void BroadcastAttributeChanged(FGameplayTag InTag, float InNewValue, FAttributeModification InModification);
+
+protected:
+
+	UFUNCTION(BlueprintCallable, Category=Attributes, DisplayName="GetAttribute")
+	bool K2_GetAttribute(FGameplayTag InAttributeTag, float& CurrentValue, float& Base, float& Delta);
+
+	UFUNCTION(BlueprintCallable, DisplayName="Remove Attribute Listener", meta = (Keywords="event,delegate"))
+	void RemoveDynamicAttributeListener(FAttributeChangedDynamicSignature Event);
+
+	/* Interchangeable set of attributes such as Health, BaseDamage, Strength, Stamina, MoveSpeed, etc. */
+	UPROPERTY(EditAnywhere, Instanced, NoClear, ReplicatedUsing=OnRep_AttributeSet)
+	TObjectPtr<URogueAttributeSet> AttributeSet;
+
+	UFUNCTION()
+	void OnRep_AttributeSet();
+
+	UFUNCTION()
+	void OnRep_Actions();
+
+	void InitAttributeSet();
+
+	/* List of delegates that came from Blueprint to ensure we can clean up "dead" hooks */
+	TMap<FAttributeChangedDynamicSignature, FDelegateHandle> DynamicDelegateHandles;
+
+	TMap<FGameplayTag, FAttributeChangedSignature> AttributeListenerMap;
+	
+	TMap<FGameplayTag, TArray<FAttributeChangedDynamicSignature>> AttributeBlueprintListeners;
+	
+	UFUNCTION(Server, Reliable)
+	void ServerStartAction(AActor* Instigator, FGameplayTag ActionName);
+
+	UFUNCTION(Server, Reliable)
+	void ServerStopAction(AActor* Instigator, FGameplayTag ActionName);
+
+	/* Granted abilities at game start */
+	UPROPERTY(EditAnywhere, Category = "Actions")
+	TArray<TSubclassOf<URogueAction>> DefaultActions;
+
+	UPROPERTY(Transient, BlueprintReadOnly, ReplicatedUsing=OnRep_Actions)
+	TArray<TObjectPtr<URogueAction>> Actions;
+
+	/* Non-replicated map for quick lookups to Actions. */
+	UPROPERTY(Transient)
+	TMap<FGameplayTag, TObjectPtr<URogueAction>> CachedActions;
+
+	virtual void InitializeComponent() override;
+
+	virtual void BeginPlay() override;
+
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
+public:	
+
+	URogueActionComponent();
+
+	UPROPERTY(BlueprintAssignable)
+	FOnActionStateChanged OnActionStarted;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnActionStateChanged OnActionStopped;
+
+};

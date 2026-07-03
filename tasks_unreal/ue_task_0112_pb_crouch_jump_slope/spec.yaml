@@ -1,0 +1,80 @@
+task_id: ue_task_0112
+title: Crouch + Jump + Slope System
+tier: hard
+instruction: "You are working in a UE5 C++ plugin called PBCharacterMovement that implements\nHL2-style FPS movement for a\
+  \ character. The plugin provides crouch/uncrouch\ntransitions, jump mechanics with air dash, slope deflection, and catch-air\n\
+  detection for ramp transitions.\n\nThe module already has:\n- A functional UE5 plugin setup with dependencies on Core, PhysicsEngine,\
+  \ and\n  CharacterMovementComponent integration\n- The velocity calculation and braking system (spec-velocity-braking)\n\
+  - Capsule collision, movement modes (Walking/Flying/Falling), and floor detection\n\nImplement the crouch, jump, and slope\
+  \ interaction system. The system must handle\nanimated crouch/uncrouch transitions with capsule interpolation, jump mechanics\n\
+  with air dash for multiple jumps, slope deflection with bounce coefficient, and\ncatch-air detection for ramp transitions.\n\
+  \nThe crouch system must satisfy these behavioral requirements:\n\nCrouch transition (DoCrouchResize):\n- Must interpolate\
+  \ between standing and crouched height over CrouchTime (0.4s)\n- Must clamp height to capsule radius during transition\n\
+  - Must adjust position to maintain base location or top during resize\n- Must call OnStartCrouch with mesh adjust for network\
+  \ prediction\n- Must adjust proxy capsule size for client simulation\n\nUncrouch transition (DoUnCrouchResize):\n- Must\
+  \ interpolate between crouched and standing height over UncrouchTime\n- Must test encroachment (can uncrouched capsule fit?)\
+  \ before uncrouching\n- Must skip uncrouch if encroachment detected\n- Must adjust position to maintain base location or\
+  \ top during resize\n- Must call OnEndCrouch with mesh adjust for network prediction\n\nJump mechanics (DoJump):\n- Must\
+  \ apply JumpZVelocity (266.7f) to Z velocity for first jump\n- Must apply air dash velocity for subsequent jumps\n- Must\
+  \ set movement mode to MOVE_Falling\n- Must adjust gravity space Z if custom gravity is enabled\n- Must check canJump()\
+  \ before allowing jump\n\nSlope interaction (HandleSlopeBoosting):\n- Must skip if on ladder or no-clip active\n- Must calculate\
+  \ wall angle from slope steepness\n- Must select impact normal or stable normal based on angle\n- Must constrain normal\
+  \ to plane if needed\n- Must apply bounce coefficient to delta for deflection\n\nCatch-air detection (ShouldCatchAir):\n\
+  - Must skip if height difference is small\n- Must check surface friction from old floor\n- Must calculate speed multiplier\
+  \ based on current speed\n- Must check if player is sliding\n- Must check if gaining ramp (moving up ramp)\n- Must check\
+  \ angle with old floor normal\n- Must check if strafing off ramp\n\nLanding validation (IsValidLandingSpot):\n- Must check\
+  \ if super::IsValidLandingSpot returns true\n- Must check if moving up slope\n- Must calculate deflection vector\n- Must\
+  \ check if deflection velocity exceeds jump velocity\n- Must return false if deflection is too high\n\nEdge cases:\n- Invalid\
+  \ data \u2014 skip transition, no crash\n- Can't crouch \u2014 skip transition, no crash\n- Already crouched \u2014 skip\
+  \ transition, no crash\n- Already uncrouched \u2014 skip transition, no crash\n- Encroachment detected \u2014 skip uncrouch,\
+  \ no crash\n- First jump \u2014 apply jump velocity, no crash\n- Air jump (subsequent) \u2014 apply air dash, no crash\n\
+  - Custom gravity \u2014 adjust gravity space Z, no crash\n- On ladder \u2014 skip slope boosting, no crash\n- No clip active\
+  \ \u2014 skip slope boosting, no crash\n- Wall angle extreme \u2014 use stable normal, no crash\n- Height difference small\
+  \ \u2014 don't catch air, no crash\n- Not gaining ramp \u2014 don't catch air, no crash\n- Not strafing \u2014 don't catch\
+  \ air, no crash\n- Super returns invalid \u2014 don't land, no crash\n\nQuality bar:\n- The implementation must compile\
+  \ as part of the PBCharacterMovement UE5 plugin\n- Follow the existing C++ conventions, macro usage, and naming patterns\n\
+  - All public-facing methods must use the appropriate UFUNCTION macros\n- No new assets or classes outside the listed files\n\
+  - Must integrate with UCharacterMovementComponent lifecycle and movement modes\n"
+hidden_requirements:
+  R1:
+    text: DoCrouchResize must interpolate between standing height and crouched height over CrouchTime (0.4s), clamping to
+      capsule radius and adjusting position to maintain base or top.
+    category: core_logic
+  R2:
+    text: DoUnCrouchResize must test encroachment (can uncrouched capsule fit?) before uncrouching, skipping if encroachment
+      is detected.
+    category: core_logic
+  R3:
+    text: DoJump must apply JumpZVelocity (266.7f) to Z velocity for first jump, and apply air dash velocity for subsequent
+      jumps.
+    category: core_logic
+  R4:
+    text: HandleSlopeBoosting must calculate wall angle from slope steepness, select impact or stable normal, constrain to
+      plane, and apply bounce coefficient to delta.
+    category: core_logic
+  R5:
+    text: ShouldCatchAir must check height difference, surface friction, speed multiplier, sliding state, ramp gain, angle
+      with old floor normal, and strafe-off-ramp condition.
+    category: core_logic
+  R6:
+    text: IsValidLandingSpot must check super::IsValidLandingSpot, moving up slope, deflection vector, and deflection velocity
+      against jump velocity threshold.
+    category: core_logic
+  R7:
+    text: Crouch/uncrouch transitions must call OnStartCrouch/OnEndCrouch with mesh adjust for network prediction and proxy
+      capsule size adjustment for client simulation.
+    category: object_lifecycle
+  R8:
+    text: HandleSlopeBoosting must skip processing if on ladder (IsOnLadder) or no-clip active (bCheatFlying).
+    category: core_logic
+test_requirements:
+  PB.Slope.HandleSlopeBoostingDeflectsDelta:
+  - R4
+  - R8
+files_to_edit:
+- Plugins\PBCharacterMovement\Source\PBCharacterMovement\Private\Character\PBPlayerMovement.cpp
+tests:
+  runner: ue_automation
+  mode: editor
+  num_clients: 0
+  filter: PB.Slope

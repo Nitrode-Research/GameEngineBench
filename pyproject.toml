@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "unrealbench"
+version = "0.1.0"
+description = "A benchmark suite for game development tasks in Unreal Engine"
+requires-python = ">=3.10"
+dependencies = [
+    "mcp",
+    "pyautogui",
+    "claude-code-sdk",
+    "pillow",
+    "pyyaml",
+    "python-dotenv",
+    "openhands-sdk; python_version >= '3.12'",
+    "openhands-tools; python_version >= '3.12'",
+    "brokenaxes>=0.6.2",
+    "anthropic>=0.18.0",  # For pipeline task generation
+    "youtube-transcript-api>=0.6.0",  # For downloading YouTube transcripts
+    "openai>=2.20.0",
+    "google-genai>=1.0.0",
+]
+
+[project.scripts]
+unrealbench = "unrealbench.src.benchmark_runner:main"
+unrealbench-mcp = "unrealbench.src.mcp_server:main"
+unrealbench-ue = "unrealbench.src.ue_benchmark_runner:main"
+unrealbench-ue-show = "unrealbench.src.ue_show_results:main"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-mock>=3.0.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+exclude = ["tasks*", "results*", "scripts*", "unrealbench_*", "auto_task_generation*", "youtube_documentation*", "anna*", "templates*", "runs*"]

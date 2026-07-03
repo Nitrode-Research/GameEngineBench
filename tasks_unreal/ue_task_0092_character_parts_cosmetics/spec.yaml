@@ -1,0 +1,92 @@
+task_id: ue_task_0092
+title: Implement replicated character parts cosmetics
+tier: hard
+
+instruction: |
+  Implement the character parts cosmetic system so modular pawn visuals are
+  applied, removed, and replicated correctly.
+  
+  Expected behavior:
+  - Gameplay code can add and remove character part entries through the existing controller or pawn component path.
+  - Character parts spawn or attach the correct visual actors, meshes, or components to the owning pawn.
+  - Part handles remain stable enough for callers to remove the intended part later.
+  - Cosmetic entries replicate so clients see the same character composition as the server.
+  - Removing or replacing a part cleans up spawned cosmetic actors and components without orphaned visuals.
+  - Pawn changes, possession changes, respawn, and teardown reapply or clear cosmetics safely.
+  - Animation style, cosmetic tags, and body-type data remain available to systems that query them.
+  - The implementation must compile and fit the existing controller component, pawn component, cosmetic statics, and replication architecture.
+  
+  Constraints:
+  - Use the repository to infer character part list ownership, replication callbacks, actor/component spawning, and pawn lifecycle rules.
+  - Do not hardcode a fixed set of cosmetics or bypass replicated part entries.
+  - Do not require new assets or hidden manual setup.
+  
+  Quality bar:
+  The implementation must be multiplayer-visible and lifecycle-safe. It should
+  survive pawn replacement and repeated add/remove operations without duplicate
+  visuals, stale handles, or client/server divergence.
+
+files_to_edit:
+  - Source/ECR/Public/Cosmetics/ECRControllerComponent_CharacterParts.cpp
+  - Source/ECR/Public/Cosmetics/ECRPawnComponent_CharacterParts.cpp
+  - Source/ECR/Public/Cosmetics/ECRCosmeticStatics.cpp
+  - Source/ECR/Public/Cosmetics/ECRCosmeticAnimationTypes.cpp
+  - Source/ECR/Public/Cosmetics/ECRCharacterPartTypes.h
+  - Source/ECR/Public/Cosmetics/ECRControllerComponent_CharacterParts.h
+  - Source/ECR/Public/Cosmetics/ECRPawnComponent_CharacterParts.h
+  - Source/ECR/Public/Cosmetics/ECRCosmeticStatics.h
+  - Source/ECR/Public/Cosmetics/ECRCosmeticAnimationTypes.h
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "ECR.CharacterParts"
+
+hidden_requirements:
+  R1:
+    text: Gameplay code can add and remove character part entries through the existing controller or pawn component path.
+    category: core_logic
+  R2:
+    text: Character parts spawn or attach the correct visual actors, meshes, or components to the owning pawn.
+    category: assets
+  R3:
+    text: Part handles remain stable enough for callers to remove the intended part later.
+    category: core_logic
+  R4:
+    text: Cosmetic entries replicate so clients see the same character composition as the server.
+    category: replication
+  R5:
+    text: Removing or replacing a part cleans up spawned cosmetic actors and components without orphaned visuals.
+    category: assets
+  R6:
+    text: Pawn changes, possession changes, respawn, and teardown reapply or clear cosmetics safely.
+    category: replication
+  R7:
+    text: Animation style, cosmetic tags, and body-type data remain available to systems that query them.
+    category: assets
+  R8:
+    text: The implementation must compile and fit the existing controller component, pawn component, cosmetic statics, and replication architecture.
+    category: assets
+  R9:
+    text: >
+      Spawned cosmetic actors that are player-owned tagged actors must be wired to
+      the owning pawn's player state, both when first spawned and whenever the
+      applied entries are refreshed, using the project's existing player-owned
+      tagged actor API (AECRPlayerOwnedTaggedActor::SetPlayerState) rather than
+      treating the spawned child actor as an opaque AActor. The
+      UpdatePlayerStateOnEntries path must perform this propagation and must not
+      remain a no-op.
+    category: assets
+
+test_requirements:
+  ECR.CharacterParts.source_contract_tokens_present:
+    - R1
+    - R2
+    - R3
+    - R4
+    - R5
+    - R6
+    - R7
+    - R8
+    - R9

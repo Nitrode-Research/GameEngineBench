@@ -1,0 +1,72 @@
+task_id: ue_task_0026
+title: Pool Manager Editor K2 Nodes
+tier: medium
+
+instruction: |
+  The Bomber project includes custom Blueprint K2 nodes for the PoolManager plugin. These nodes expose "Take From Pool" and "Take From Pool Array" as graph nodes with typed output pins, success/failure execution routing, priority inputs, class selection, and compiler expansion into the runtime PoolManager subsystem calls. Implement the editor-node behavior in the task-owned files.
+
+  Blueprint users must be able to place the PoolManager editor K2 nodes, choose an object class, get correctly typed outputs, pass transform/amount/priority inputs, and compile the graph into calls to the runtime subsystem.
+
+  The implementation must preserve the existing editor architecture:
+
+  - `UK2Node_TakeFromPoolBase` owns shared pin allocation, class-selection handling, output type propagation, menu registration, graph compatibility, and compiler expansion.
+  - `UK2Node_TakeFromPool` expands to `UPoolManagerSubsystem::BPTakeFromPool` and forwards the transform input.
+  - `UK2Node_TakeFromPoolArray` expands to `UPoolManagerSubsystem::BPTakeFromPoolArray`, returns an array output, forwards amount, and validates the returned array before routing success.
+  - Expansion must create intermediate call, delegate, assignment, validity, branch, and temporary-variable nodes and move user pin links into the generated graph.
+  - Reconstruction must preserve output pin types and migrate legacy `Then` pins to `Completed`.
+  - Menu actions and category should register the nodes under Pool Manager in compatible Blueprint graphs.
+
+  Do not replace these with ordinary function calls or a simplified node shell. Implement the editor behavior that makes the Blueprint nodes type-aware and compilable.
+
+files_to_edit:
+  - Plugins/PoolManager/Source/PoolManagerEditor/Private/K2Node_TakeFromPoolBase.cpp
+  - Plugins/PoolManager/Source/PoolManagerEditor/Public/K2Node_TakeFromPoolBase.h
+  - Plugins/PoolManager/Source/PoolManagerEditor/Private/K2Node_TakeFromPool.cpp
+  - Plugins/PoolManager/Source/PoolManagerEditor/Public/K2Node_TakeFromPool.h
+  - Plugins/PoolManager/Source/PoolManagerEditor/Private/K2Node_TakeFromPoolArray.cpp
+  - Plugins/PoolManager/Source/PoolManagerEditor/Public/K2Node_TakeFromPoolArray.h
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "Bomber.PoolManagerEditorK2"
+
+hidden_requirements:
+  R1:
+    text: The base node must allocate exec, completed, failed, target, class, priority, and typed output pins with stable names and tooltips.
+    category: editor_api
+  R2:
+    text: The selected class pin must drive the output pin type and preserve compatible links when the class changes.
+    category: editor_api
+  R3:
+    text: Pin reconstruction must preserve output type and migrate legacy Then pins to Completed.
+    category: editor_api
+  R4:
+    text: The base node must register menu actions under Pool Manager and be compatible only with ubergraphs and macros.
+    category: editor_api
+  R5:
+    text: Compiler expansion must create the runtime PoolManager call, temporary output storage, completed delegate event, assignment node, validity check, branch, and completed/failed exec routing.
+    category: compiler_expansion
+  R6:
+    text: Compiler expansion must move target, object class, priority, output, and exec pin links into intermediate nodes and report compiler errors if internal wiring fails.
+    category: compiler_expansion
+  R7:
+    text: The single-object node must expand to BPTakeFromPool and forward the transform input.
+    category: compiler_expansion
+  R8:
+    text: The array node must expand to BPTakeFromPoolArray, return an array output pin, forward amount, and validate array results with Array_IsValidIndex.
+    category: compiler_expansion
+
+test_requirements:
+  Bomber.PoolManagerEditorK2.base_node_pin_and_type_source:
+    - R1
+    - R2
+    - R3
+    - R4
+  Bomber.PoolManagerEditorK2.base_node_expansion_source:
+    - R5
+    - R6
+  Bomber.PoolManagerEditorK2.single_and_array_node_source:
+    - R7
+    - R8

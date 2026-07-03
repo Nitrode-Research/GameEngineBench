@@ -1,0 +1,105 @@
+task_id: ue_task_0019
+title: Generated Map Orchestrator
+tier: hard
+
+instruction: |
+  The game populates a procedurally generated grid with level actors at the start of each round. Currently no actors are placed when a round begins.
+
+  The project already contains:
+  - a generation strategy that determines which actor type belongs on each cell
+  - actor pools for reusing instances across rounds
+  - systems that wait for a map-ready signal before acting (AI, camera, pawn ready)
+
+  The system must satisfy these behavioral requirements:
+
+  Map population:
+  - When a round starts, the grid must be filled with the correct actors in their correct cells.
+  - Two clients in the same session must see identical maps — same actor types, same cells.
+  - The cell-assignment computation must not block the game thread for a noticeable duration.
+  - Regenerating the map must reuse existing actor instances rather than destroying and respawning them; the actor count in the level must not grow with each regeneration.
+
+  Completion signal:
+  - One ready signal must fire per regeneration on each peer, after every actor for that round is locally present. It must not fire early, and must not fire twice.
+
+  Runtime controls:
+  - Changing the map size at runtime must replicate to all clients and take effect on the next generation.
+  - Constructing or moving the map actor in the editor must update the in-editor preview.
+
+  Use the repository to understand the generation pipeline, the actor container replication conventions, and the pool manager lifecycle.
+
+hidden_requirements:
+  R1:
+    text: Round-start generation must populate the generated map with level actors assigned by the configured generation strategy.
+    category: core_logic
+  R2:
+    text: Generation must run only on authority and must avoid re-entering while a generation is already in progress.
+    category: authority
+  R3:
+    text: The expensive cell-assignment step must run off the game thread and finish spawning on the game thread.
+    category: object_lifecycle
+  R4:
+    text: Generated actors must be acquired through the pool manager and registered in the map component container instead of accumulating fresh actors on each regeneration.
+    category: object_lifecycle
+  R5:
+    text: Generated map components must be added to the replicated container with dirty marking so clients can reconstruct the local map.
+    category: replication
+  R6:
+    text: GetLifetimeReplicatedProps must register MapComponents, GenerateLevelActorsToken, and AbilitySystemComponent for replication.
+    category: replication
+  R7:
+    text: Generation completion must advance a replicated token after all actors for the round are locally present.
+    category: replication
+  R8:
+    text: The generated-level-actors ready signal must fire exactly once per generation and only after the local container is populated.
+    category: object_lifecycle
+  R9:
+    text: Starting a new generation must reset both local and replicated generation tokens so clients count the next round from a clean baseline.
+    category: replication
+  R10:
+    text: The OnRep path for the generation token must handle both reset-to-zero packets and catch-up packets where actors arrived before the token.
+    category: replication
+  R11:
+    text: Regeneration must destroy or return old level actors through the generated-map removal path before spawning the next layout.
+    category: object_lifecycle
+  R12:
+    text: Changing the map size at runtime must update actor scale and trigger a new generation.
+    category: core_logic
+  R13:
+    text: Generated-map construction or transform changes must rebuild grid cells and refresh editor preview state.
+    category: object_lifecycle
+  R14:
+    text: The generated map must broadcast world ability-system readiness once the environmental ability system component is available.
+    category: initialization
+  R15:
+    text: Dragged or manually placed map actors must be tracked across editor construction and rescaled when the generated grid size changes.
+    category: object_lifecycle
+
+test_requirements:
+  Bomber.GeneratedMapOrchestrator.ReplicationProps:
+    - R5
+    - R6
+    - R7
+  Bomber.GeneratedMapOrchestrator.PIE_Lifecycle:
+    - R1
+    - R3
+    - R4
+    - R7
+    - R8
+    - R11
+    - R12
+  Bomber.GeneratedMapOrchestrator.ContainerAndTokenBranches:
+    - R5
+    - R7
+    - R8
+    - R9
+    - R10
+
+files_to_edit:
+  - Source/Bomber/Private/Actors/BmrGeneratedMap.cpp
+  - Source/Bomber/Public/Actors/BmrGeneratedMap.h
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "Bomber.GeneratedMapOrchestrator"

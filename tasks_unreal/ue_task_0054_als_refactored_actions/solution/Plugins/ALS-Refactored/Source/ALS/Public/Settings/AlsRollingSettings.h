@@ -1,0 +1,35 @@
+﻿#pragma once
+
+#include "AlsRollingSettings.generated.h"
+
+class UAnimMontage;
+
+USTRUCT(BlueprintType)
+struct ALS_API FAlsRollingSettings
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ALS")
+	TObjectPtr<UAnimMontage> Montage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ALS")
+	uint8 bCrouchOnStart : 1 {true};
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ALS")
+	uint8 bRotateToInputOnStart : 1 {true};
+
+	/// The lower the value, the faster the interpolation. A zero value means instant interpolation.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ALS", Meta = (ClampMin = 0, ForceUnits = "s"))
+	float RotationInterpolationHalfLife{0.1f};
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ALS")
+	uint8 bStartRollingOnLand : 1 {true};
+
+	/// Character will roll if they land at a speed that exceeds this value.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ALS",
+		Meta = (ClampMin = 0, EditCondition = "bStartRollingOnLand", ForceUnits = "cm/s"))
+	float RollingOnLandSpeedThreshold{700.0f};
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ALS")
+	uint8 bInterruptRollingWhenInAir : 1 {true};
+};

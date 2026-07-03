@@ -1,0 +1,83 @@
+# UnrealBench full frontier-agent model matrix.
+# Run with: python -m unrealbench.src.ue_benchmark_runner --manifest run_manifest.yaml
+#
+# Each run writes a separate JSON file under results/model_matrix/ and each
+# snapshot result.json records token_usage.output_tokens, cost_usd,
+# duration_seconds, and agent_steps when the provider CLI exposes them.
+#
+# Terminal-agent CLIs that do not expose machine-readable usage leave token/cost
+# fields null/0 instead of fabricating values. Configure those CLIs through:
+#   QWEN_CODE_CMD / QWEN_CODE_ARGS
+#   KIMI_CODE_CMD / KIMI_CODE_ARGS
+#   DEEPSEEK_CODE_CMD / DEEPSEEK_CODE_ARGS
+#   GLM_CODE_CMD / GLM_CODE_ARGS
+#   MUSE_CODE_CMD / MUSE_CODE_ARGS
+
+defaults:
+  mode: solve
+  tasks: [1-110]
+  warm_cache: true
+  skip_judge: false
+  solver_timeout: 3600
+  tasks_dir: tasks_unreal
+
+runs:
+  - model: gpt-5.5
+    agent: codex
+    reasoning: xhigh
+    output: results/model_matrix/codex_gpt-5.5_xhigh_tasks_1-110.json
+
+  - model: gpt-5.5
+    agent: codex
+    reasoning: high
+    output: results/model_matrix/codex_gpt-5.5_high_tasks_1-110.json
+
+  - model: gpt-5.5
+    agent: codex
+    reasoning: medium
+    output: results/model_matrix/codex_gpt-5.5_medium_tasks_1-110.json
+
+  - model: claude-opus-4-8
+    agent: claude-code
+    reasoning: max
+    output: results/model_matrix/claude-code_4.8_max_tasks_1-110.json
+
+  - model: claude-opus-4-8
+    agent: claude-code
+    reasoning: high
+    output: results/model_matrix/claude-code_4.8_high_tasks_1-110.json
+
+  - model: claude-opus-4-7
+    agent: claude-code
+    reasoning: max
+    output: results/model_matrix/claude-code_4.7_max_tasks_1-110.json
+
+  - model: claude-opus-4-7
+    agent: claude-code
+    reasoning: high
+    output: results/model_matrix/claude-code_4.7_high_tasks_1-110.json
+
+  - model: gemini-3.5-pro
+    agent: antigravity-cli
+    output: results/model_matrix/antigravity_gemini-3.5-pro_tasks_1-110.json
+
+  - model: qwen3.7-plus
+    agent: qwen-code
+    output: results/model_matrix/qwen3.7-plus_tasks_1-110.json
+
+  - model: kimi-k2.7-code
+    agent: kimi-code
+    output: results/model_matrix/kimi-k2.7-code_tasks_1-110.json
+
+  - model: deepseek-v4-pro
+    agent: deepseek-code
+    output: results/model_matrix/deepseek_4_pro_tasks_1-110.json
+
+  - model: glm-5.2
+    agent: qwen-code
+    output: results/model_matrix/glm_5.2_qwen_tasks_1-110.json
+
+  - model: muse-spark
+    agent: muse-code
+    output: results/model_matrix/muse_spark_tasks_1-110.json
+

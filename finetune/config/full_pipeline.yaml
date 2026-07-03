@@ -1,0 +1,41 @@
+# End-to-end pipeline config
+
+dataset_input: finetune/data/canonical/dataset_20_success_from_test_results_trainable.jsonl
+
+# Use uv runtime for child scripts by default
+python_cmd:
+  - uv
+  - run
+  - python
+
+processed_dir: finetune/data/processed
+manifest_path: finetune/artifacts/dataset_manifest.json
+run_artifact_path: finetune/artifacts/complete_pipeline_run.json
+generated_experiment_config: finetune/config/experiment.generated.yaml
+
+base_model: gpt-4o-mini-2024-07-18
+suffix: unrealbench
+
+# If running with --skip-train, provide tuned_model manually.
+tuned_model: openai/ft:gpt-4o-mini-2024-07-18:inception-technologies:gamedevbench:DHeE2TCa
+
+baseline_model: openai/gpt-4o-mini-2024-07-18
+agent: openhands
+task_list: tasks_medium.yaml
+benchmark_runner: unrealbench/src/benchmark_runner.py
+
+val_ratio: 0.1
+seed: 42
+
+poll_seconds: 300
+timeout_seconds: 10800
+
+shared_flags:
+  use_runtime_video: false
+  enable_mcp: false
+  skip_display: false
+  debug: false
+
+outputs:
+  report_path: finetune/reports/latest_ab_report.json
+  summary_path: finetune/reports/latest_ab_summary.md

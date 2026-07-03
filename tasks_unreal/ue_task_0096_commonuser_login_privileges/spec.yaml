@@ -1,0 +1,76 @@
+task_id: ue_task_0096
+title: Implement CommonUser login and privilege checks
+tier: hard
+
+instruction: |
+  Implement CommonUser login and privilege handling so users can authenticate,
+  report availability, and react correctly to online service state.
+  
+  Expected behavior:
+  - Login requests progress through the existing auto-login, login UI, platform-auth transfer, and privilege-check paths.
+  - The system resolves default, platform, and game online contexts correctly for the current platform configuration.
+  - Login success updates user info, net IDs, nicknames, cached privilege results, and local player ownership.
+  - Login failure reports useful errors and does not leave active requests permanently pending.
+  - Privilege checks translate platform or online-service results into the project's CommonUser privilege results.
+  - Availability changes are broadcast only when effective availability changes.
+  - Logout, connection loss, controller pairing changes, and input-device changes update affected users safely.
+  - The implementation must compile and fit the existing CommonUser, OSSv1/OSSv2, platform input, and messaging architecture.
+  
+  Constraints:
+  - Use the repository to infer online context caches, request state transitions, privilege mappings, and delegate cleanup rules.
+  - Do not implement a fake always-logged-in user path.
+  - Do not require new assets or hidden manual setup.
+  
+  Quality bar:
+  The implementation must be robust under success, failure, cancellation,
+  connection changes, and platform/user remapping. Compile success is not
+  sufficient if privileges or availability are silently wrong.
+
+files_to_edit:
+  - Plugins/CommonUser/Source/CommonUser/Private/CommonUserSubsystem.cpp
+  - Plugins/CommonUser/Source/CommonUser/Private/CommonUserTypes.cpp
+  - Plugins/CommonUser/Source/CommonUser/Public/CommonUserSubsystem.h
+  - Plugins/CommonUser/Source/CommonUser/Public/CommonUserTypes.h
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "ECR.CommonUserLogin"
+
+hidden_requirements:
+  R1:
+    text: Login requests progress through the existing auto-login, login UI, platform-auth transfer, and privilege-check paths.
+    category: ui
+  R2:
+    text: The system resolves default, platform, and game online contexts correctly for the current platform configuration.
+    category: replication
+  R3:
+    text: Login success updates user info, net IDs, nicknames, cached privilege results, and local player ownership.
+    category: ui
+  R4:
+    text: Login failure reports useful errors and does not leave active requests permanently pending.
+    category: core_logic
+  R5:
+    text: Privilege checks translate platform or online-service results into the project's CommonUser privilege results.
+    category: replication
+  R6:
+    text: Availability changes are broadcast only when effective availability changes.
+    category: core_logic
+  R7:
+    text: Logout, connection loss, controller pairing changes, and input-device changes update affected users safely.
+    category: replication
+  R8:
+    text: The implementation must compile and fit the existing CommonUser, OSSv1/OSSv2, platform input, and messaging architecture.
+    category: input
+
+test_requirements:
+  ECR.CommonUserLogin.source_contract_tokens_present:
+    - R1
+    - R2
+    - R3
+    - R4
+    - R5
+    - R6
+    - R7
+    - R8

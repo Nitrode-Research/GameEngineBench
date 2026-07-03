@@ -1,0 +1,157 @@
+name: Unreal Plugin Cross-Platform CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-test:
+    name: UE Build & Test (${{ matrix.os }})
+    # Requires self-hosted runners labeled with 'windows', 'linux', or 'macos'
+    runs-on: [self-hosted, "${{ matrix.os }}"]
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows, linux, macos]
+    
+    env:
+      # Set this on your runner machine's environment variables or here
+      UE_PATH: ${{ matrix.os == 'windows' && 'C:/Program Files/Epic Games/UE_5.3' || '/Users/Shared/EpicGames/UE_5.3' }}
+      PROJECT_NAME: "YourProjectName"
+      PLUGIN_NAME: "YourPluginName"
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Build Plugin
+        run: |
+          # Use Unreal Automation Tool (UAT) to build the plugin
+          ${{ env.UE_PATH }}/Engine/Build/BatchFiles/RunUAT.${{ matrix.os == 'windows' && 'bat' || 'sh' }} \
+          BuildPlugin -Plugin="${{ github.workspace }}/${{ env.PLUGIN_NAME }}.uplugin" \
+          -Package="${{ github.workspace }}/BuiltPlugin" -Rocket
+
+      - name: Run Tests & Coverage (Windows)
+        if: matrix.os == 'windows'
+        shell: cmd
+        run: |
+          :: Use OpenCppCoverage to wrap the Unreal Editor test execution
+          OpenCppCoverage.exe --sources "${{ env.PLUGIN_NAME }}" --export_type cobertura:coverage.xml -- ^
+          "${{ env.UE_PATH }}\Engine\Binaries\Win64\UnrealEditor-Cmd.exe" ^
+          "${{ github.workspace }}\${{ env.PROJECT_NAME }}.uproject" ^
+          -ExecCmds="Automation RunTests ${{ env.PLUGIN_NAME }}; quit" ^
+          -unattended -nopause -testexit="Automation Test Queue Empty" -log=TestLog.txt
+
+      - name: Run Tests & Coverage (Unix)
+        if: matrix.os != 'windows'
+        run: |
+          # Use LLVM instrumentation for coverage on Linux/macOS
+          export LLVM_PROFILE_FILE="code-%p.profraw"
+          ${{ env.UE_PATH }}/Engine/Binaries/${{ matrix.os == 'linux' && 'Linux' || 'Mac' }}/UnrealEditor-Cmd \
+          "${{ github.workspace }}/${{ env.PROJECT_NAME }}.uproject" \
+          -ExecCmds="Automation RunTests ${{ env.PLUGIN_NAME }}; quit" \
+          -unattended -nopause -testexit="Automation Test Queue Empty" -log=TestLog.txt
+
+      - name: Upload Build Logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: logs-${{ matrix.os }}
+          path: |
+            Saved/Logs/*.log
+            TestLog.txt
+
+      - name: Upload to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage.xml
+          flags: ${{ matrix.os }}
+          name: ue-plugin-coverage
+          fail_ci_if_error: true
+
+
+==
+
+name: Unreal Plugin Cross-Platform Build
+
+on:
+  push:
+    branches:
+      - stable
+  pull_request:
+    branches:
+      - stable
+
+jobs:
+  build-windows:
+    runs-on: [self-hosted, windows-latest, windows-cross-compiler, x64]
+    steps:
+     - name: Set up Git
+       uses: actions/setup-git@v2
+       with:
+        git-version: '2.30.0' # Specify a version 2.18 or higher
+
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        submodules: true # If your plugin has submodules
+
+    - name: Setup Unreal Engine (Windows)
+      # Use a pre-built Unreal Engine setup action or manually download/install
+      # For free tier, consider using a minimal engine version if possible,
+      # or focusing on a specific engine version to reduce download size.
+      # Example: Using a community-maintained action if available, or a custom script.
+      # This step is the most critical for free tier usage due to download/disk space.
+      # A custom script to download a specific, minimal engine version from Epic Games
+      # or a pre-configured environment in a self-hosted runner would be optimal.
+      run: |
+        # Example placeholder for setting up Unreal Engine
+        # This would involve downloading and extracting a specific UE version
+        # from Epic's CDN (requires authentication) or a pre-cached version.
+        # For free tier, manually managing engine versions is often required.
+        echo "Setting up Unreal Engine for Windows..."
+        # Add your specific commands here to download/configure UE.
+
+    - name: Build Plugin (Windows)
+      run: |
+        # Replace with your actual build command for the plugin
+        # Example: Using UnrealBuildTool
+        # "C:\Program Files\Epic Games\UE_VERSION\Engine\Build\BatchFiles\RunUAT.bat" BuildPlugin -Plugin="ASLXT.uplugin" -Package=".\Builds\Windows" -TargetPlatforms=Win64
+        echo "Building Plugin for Windows..."
+        
+    - name: Return True
+      run: echo "Return true."
+
+    - name: Setup cross-compilation environment (Linux target)
+      shell: powershell
+      run: |
+        # Install or configure cross-compilation toolchains for Linux on Windows
+        # This might involve installing MinGW-w64 with a Linux target toolchain
+        # or using a pre-configured environment.
+        Write-Host "Setting up cross-compilation environment for Linux..."
+        # Example: Ensure cross-compiler is available in PATH
+
+    - name: Build Plugin for Linux
+      shell: powershell
+      run: |
+        # Commands to build your plugin for Linux using the cross-compiler
+        Write-Host "Cross-compiling plugin for Linux..."
+        # Replace with your actual cross-compile command
+        # .\build-plugin.ps1 -target Linux -cross-compiler x86_64-linux-gnu-gcc
+
+    # - name: Upload Windows Artifacts
+    #   uses: actions/upload-artifact@v4
+    #   with:
+    #     name: plugin-windows
+    #     path: path/to/your/windows/build/output/
+# 
+    # - name: Upload Linux Artifacts
+    #   uses: actions/upload-artifact@v4
+    #   with:
+    #     name: plugin-linux
+    #     path: path/to/your/linux/build/output/

@@ -1,0 +1,70 @@
+task_id: ue_task_0113
+title: Crouch Slide + Ladder + NoClip System
+tier: hard
+instruction: "You are working in a UE5 C++ plugin called PBCharacterMovement that implements\nHL2-style FPS movement for a\
+  \ character. The plugin provides crouch slide with\nvelocity boost, ladder climbing with velocity reset, no-clip toggle\
+  \ for flying\nmode, and camera roll calculation based on side velocity.\n\nThe module already has:\n- A functional UE5 plugin\
+  \ setup with dependencies on Core, PhysicsEngine, and\n  CharacterMovementComponent integration\n- The velocity calculation\
+  \ and braking system (spec-velocity-braking)\n- The crouch/jump/slope system (spec-crouch-jump-slope)\n- Capsule collision,\
+  \ movement modes (Walking/Flying/Falling), and floor detection\n\nImplement the crouch slide, ladder, no-clip, and camera\
+  \ roll systems. The system\nmust handle crouch slide with cooldown and velocity boost, ladder climbing with\nvelocity reset,\
+  \ no-clip toggle for flying mode, and camera roll based on side\nvelocity and roll parameters.\n\nThe crouch slide system\
+  \ must satisfy these behavioral requirements:\n\nStart crouch slide (StartCrouchSlide):\n- Must check cooldown (CrouchSlideCooldown\
+  \ = 1.0f) before starting slide\n- Must check minimum velocity (MinCrouchSlideBoost) before starting slide\n- Must get floor\
+  \ normal for slope calculation\n- Must calculate slope factor from input direction and floor normal\n- Must calculate new\
+  \ speed with slope factor (downhill = boost, uphill = decay)\n- Must set velocity to new speed\n- Must set crouch slide\
+  \ start time for cooldown tracking\n- Must set bCrouchSliding flag to true\n\nShould crouch slide (ShouldCrouchSlide):\n\
+  - Must check if currently sliding (bCrouchSliding)\n- Must check if moving on ground (IsMovingOnGround)\n- Must return true\
+  \ if sliding and on ground\n\nStop crouch slide (StopCrouchSlide):\n- Must clear bCrouchSliding flag\n- Must clear defer\
+  \ crouch slide to land flag\n\nNo-clip toggle (SetNoClip / ToggleNoClip):\n- Must set movement mode to Flying when enabled\n\
+  - Must set movement mode to Walking when disabled\n- Must set deferred movement mode for reliable mode switching\n- Must\
+  \ toggle bCheatFlying flag\n- Must enable collision when disabled, disable when enabled\n- Must set bHasDeferredMovementMode\
+  \ flag\n\nCamera roll (GetCameraRoll):\n- Must skip if RollSpeed or RollAngle is zero\n- Must calculate side velocity from\
+  \ current velocity\n- Must calculate sign of side velocity\n- Must calculate absolute side velocity\n- Must calculate roll\
+  \ based on speed and RollAngle\n- Must return roll with sign applied\n\nEdge cases:\n- Cooldown active \u2014 skip slide,\
+  \ no crash\n- Low velocity \u2014 skip slide, no crash\n- Not on ground \u2014 don't slide, no crash\n- Enable no clip \u2014\
+  \ set flying mode, no crash\n- Disable no clip \u2014 set walking mode, no crash\n- Zero roll speed \u2014 return zero roll,\
+  \ no crash\n- Zero roll angle \u2014 return zero roll, no crash\n- Negative side velocity \u2014 apply sign, no crash\n\
+  - High side velocity \u2014 clamp to roll angle, no crash\n\nQuality bar:\n- The implementation must compile as part of\
+  \ the PBCharacterMovement UE5 plugin\n- Follow the existing C++ conventions, macro usage, and naming patterns\n- All public-facing\
+  \ methods must use the appropriate UFUNCTION macros\n- No new assets or classes outside the listed files\n- Must integrate\
+  \ with UCharacterMovementComponent lifecycle and movement modes\n"
+hidden_requirements:
+  R1:
+    text: StartCrouchSlide must check CrouchSlideCooldown (1.0f) before starting, and verify velocity exceeds MinCrouchSlideBoost.
+    category: core_logic
+  R2:
+    text: StartCrouchSlide must calculate slope factor from input direction and floor normal, applying downhill boost and
+      uphill decay to velocity.
+    category: core_logic
+  R3:
+    text: ShouldCrouchSlide must check bCrouchSliding flag and IsMovingOnGround, returning true only when both conditions
+      are met.
+    category: core_logic
+  R4:
+    text: StopCrouchSlide must clear bCrouchSliding flag and defer crouch slide to land flag.
+    category: core_logic
+  R5:
+    text: SetNoClip must set movement mode to MOVE_Flying when enabled, MOVE_Walking when disabled, and toggle bCheatFlying
+      flag.
+    category: core_logic
+  R6:
+    text: ToggleNoClip must toggle bCheatFlying flag and call SetNoClip with toggled value.
+    category: core_logic
+  R7:
+    text: GetCameraRoll must calculate side velocity, apply sign, and scale by RollAngle and RollSpeed parameters.
+    category: core_logic
+  R8:
+    text: SetNoClip must enable collision when disabled and disable collision when enabled.
+    category: core_logic
+test_requirements:
+  PB.NoClip.ToggleChangesMovementMode:
+  - R5
+  - R8
+files_to_edit:
+- Plugins\PBCharacterMovement\Source\PBCharacterMovement\Private\Character\PBPlayerMovement.cpp
+tests:
+  runner: ue_automation
+  mode: editor
+  num_clients: 0
+  filter: PB.NoClip

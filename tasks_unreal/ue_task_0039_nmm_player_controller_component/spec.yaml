@@ -1,0 +1,103 @@
+task_id: ue_task_0039
+title: NMM Player Controller Component (Cinematic Input and Save Game)
+tier: hard
+
+instruction: |
+  The New Main Menu coordinates input contexts, mouse visibility, music, and save game loading through a component on each player controller. Currently no listeners bind, no save game loads, music never starts, and cinematic input is never gated.
+
+  The project already contains:
+  - a menu data asset that gates all initialization
+  - input contexts for gameplay and cinematic modes
+  - a save game slot for persisting menu choices
+
+  The system must satisfy these behavioral requirements:
+
+  Initialization:
+  - No listeners must bind before the data asset is available — binding in BeginPlay directly races data-asset availability.
+  - Any stale MenuUnloaded message from a prior session must be cleared at init so it does not fire on freshly-bound listeners.
+  - All subscriptions, the async save-game load, and disabling auto camera possession run inside the data-asset callback.
+
+  Input management:
+  - Entering cinematic mode: disable all game-state-driven input contexts before enabling cinematic-only contexts. Stale gameplay inputs must not leak through during cinematics. Also suppress move input and stop the menu music.
+  - Exiting cinematic mode: remove only the cinematic contexts. Game-state-driven contexts are managed separately on menu-state changes.
+  - Input context updates short-circuit if the main menu widget is not yet initialized. The widget-ready event re-triggers the update.
+
+  Save game:
+  - Loaded asynchronously. If no save slot exists yet, create and persist a fresh save for next session — but the originally-passed object (not the newly-created one) becomes the active save for this session.
+
+  Music:
+  - Plays when the game state enters the menu phase; stops when it enters game-starting.
+
+  Teardown:
+  - On unregister, broadcast MenuUnloaded before any cleanup. Non-authority clients must forward the event to the server. Then unbind inputs, remove contexts, stop music, and release save data.
+
+  Use the repository to understand the NMM data asset, global message subsystem, and spots subsystem to find the correct event ordering.
+
+hidden_requirements:
+  R1:
+    text: BeginPlay must only request the NMM data asset and clear stale MenuUnloaded cache; listener binding and save loading must wait for the data-asset callback.
+    category: initialization
+  R2:
+    text: Initialization must clear cached MenuUnloaded messages before newly bound listeners can replay a prior-session unload event.
+    category: object_lifecycle
+  R3:
+    text: The data-asset callback must wire game-state, menu-state, widget-ready, async save-load, and level-camera auto-possession setup in one data-ready path.
+    category: initialization
+  R4:
+    text: Entering cinematic mode must disable all game-state-driven input contexts before enabling cinematic-only contexts.
+    category: core_logic
+  R5:
+    text: Cinematic mode must suppress movement input, enable cinematic mouse settings, and stop main-menu music while the cinematic is active.
+    category: core_logic
+  R6:
+    text: Exiting cinematic mode must remove only cinematic-specific contexts and mouse settings, leaving game-state-managed contexts to the menu-state update path.
+    category: core_logic
+  R7:
+    text: Managed menu input context updates must short-circuit until the main menu widget exists, and the widget-ready event must retry the skipped update.
+    category: initialization
+  R8:
+    text: Async save loading must create and persist a fresh save when no slot exists, but the originally supplied async-load object remains the active session input to SetSaveGameData.
+    category: object_lifecycle
+  R9:
+    text: Main-menu music must play when the game state enters Menu and stop when entering GameStarting or Cinematic.
+    category: core_logic
+  R10:
+    text: OnUnregister must broadcast MenuUnloaded before cleanup and forward that event to the server from non-authority clients.
+    category: authority
+  R11:
+    text: OnUnregister must unbind menu input actions, remove menu contexts, stop or destroy menu music, and release save-game data.
+    category: object_lifecycle
+  R12:
+    text: The component must expose the runtime UClass surface used by the menu component tests and event bindings.
+    category: initialization
+
+test_requirements:
+  Bomber.NMMPlayerControllerComponent.BeginPlayBindsNoListeners:
+    - R1
+  Bomber.NMMPlayerControllerComponent.BeginPlayClearsStaleMenuUnloaded:
+    - R2
+  Bomber.NMMPlayerControllerComponent.CinematicEnableDisablesAllFirst:
+    - R4
+  Bomber.NMMPlayerControllerComponent.ManagedContextsShortCircuitOnNullWidget:
+    - R7
+  Bomber.NMMPlayerControllerComponent.MusicRoutingAndCinematicSuppress:
+    - R5
+    - R9
+  Bomber.NMMPlayerControllerComponent.NoSlotFallbackPassesOriginalParameter:
+    - R8
+  Bomber.NMMPlayerControllerComponent.OnDataAssetLoadedWiresEverything:
+    - R3
+  Bomber.NMMPlayerControllerComponent.OnUnregisterBroadcastsAndForwardsToServer:
+    - R10
+    - R11
+  Bomber.NMMPlayerControllerComponent.RuntimeUClassSurface:
+    - R12
+
+files_to_edit:
+  - Plugins/GameFeatures/NewMainMenu/Source/NewMainMenu/Private/Components/NMMPlayerControllerComponent.cpp
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "Bomber.NMMPlayerControllerComponent"

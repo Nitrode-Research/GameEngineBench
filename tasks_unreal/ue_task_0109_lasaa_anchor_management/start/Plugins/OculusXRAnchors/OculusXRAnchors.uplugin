@@ -1,0 +1,17 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "OculusXRAnchors Stub",
+	"Description": "Minimal local benchmark stub for OculusXRAnchors APIs used by LASAA tasks.",
+	"Category": "Benchmark",
+	"EnabledByDefault": true,
+	"CanContainContent": false,
+	"Modules": [
+		{
+			"Name": "OculusXRAnchors",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}
+	]
+}

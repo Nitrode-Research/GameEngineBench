@@ -1,0 +1,120 @@
+task_id: ue_task_0077
+title: SPUD Persistent Runtime Restore Composite
+tier: hard
+
+instruction: |
+  You are working in an Unreal Engine 5 project that uses the SPUD runtime save plugin.
+  Implement SPUD's persistent runtime restore pipeline in the task-owned files.
+
+  The project already contains the public API surface, build/module wiring, and surrounding SPUD save/load integration points.
+
+  Runtime-created actors, World Partition roaming actors, reflected SaveGame state, and metadata-based property restore must work together across the full SPUD runtime restore pipeline.
+
+  Implement the following behavior:
+
+  - Runtime-spawned persistent actors are identified by stable SpudGuid values rather than transient object names.
+  - References between saved runtime actors are restored to the recreated or already-existing actor instance.
+  - Runtime actors that already exist because of normal world initialization are matched instead of duplicated.
+  - Level-authored persistent actors destroyed during gameplay remain destroyed after restore, while runtime-spawned actors are not recorded as destroyed level actors by the subsystem-level gameplay flow.
+  - `USpudState::StoreLevelActorDestroyed` is the low-level state writer for destroyed placed-actor tombstones and should record the actor identity it is given; runtime-vs-level eligibility filtering belongs in the subsystem/caller path before this state API is invoked.
+  - Destroyed placed-actor records use stable level actor identity, persist through SPUD's chunked archive format, and are applied after normal actor restore.
+  - Roaming actors can move between World Partition runtime cells, are stored into inactive or unloading cells, and are not duplicated when cells reload.
+  - Cell cache state stays synchronized with streaming load/unload notifications, including pending unload.
+  - `USpudRoamingActorSubsystem::RegisterActor` and `UnregisterActor` are low-level tracking operations: they must accept any actor supplied by the caller, dedupe repeated registrations, and leave roaming-eligibility decisions to the code paths that decide when registration should happen.
+  - Actors restored near a cell boundary are clamped inside the target cell so they do not immediately hand off again.
+  - Reflected SaveGame properties survive metadata slow-path restore for custom structs, supported containers, and struct arrays.
+  - Runtime-only reflected fields that are not marked SaveGame must not be pulled into nested SaveGame struct state.
+
+  Use the existing SPUD subsystem, state, property metadata, runtime actor component, and roaming actor subsystem architecture.
+  Do not add a separate global registry, do not special-case the test actor names, do not replace SPUD with raw UObject::Serialize,
+  and do not change project/build configuration files.
+
+files_to_edit:
+  - "Plugins/SPUD/Source/SPUD/Public/SpudState.h"
+  - "Plugins/SPUD/Source/SPUD/Private/SpudState.cpp"
+  - "Plugins/SPUD/Source/SPUD/Public/SpudPropertyUtil.h"
+  - "Plugins/SPUD/Source/SPUD/Private/SpudPropertyUtil.cpp"
+  - "Plugins/SPUD/Source/SPUD/Public/ISpudObject.h"
+  - "Plugins/SPUD/Source/SPUD/Public/SpudData.h"
+  - "Plugins/SPUD/Source/SPUD/Private/SpudData.cpp"
+  - "Plugins/SPUD/Source/SPUD/Public/SpudSubsystem.h"
+  - "Plugins/SPUD/Source/SPUD/Private/SpudSubsystem.cpp"
+  - "Plugins/SPUD/Source/SPUD/Public/SpudRoamingActorSubsystem.h"
+  - "Plugins/SPUD/Source/SPUD/Private/SpudRoamingActorSubsystem.cpp"
+  - "Plugins/SPUD/Source/SPUD/Public/SpudRuntimeStoredActorComponent.h"
+  - "Plugins/SPUD/Source/SPUD/Private/SpudRuntimeStoredActorComponent.cpp"
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "SPUD.PersistentRuntimeRestore"
+
+hidden_requirements:
+  R1:
+    text: Runtime-spawned persistent actors must be stored by stable SpudGuid identity rather than transient object name, and repeated saves with the same identity must update one spawned record.
+    category: core_logic
+  R2:
+    text: Runtime actors must respawn with their saved class, SaveGame state, stable guid, and repaired strong or weak references to other restored runtime actors.
+    category: serialization
+  R3:
+    text: Runtime actor identity and references must survive a full SPUD archive save/load cycle, not just an in-memory state restore.
+    category: serialization
+  R4:
+    text: Roaming runtime actors must restore as roaming actor classes and preserve runtime actor references after respawn.
+    category: runtime_integration
+  R5:
+    text: Existing runtime actors with the same saved guid must be restored in place rather than duplicated.
+    category: object_lifecycle
+  R6:
+    text: Runtime actors that opt out of respawn and provide a stable override name must be stored as named level actor state, not as spawned actor records.
+    category: core_logic
+  R7:
+    text: Destroyed placed actor records must use stable level actor identity and round-trip through SPUD's archive format.
+    category: serialization
+  R8:
+    text: Destroyed placed actor tombstones must be applied after normal actor restore so saved state and deletion state do not conflict.
+    category: object_lifecycle
+  R9:
+    text: Roaming actor cell lookup must choose the most specific cached cell and report active versus loaded-but-inactive state.
+    category: core_logic
+  R10:
+    text: Roaming actor cell cache must preserve cached cells and mark them pending unload during streaming pre-unload notifications.
+    category: runtime_integration
+  R11:
+    text: Roaming actor tracking operations must dedupe repeated registration and cleanly remove actors on unregister.
+    category: object_lifecycle
+  R12:
+    text: Roaming actors restored near a cell boundary must be clamped inside the target cell with an inset.
+    category: core_logic
+  R13:
+    text: Slow-path property restore must round-trip SaveGame custom structs, fallback containers, and struct arrays while excluding runtime-only fields.
+    category: serialization
+
+test_requirements:
+  SPUD.PersistentRuntimeRestore.stores_runtime_actor_by_stable_identity:
+    - R1
+  SPUD.PersistentRuntimeRestore.respawns_runtime_actors_and_fixes_runtime_references:
+    - R2
+  SPUD.PersistentRuntimeRestore.archive_roundtrip_preserves_runtime_identity_and_references:
+    - R3
+  SPUD.PersistentRuntimeRestore.restores_roaming_runtime_actors_and_references:
+    - R4
+  SPUD.PersistentRuntimeRestore.does_not_duplicate_existing_runtime_actor_with_same_guid:
+    - R5
+  SPUD.PersistentRuntimeRestore.respects_never_respawn_and_override_name_for_auto_created_actors:
+    - R6
+  SPUD.PersistentRuntimeRestore.records_stable_actor_names_and_roundtrips_archive:
+    - R7
+  SPUD.PersistentRuntimeRestore.restore_applies_destroyed_records_after_actor_restore:
+    - R8
+  SPUD.PersistentRuntimeRestore.finds_most_specific_cell_and_reports_activation:
+    - R9
+  SPUD.PersistentRuntimeRestore.tracks_pending_unload_state:
+    - R10
+  SPUD.PersistentRuntimeRestore.registers_and_unregisters_unique_actors:
+    - R11
+  SPUD.PersistentRuntimeRestore.clamps_actor_inside_target_cell:
+    - R12
+  SPUD.PersistentRuntimeRestore.slow_path_restores_custom_structs_and_fallback_containers:
+    - R13

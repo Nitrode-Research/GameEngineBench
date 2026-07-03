@@ -1,0 +1,116 @@
+task_id: ue_task_0022
+title: Bomb Placement and Explosion Execution
+tier: hard
+
+instruction: |
+  Placing a bomb is a player action that produces a detonation pipeline: validate the target cell, spawn the bomb, run a fuse, then explode and damage everything in range. Currently pressing the place key fires nothing.
+
+  The project already contains:
+  - a fuse system that carries context from placement to explosion
+  - a cell scan library for computing blast arms
+  - attribute data for fire radius and outgoing damage
+
+  The system must satisfy these behavioral requirements:
+
+  Placement:
+  - The bomb targets the cell the pawn currently occupies.
+  - Placement is blocked if the cell already contains a non-player actor. Players on the cell — including the placer — do not block placement.
+  - The number of live bombs per player is capped by holding the placement cost for the fuse duration, not by a cooldown or explicit counter. The cap releases when the bomb detonates.
+  - Two players placing on the same cell simultaneously must result in exactly one bomb.
+  - On a remote client's placement, the server shortens the fuse by the client's ping (clamped to a maximum) so the explosion appears simultaneous from both sides.
+
+  Explosion:
+  - The blast area is computed at detonation time from current map state — not stored at placement time.
+  - The explosion walks outward along four arms from the origin until each arm hits a solid wall. Arm length comes from the placer's fire radius attribute. The placer is not immune to their own bomb.
+  - Boxes on affected cells are destroyed through the map's actor-removal path.
+  - The explosion runs on authority only, and only during in-game or end-game phases.
+  - The placer's outgoing damage is captured at detonation time. A missing capture makes every explosion silently do zero damage.
+
+  Chain reactions:
+  - A bomb on an affected cell must detonate as part of the chain, originating from its own cell.
+  - Same-tick chains must resolve cleanly with no duplicate damage to any pawn.
+
+  Use the repository to understand the fuse system, the cell utility library, and how the two halves of this pipeline couple through shared context.
+
+hidden_requirements:
+  R1:
+    text: Placement validation must derive the target cell from the gameplay event payload rather than resampling pawn position during activation.
+    category: core_logic
+  R2:
+    text: Placement validation must reject cells occupied by non-player actors while allowing players on the target cell.
+    category: core_logic
+  R3:
+    text: Cell occupancy validation must happen before ability activation so simultaneous placements on one cell resolve to a single bomb.
+    category: core_logic
+  R4:
+    text: Activation must commit the ability, write only the bomb origin cell to the fuse effect context, and spawn the bomb through the generated map.
+    category: core_logic
+  R5:
+    text: Placement cost must be applied as a durational gameplay effect for the fuse duration so the live-bomb cap releases on detonation.
+    category: object_lifecycle
+  R6:
+    text: Remote-client placement must shorten the fuse on the server by clamped player ping so detonation timing stays aligned.
+    category: authority
+  R7:
+    text: Explosion execution must capture the placer's outgoing damage attribute from the source ASC.
+    category: core_logic
+  R8:
+    text: Explosion execution must run only on authority and only during in-game or end-game phases.
+    category: authority
+  R9:
+    text: Explosion execution must read the origin cell from the fuse context and bail if no bomb remains at that origin.
+    category: core_logic
+  R10:
+    text: Explosion cells must be computed at detonation time with the cell utility explosion path and the placer's current fire radius.
+    category: core_logic
+  R11:
+    text: Explosion damage must be cell-based and must not use engine radial or point damage helpers that ignore grid walls.
+    category: core_logic
+  R12:
+    text: Boxes or other ASC-less level actors in affected cells must be destroyed through the generated map's actor-removal path.
+    category: object_lifecycle
+  R13:
+    text: Pawns or other actors with an ASC in affected cells must receive a damage gameplay effect with the captured outgoing damage.
+    category: core_logic
+  R14:
+    text: Chain reactions must remove the chained bomb's fuse effect from the chained bomb placer's ASC so the chained execution runs from its own origin.
+    category: object_lifecycle
+  R15:
+    text: Chain reactions must not call a direct detonate or explode function on the bomb actor.
+    category: core_logic
+  R16:
+    text: Same-tick chains must avoid duplicate damage by bailing when the origin bomb has already been removed.
+    category: edge_case
+
+test_requirements:
+  Bomber.BombPlacement.ExplosionDamageCaptureDeclared:
+    - R7
+  Bomber.BombPlacement.PlacementGateIsPreActivation:
+    - R1
+    - R2
+    - R3
+  Bomber.BombPlacement.OriginWrittenToFuseContext:
+    - R4
+  Bomber.BombPlacement.CostHeldForFuseDuration:
+    - R5
+  Bomber.BombPlacement.ExecutionAuthorityAndPhaseGate:
+    - R8
+  Bomber.BombPlacement.CellBasedExplosionNotRadial:
+    - R10
+    - R11
+  Bomber.BombPlacement.BoxDestructionPath:
+    - R12
+  Bomber.BombPlacement.ChainViaFuseRemovalOnPlacer:
+    - R14
+    - R15
+    - R16
+
+files_to_edit:
+  - Source/Bomber/Private/AbilitySystem/Abilities/BmrBombPlaceAbility.cpp
+  - Source/Bomber/Private/AbilitySystem/Executions/BmrExplosionExecution.cpp
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "Bomber.BombPlacement"

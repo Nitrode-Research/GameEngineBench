@@ -1,0 +1,121 @@
+task_id: ue_task_0009
+title: Interaction Component
+tier: medium
+
+instruction: |
+  # Interaction Component
+
+  ## Context
+
+  This is an Unreal Engine 5 C++ action roguelike. The player character has a component that scans the environment every tick and highlights the most relevant interactable object nearby. When the player presses the interact key, it triggers an interaction on whatever object is currently focused.
+
+  The project uses Unreal's gameplay interface pattern — interactable actors implement a native interface with an `Interact` method. The component is attached to the player controller, not the character.
+
+  ## What You Need to Implement
+
+  Implement `Source/ActionRoguelike/Player/RogueInteractionComponent.cpp` so the following behaviors work:
+
+  - Walking near a chest, pickup, or other interactable actor causes it to visually highlight (an overlay material appears on all of its static mesh components)
+  - A world-space UI widget appears above the focused actor showing an interaction prompt
+  - Only one actor is focused at a time — the one the camera is most directly pointing toward wins
+  - When the player moves away or a different actor becomes the best candidate, the old highlight and widget are removed and the new one is shown
+  - Pressing the interact key does nothing if no actor is focused (a debug message may appear on screen)
+  - Pressing the interact key while an actor is focused triggers the interact behavior on that actor (server-side)
+  - The interaction scan runs every tick, but only on the local controller — not on simulated proxies
+
+  ## Observable Failures Without Your Implementation
+
+  - No highlight appears when near interactable objects
+  - No interaction prompt widget appears
+  - Pressing interact does nothing — chests cannot be opened, pickups cannot be collected
+  - No on-screen message when trying to interact with nothing
+
+  ## Quality Bar
+
+  Your implementation should consistently choose the most relevant nearby interactable based on the local player's current view, correctly create and clean up highlight and prompt state as focus changes, and ensure interaction requests are handled on the server. Edge cases like a missing pawn or dead player must not crash and must leave the component with no usable interaction target.
+
+hidden_requirements:
+  R1:
+    text: Focused interactable actors must receive the configured overlay highlight on all static mesh components, and prior highlights must be removed when focus changes or is lost.
+    category: object_lifecycle
+  R2:
+    text: Focusing an interactable must create or reuse a world-space prompt widget, attach it to the focused actor, and retarget or remove it when focus changes or is lost.
+    category: object_lifecycle
+  R3:
+    text: The scan must choose exactly one focused actor from nearby interactables by preferring the candidate most aligned with the local controller's camera direction.
+    category: core_logic
+  R4:
+    text: Focus changes must update the focused actor atomically so interactions route only to the current best candidate and not to previously focused actors.
+    category: core_logic
+  R5:
+    text: Interacting with no focused actor must be a safe no-op, optionally reporting a debug message, and must not interact with unrelated actors in the world.
+    category: edge_case
+  R6:
+    text: Interacting with a focused actor must route through the server interaction path and execute that actor's gameplay-interface Interact implementation with the owning controller.
+    category: authority
+  R7:
+    text: Interaction scanning must tick only for local controllers; non-local or simulated controller instances must not run the scan or mutate focus state.
+    category: authority
+  R8:
+    text: The component must be tick-enabled by default and use a positive interaction radius with the configured interaction trace channel.
+    category: defaults
+  R9:
+    text: The component must expose configurable widget-class and highlight-material properties used by the prompt and overlay presentation paths.
+    category: defaults
+  R10:
+    text: Missing or invalid pawn state, including no possessed pawn or a dead pawn, must not crash and must leave no usable interaction target.
+    category: object_lifecycle
+  R11:
+    text: PrimaryInteract must dispatch selectively to the current FocusedActor only; nearby but unfocused interactables must remain unchanged.
+    category: core_logic
+
+test_requirements:
+  ActionRoguelike.Interaction.PrimaryInteractRoutesToServerInteract:
+    - R5
+    - R6
+  ActionRoguelike.Interaction.PrimaryInteractDispatchesOnlyToFocused:
+    - R6
+    - R11
+  ActionRoguelike.Interaction.TickRunsScanOnLocalController:
+    - R7
+    - R10
+  ActionRoguelike.Interaction.TickSelectsMostCameraFacingCandidate:
+    - R3
+    - R4
+    - R7
+  ActionRoguelike.Interaction.TickEnabledByDefault:
+    - R8
+  ActionRoguelike.Interaction.TickGroupIsPostUpdateWork:
+    - R8
+  ActionRoguelike.Interaction.TraceRadiusIsPositive:
+    - R8
+  ActionRoguelike.Interaction.TraceChannelIsCustom:
+    - R8
+  ActionRoguelike.Interaction.DefaultWidgetClassPropertyExists:
+    - R9
+  ActionRoguelike.Interaction.HighlightOverlayMaterialPropertyExists:
+    - R9
+  ActionRoguelike.Interaction.PrimaryInteractTracksFocusChanges:
+    - R4
+    - R6
+    - R11
+  ActionRoguelike.Interaction.TickAppliesAndTransfersFocusPresentation:
+    - R1
+    - R2
+    - R3
+    - R4
+  ActionRoguelike.Interaction.TickClearsWidgetInstOnFocusLoss:
+    - R2
+    - R10
+  ActionRoguelike.Interaction.TickClearsHighlightOverlayOnFocusLoss:
+    - R1
+    - R10
+
+files_to_edit:
+  - Source/ActionRoguelike/Player/RogueInteractionComponent.cpp
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "ActionRoguelike.Interaction"

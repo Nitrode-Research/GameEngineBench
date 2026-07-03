@@ -1,0 +1,71 @@
+task_id: ue_task_0070
+title: Ricochet Bullets
+tier: hard
+
+instruction: |
+  You are working in an Unreal Engine 5 project that uses the Ricochet plugin.
+  Implement the behavior of the Ricochet Bullets system in the task-owned files.
+  
+  The project already contains the public API surface, assets, build/module wiring, and surrounding gameplay or plugin integration points.
+  
+  Implement the following behavior:
+  
+  - Activating a bullet uses the existing Ricochet lifecycle rather than a toy spawned projectile path.
+  - Deactivation and reuse clean up state so the pool can safely recycle bullets.
+  - Initial velocity and active-state replication continue to drive client behavior through the repo’s existing replication path.
+  - Receiver-side recoil and weight queries still aggregate the expected live weapon/bullet state.
+  - Client prediction correction continues to route through the existing correction path rather than being silently ignored.
+
+files_to_edit:
+  - "Plugins/Ricochet/Source/Ricochet/Private/Actors/RicochetBullet.cpp"
+  - "Plugins/Ricochet/Source/Ricochet/Public/Actors/RicochetBullet.h"
+  - "Plugins/Ricochet/Source/Ricochet/Private/Actors/RicochetBulletPoolManager.cpp"
+  - "Plugins/Ricochet/Source/Ricochet/Public/Actors/RicochetBulletPoolManager.h"
+  - "Plugins/Ricochet/Source/Ricochet/Private/Components/RicochetReceiver.cpp"
+  - "Plugins/Ricochet/Source/Ricochet/Public/Components/RicochetReceiver.h"
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "Ricochet.Bullets"
+
+hidden_requirements:
+  R1:
+    text: ActivateBullet must run through the authority-side lifecycle and set transform, visibility, collision, active state, and projectile movement activation.
+    category: object_lifecycle
+  R2:
+    text: Bullet activation must notify non-authority clients through the existing multicast or replicated activation path.
+    category: replication
+  R3:
+    text: DeactivateBullet must clear active state, movement, visibility, and collision so a bullet can safely return to the pool.
+    category: object_lifecycle
+  R4:
+    text: OnRep_IsActive must mirror active and inactive bullet state on clients.
+    category: replication
+  R5:
+    text: The bullet pool must initialize inactive pooled bullets on authority and return an available inactive bullet for reuse.
+    category: object_lifecycle
+  R6:
+    text: The bullet pool must respect the configured maximum size and must not return an active bullet or null when an inactive pooled bullet is available.
+    category: core_logic
+  R7:
+    text: Initial velocity must replicate and update the client movement or prediction path.
+    category: replication
+  R8:
+    text: Receiver-side recoil and weight queries must preserve the expected live weapon and bullet-state aggregation paths.
+    category: core_logic
+  R9:
+    text: Client prediction correction must remain routed through the existing correction path rather than being silently ignored.
+    category: replication
+  R10:
+    text: "Activating a bullet must seed its replicated launch velocity along the spawn direction at this project's configured muzzle launch speed, so clients can begin predicting the round's flight from activation rather than leaving the launch velocity unset."
+    category: replication
+
+test_requirements:
+  Ricochet.Bullets.activate_bullet_marks_bullet_active:
+    - R1
+    - R10
+  Ricochet.Bullets.pool_returns_inactive_bullet_for_reuse:
+    - R5
+    - R6

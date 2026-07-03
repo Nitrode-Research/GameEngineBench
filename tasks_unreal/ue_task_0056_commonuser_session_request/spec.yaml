@@ -1,0 +1,108 @@
+task_id: ue_task_0056
+title: CommonUser Session Request and Notification Layer
+tier: hard
+
+instruction: |
+  You are working in an Unreal Engine 5 project that uses the CommonUser plugin.
+  Implement the session request factory methods, URL construction, request validation,
+  subsystem lifecycle guard, and notification dispatch in CommonSessionSubsystem.cpp.
+
+  The plugin manages the full online session lifecycle: creating host and search request objects
+  with correct defaults, building travel URLs for map transitions, validating requests before
+  submitting them to the online subsystem, and broadcasting session state changes to all
+  registered native and Blueprint delegates.
+
+  The project already contains:
+  - The full public API and UCLASS/UFUNCTION/UPROPERTY surface for all session types
+  - OSS v1 and OSS v2 internal session creation, join, find, and destroy paths
+  - Beacon host/client infrastructure
+  - All delegate declarations and delegate member variables
+
+  What the layer must do:
+
+  - The two request factories each hand back a newly-created request configured the way
+    an online session expects: online play, the project's configured lobby and voice-chat
+    defaults, and presence enabled for an ordinary client (a dedicated server advertises no
+    presence). The search factory mirrors the online + lobby configuration.
+
+  - The subsystem must decline to create itself when the game provides its own specialized
+    session subsystem, so there is never a duplicate.
+
+  - Travel-URL construction turns a host request into the URL the engine travels to. It must
+    reflect the request's online mode — a purely local (offline) game carries none of the
+    online networking options — while advertising the listening host and LAN matchmaking
+    wherever those apply; it carries the session's configured player limit so the destination
+    map can size the match; and it threads through every caller-supplied extra argument, each
+    of which may be a bare switch or a key/value pair.
+
+  - Request validation rejects a request whose map cannot be resolved and surfaces a
+    human-readable error describing the failure.
+
+  - Each notification entry point must fan a session state change out to every listener it
+    has — the native side and the Blueprint-facing side alike.
+
+  - Recording a create-session failure must leave behind a retrievable, unsuccessful result
+    tagged as an internal failure, so a later caller can read back what went wrong.
+
+files_to_edit:
+  - Plugins/CommonUser/Source/CommonUser/Private/CommonSessionSubsystem.cpp
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "CommonUser.SessionRequest"
+
+hidden_requirements:
+  R1:
+    text: Online host-session requests are created with Online mode, configured lobby defaults, voice-chat defaults, and presence enabled except on dedicated servers.
+    category: configuration
+  R2:
+    text: Online search-session requests are created with Online mode and configured lobby defaults.
+    category: configuration
+  R3:
+    text: The subsystem refuses creation when a game-specific subclass exists, preventing duplicate session subsystems.
+    category: subsystem_architecture
+  R4:
+    text: Offline travel URLs include no online flags while preserving all extra arguments.
+    category: core_logic
+  R5:
+    text: LAN travel URLs include bIsLanMatch and listen flags before extra arguments.
+    category: core_logic
+  R6:
+    text: Online travel URLs include listen and all extra arguments as key-only or key-value URL parameters.
+    category: core_logic
+  R7:
+    text: Request validation fails and reports an error when the resolved map name is empty.
+    category: core_logic
+  R8:
+    text: Session notification methods broadcast both native delegates and their dynamic Blueprint counterparts.
+    category: runtime_integration
+  R9:
+    text: Create-session errors are recorded as unsuccessful InternalFailure results with retrievable error text.
+    category: core_logic
+  R10:
+    text: "ConstructTravelURL must encode the session's advertised player capacity into the travel URL as a ?MaxPlayers=<count> option for any non-Offline session, where the advertised capacity is the configured player limit together with this project's reserved infrastructure slots rather than the raw configured count."
+    category: core_logic
+
+test_requirements:
+  CommonUser.SessionRequest.factory_host_request_has_correct_defaults:
+    - R1
+  CommonUser.SessionRequest.factory_search_request_has_correct_defaults:
+    - R2
+  CommonUser.SessionRequest.construct_travel_url_offline_with_extra_args:
+    - R4
+  CommonUser.SessionRequest.construct_travel_url_lan_mode:
+    - R5
+  CommonUser.SessionRequest.construct_travel_url_online_mode:
+    - R6
+  CommonUser.SessionRequest.construct_travel_url_includes_max_players:
+    - R10
+  CommonUser.SessionRequest.validate_fails_and_sets_error_when_map_empty:
+    - R7
+  CommonUser.SessionRequest.notify_create_session_complete_broadcasts_native_delegate:
+    - R8
+  CommonUser.SessionRequest.notify_search_finished_broadcasts_native_delegate:
+    - R8
+  CommonUser.SessionRequest.set_create_session_error_records_internal_failure:
+    - R9

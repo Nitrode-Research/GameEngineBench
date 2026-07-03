@@ -1,0 +1,92 @@
+task_id: ue_task_0105
+title: Implement replicated quickbar equipment activation
+tier: hard
+
+instruction: |
+  Implement the quickbar equipment activation system so player equipment behaves
+  correctly in multiplayer.
+  
+  Expected behavior:
+  - A player can add equipment-backed items to quickbar slots and activate a slot by index.
+  - Only one quickbar slot is active for a given activation channel at a time.
+  - Activating a slot equips the referenced item through the existing equipment system.
+  - Deactivating or replacing the active slot unequips the previous equipment cleanly.
+  - Empty slots, invalid indexes, duplicate slot assignments, and missing item instances are handled safely.
+  - Quickbar slot contents, active indexes, and spawned equipment state replicate to clients.
+  - Client requests are forwarded to the server; the server remains authoritative for gameplay state.
+  - UI and gameplay listeners are notified when quickbar contents or active equipment change.
+  - Character teardown removes equipped items without leaving spawned actors, abilities, or replicated stale state behind.
+  - The implementation must compile and fit the existing inventory, equipment, ability, and component architecture.
+  
+  Constraints:
+  - Use the repository to infer lifecycle rules, replication patterns, gameplay messages, equipment integration, and expected authority checks.
+  - Do not replace the system with a toy local-only quickbar.
+  - Do not require new assets or hidden manual setup.
+  
+  Quality bar:
+  The implementation must be production-quality and multiplayer-correct. It
+  should work on a listen server with at least one client, preserve existing
+  UI/gameplay integration, and avoid breaking unrelated inventory or equipment
+  behavior.
+
+files_to_edit:
+  - Source/ECR/Private/Gameplay/Equipment/ECRQuickBarComponent.cpp
+  - Source/ECR/Private/Gameplay/Equipment/ECREquipmentManagerComponent.cpp
+  - Source/ECR/Private/Gameplay/Equipment/ECREquipmentInstance.cpp
+  - Source/ECR/Private/Gameplay/Equipment/ECREquipmentDefinition.cpp
+  - Source/ECR/Private/Gameplay/Equipment/ECRGameplayAbility_FromEquipment.cpp
+  - Source/ECR/Public/Gameplay/Equipment/ECRQuickBarComponent.h
+  - Source/ECR/Public/Gameplay/Equipment/ECREquipmentManagerComponent.h
+  - Source/ECR/Public/Gameplay/Equipment/ECREquipmentInstance.h
+  - Source/ECR/Public/Gameplay/Equipment/ECREquipmentDefinition.h
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "ECR.QuickbarEquipment"
+
+hidden_requirements:
+  R1:
+    text: A player can add equipment-backed items to quickbar slots and activate a slot by index.
+    category: ui
+  R2:
+    text: Only one quickbar slot is active for a given activation channel at a time.
+    category: ui
+  R3:
+    text: Activating a slot equips the referenced item through the existing equipment system, granting the equipment's ability set to the owning ability system (GiveToAbilitySystem).
+    category: ui
+  R4:
+    text: Deactivating or replacing the active slot unequips the previous equipment cleanly, removing the granted ability set (TakeFromAbilitySystem), not just the spawned actors.
+    category: ui
+  R5:
+    text: Empty slots, invalid indexes, duplicate slot assignments, and missing item instances are handled safely.
+    category: core_logic
+  R6:
+    text: Quickbar slot contents, active indexes, and spawned equipment state replicate to clients.
+    category: replication
+  R7:
+    text: Client requests are forwarded to the server; the server remains authoritative for gameplay state.
+    category: replication
+  R8:
+    text: UI and gameplay listeners are notified when quickbar contents or active equipment change.
+    category: replication
+  R9:
+    text: Character teardown removes equipped items without leaving spawned actors, abilities, or replicated stale state behind.
+    category: replication
+  R10:
+    text: The implementation must compile and fit the existing inventory, equipment, ability, and component architecture.
+    category: ui
+
+test_requirements:
+  ECR.QuickbarEquipment.source_contract_tokens_present:
+    - R1
+    - R2
+    - R3
+    - R4
+    - R5
+    - R6
+    - R7
+    - R8
+    - R9
+    - R10

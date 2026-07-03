@@ -1,0 +1,184 @@
+﻿// Copyright Epic Games, Inc. All Rights Reserved.
+
+#include "Gameplay/ECRGameplayTags.h"
+#include "System/ECRLogChannels.h"
+#include "GameplayTagsManager.h"
+#include "Engine/EngineTypes.h"
+#include "Gameplay/Character/ECRCharacterMovementComponent.h"
+
+FECRGameplayTags FECRGameplayTags::GameplayTags;
+
+void FECRGameplayTags::InitializeNativeTags()
+{
+	UGameplayTagsManager& Manager = UGameplayTagsManager::Get();
+
+	GameplayTags.AddAllTags(Manager);
+
+	// Notify manager that we are done adding native tags.
+	Manager.DoneAddingNativeTags();
+}
+
+void FECRGameplayTags::AddAllTags(UGameplayTagsManager& Manager)
+{
+	AddTag(Ability_ActivateFail_IsDead, "Ability.ActivateFail.IsDead",
+	       "Ability failed to activate because its owner is dead.");
+	AddTag(Ability_ActivateFail_Cooldown, "Ability.ActivateFail.Cooldown",
+	       "Ability failed to activate because it is on cool down.");
+	AddTag(Ability_ActivateFail_Cost, "Ability.ActivateFail.Cost",
+	       "Ability failed to activate because it did not pass the cost checks.");
+	AddTag(Ability_ActivateFail_TagsBlocked, "Ability.ActivateFail.TagsBlocked",
+	       "Ability failed to activate because tags are blocking it.");
+	AddTag(Ability_ActivateFail_TagsMissing, "Ability.ActivateFail.TagsMissing",
+	       "Ability failed to activate because tags are missing.");
+	AddTag(Ability_ActivateFail_Networking, "Ability.ActivateFail.Networking",
+	       "Ability failed to activate because it did not pass the network checks.");
+	AddTag(Ability_ActivateFail_ActivationGroup, "Ability.ActivateFail.ActivationGroup",
+	       "Ability failed to activate because of its activation group.");
+
+	AddTag(Ability_Behavior_SurvivesDeath, "Ability.Behavior.SurvivesDeath",
+	       "An ability with this type tag should not be removed due to death.");
+
+	/* Only these tags will be replicated for simulated proxies in ECRCharacter.cpp */
+	AddSimProxyReplicatedTag(Event_Movement_ADS, "Event.Movement.ADS","ADS. Will be replicated to sim proxies");
+	AddSimProxyReplicatedTag(Event_Movement_Sprint, "Event.Movement.Sprint","Sprint. Will be replicated to sim proxies");
+	AddSimProxyReplicatedTag(Event_Movement_Wounded, "Event.Movement.Wounded","Wounded. Will be replicated to sim proxies");
+	AddSimProxyReplicatedTag(Event_Movement_Evade, "Event.Movement.Evade","Evade. Will be replicated to sim proxies");
+	AddSimProxyReplicatedTag(Event_Movement_Dying, "Event.Movement.Dying","Dying. Will be replicated to sim proxies");
+	AddSimProxyReplicatedTag(Event_Movement_JumpFlying, "Event.Movement.JumpFlying","JumpFlying. Will be replicated to sim proxies");
+	AddSimProxyReplicatedTag(Event_Movement_Bracing, "Event.Movement.Bracing","Bracing. Will be replicated to sim proxies");
+	AddSimProxyReplicatedTag(Event_Movement_SprintEnd, "Event.Movement.SprintEnd","SprintEnd. Will be replicated to sim proxies");
+	AddSimProxyReplicatedTag(Event_Movement_JumpPackEvading, "Event.Movement.JumpPack.Evading","JPA Evade. Will be replicated to sim proxies");
+	AddSimProxyReplicatedTag(Event_Movement_DirtyChargedAttackFix, "Event.Movement.DirtyChargedAttackFix","Mirroring lower body bones for charged attack. Will be replicated to sim proxies");
+	AddSimProxyReplicatedTag(Event_Movement_WoundedCancel, "Event.Movement.WoundedCancel","Wounded cancel. Will be replicated to sim proxies");
+	AddSimProxyReplicatedTag(Event_Movement_ExecutionVictim, "Event.Movement.ExecutionVictim","Execution victim. Will be replicated to sim proxies");
+	AddSimProxyReplicatedTag(Status_VisibleToEnemy, "Status.VisibleToEnemy", "Visible to enemy (show GUI marker). Will be replicated to sim proxies");
+	/* */
+
+	AddTag(Cosmetic_Montage, "Cosmetic.Montage", "Prefix for montage customization");
+	AddTag(Cosmetic_AnimStyle, "Cosmetic.AnimationStyle", "Prefix for animation style customization");
+	AddTag(Cosmetic_ActorSubclass, "Cosmetic.ActorSubclass", "Prefix for actor subclass customization");
+
+	AddTag(Cheat_GodMode, "Cheat.GodMode", "GodMode cheat is active on the owner.");
+	AddTag(Cheat_UnlimitedHealth, "Cheat.UnlimitedHealth", "UnlimitedHealth cheat is active on the owner.");
+
+	AddTag(InputTag_Move, "InputTag.Move", "Move input.");
+	AddTag(InputTag_Look_Mouse, "InputTag.Look.Mouse", "Look (mouse) input.");
+	AddTag(InputTag_Look_Stick, "InputTag.Look.Stick", "Look (stick) input.");
+	AddTag(InputTag_Crouch, "InputTag.Crouch", "Crouch input.");
+	AddTag(InputTag_AutoRun, "InputTag.AutoRun", "Auto-run input.");
+
+	AddTag(InputTag_Vehicle_Throttle, "InputTag.Vehicle.Throttle", "Throttle input.");
+	AddTag(InputTag_Vehicle_Steer, "InputTag.Vehicle.Steer", "Steer input.");
+	AddTag(InputTag_Vehicle_Brake, "InputTag.Vehicle.Brake", "Brake input.");
+
+	AddTag(Gameplay_Special_ReducedDamage, "Gameplay.Special.ReducedDamage", "Reduced damage for 1 attack");
+	AddTag(Gameplay_Special_Reflect, "Gameplay.Special.Reflect", "Damage is reflected back to attacker");
+	AddTag(Gameplay_Special_Reflect_50, "Gameplay.Special.Reflect.Half", "Damage is reflected back to attacker (half)");
+
+	AddTag(GameplayEffect_DamageIgnoresShield, "GameplayEffect.Special.DamageIgnoresShield",
+	       "Damage effects having this tag will ignore shield");
+    AddTag(GameplayEffect_NoReflect, "GameplayEffect.Special.NoReflect",
+           "Damage effects having this tag will not be reflected");
+	AddTag(GameplayEffect_HealingIgnoresMultipliers, "GameplayEffect.Special.HealingIgnoresMultipliers", 
+"Healing effects having this tags will ignore healing multipliers");
+
+	AddTag(GameplayEvent_Death, "GameplayEvent.Death",
+	       "Event that fires on death. This event only fires on the server.");
+
+	AddTag(GameplayEvent_RequestReset, "GameplayEvent.RequestReset",
+	       "Event to request a player's pawn to be instantly replaced with a new one at a valid spawn location.");
+	AddTag(GameplayEvent_Reset, "GameplayEvent.Reset", "Event that fires once a player reset is executed.");
+	AddTag(GameplayEvent_Landed, "GameplayEvent.Landed",
+	       "Event that fires once a player lands (movement mode changes from falling to another)");
+	AddTag(GameplayEvent_MovementModeChanged, "GameplayEvent.MovementModeChanged",
+	       "Event that fires when character movement mode changes.");
+	AddTag(GameplayEvent_Wounded, "GameplayEvent.Wounded",
+	       "Event that fires on becoming wounded. This event only fires on the server.");
+	AddTag(GameplayEvent_WoundedCancel, "GameplayEvent.WoundedCancel", "Event that fires on "
+	       "becoming un wounded from wounded. This event only "
+	       "fires on the server.");
+
+	AddTag(SetByCaller_Damage, "SetByCaller.Damage", "SetByCaller tag used by damage gameplay effects.");
+	AddTag(SetByCaller_Heal, "SetByCaller.Heal", "SetByCaller tag used by healing gameplay effects.");
+
+	AddTag(Mod_AnyWeaponMod, "Mod.UniversalMod", "SetByCaller tag used by healing gameplay effects.");
+
+	AddTag(Status_Crouching, "Status.Crouching", "Target is crouching.");
+	AddTag(Status_ADS, "Status.ADS", "Target is in ADS mode.");
+	AddTag(Status_NoWeaponHeatRemove, "Status.Weapon.NoHeatRemove",
+	       "Target is in mode where heat must not be removed.");
+	AddTag(Status_Bracing, "Status.Bracing", "Target is in bracing mode.");
+	AddTag(Status_AutoRunning, "Status.AutoRunning", "Target is auto-running.");
+	AddTag(Status_Death, "Status.Death", "Target has the death status.");
+	AddTag(Status_Death_Dying, "Status.Death.Dying", "Target has begun the death process.");
+	AddTag(Status_Death_Dead, "Status.Death.Dead", "Target has finished the death process.");
+	AddTag(Status_JumpFlying, "Status.JumpFlying", "Target is jump pack flying.");
+	AddTag(Status_Wounded, "Status.Wounded", "Target is wounded.");
+
+	AddMovementModeTag(Movement_Mode_Walking, "Movement.Mode.Walking", MOVE_Walking);
+	AddMovementModeTag(Movement_Mode_NavWalking, "Movement.Mode.NavWalking", MOVE_NavWalking);
+	AddMovementModeTag(Movement_Mode_Falling, "Movement.Mode.Falling", MOVE_Falling);
+	AddMovementModeTag(Movement_Mode_Swimming, "Movement.Mode.Swimming", MOVE_Swimming);
+	AddMovementModeTag(Movement_Mode_Flying, "Movement.Mode.Flying", MOVE_Flying);
+	AddMovementModeTag(Movement_Mode_Custom, "Movement.Mode.Custom", MOVE_Custom);
+
+	AddTag(Movement_Mode_Falling_Standard, "Movement.Mode.Falling.Standard", "Standard falling");
+	AddTag(Movement_Mode_Falling_JumpPack, "Movement.Mode.Falling.JumpPack", "Falling when jump pack flying");
+}
+
+void FECRGameplayTags::AddTag(FGameplayTag& OutTag, const ANSICHAR* TagName, const ANSICHAR* TagComment)
+{
+	OutTag = UGameplayTagsManager::Get().AddNativeGameplayTag(FName(TagName),
+	                                                          FString(TEXT("(Native) ")) + FString(TagComment));
+}
+
+void FECRGameplayTags::AddSimProxyReplicatedTag(FGameplayTag& OutTag, const ANSICHAR* TagName,
+	const ANSICHAR* TagComment)
+{
+	AddTag(OutTag, TagName, TagComment);
+	if (SimProxyReplicatedTags.Num() < 16)
+	{
+		SimProxyReplicatedTags.AddUnique(OutTag);
+	} else
+	{
+		UE_LOG(LogECR, Fatal, TEXT("Amount of simulation proxy replicated tags exceeded 16, max size of bitmask"));
+	}
+}
+
+void FECRGameplayTags::AddMovementModeTag(FGameplayTag& OutTag, const ANSICHAR* TagName, uint8 MovementMode)
+{
+	AddTag(OutTag, TagName, "Character movement mode tag.");
+	GameplayTags.MovementModeTagMap.Add(MovementMode, OutTag);
+}
+
+void FECRGameplayTags::AddCustomMovementModeTag(FGameplayTag& OutTag, const ANSICHAR* TagName, uint8 CustomMovementMode)
+{
+	AddTag(OutTag, TagName, "Character custom movement mode tag.");
+	GameplayTags.CustomMovementModeTagMap.Add(CustomMovementMode, OutTag);
+}
+
+FGameplayTag FECRGameplayTags::FindTagByString(FString TagString, bool bMatchPartialString)
+{
+	const UGameplayTagsManager& Manager = UGameplayTagsManager::Get();
+	FGameplayTag Tag = Manager.RequestGameplayTag(FName(*TagString), false);
+
+	if (!Tag.IsValid() && bMatchPartialString)
+	{
+		FGameplayTagContainer AllTags;
+		Manager.RequestAllGameplayTags(AllTags, true);
+
+		for (const FGameplayTag TestTag : AllTags)
+		{
+			if (TestTag.ToString().Contains(TagString))
+			{
+				UE_LOG(LogECR, Display,
+				       TEXT("Could not find exact match for tag [%s] but found partial match on tag [%s]."), *TagString,
+				       *TestTag.ToString());
+				Tag = TestTag;
+				break;
+			}
+		}
+	}
+
+	return Tag;
+}

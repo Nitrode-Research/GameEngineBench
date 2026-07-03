@@ -1,0 +1,82 @@
+task_id: ue_task_0045
+title: ALSXT Vaulting
+tier: hard
+
+instruction: |
+  You are working in an Unreal Engine 5 third-person character project that uses the ALSXT plugin.
+  Implement the vaulting system in AlsxtCharacter_Actions.cpp.
+
+  The system handles obstacle detection via forward, depth, downward, landing, and landing-location
+  traces; vault-type selection from tags and settings; launch and landing parameter solving relative
+  to the obstacle; the multicast and server vault start path; and root-motion source preparation
+  for networked traversal.
+
+  The project already contains:
+  - The character API and all method signatures
+  - Vaulting settings assets and gameplay tags
+  - The root-motion source type definition and serialization behavior
+  - Montage references, curves, and other content
+
+  Implement the following behavior:
+
+  - Characters can start vaulting only when locomotion and action rules allow it.
+  - The system rejects obstacles that are too angled, too deep, too high or low, or unsafe on the landing side.
+  - It selects the correct grounded or in-air vault type from the existing settings and tags.
+  - Hand placement and landing position adapt correctly to obstacles of different heights and depths — a tall obstacle produces different hand and landing positions than a short one.
+  - Moving bases are handled correctly so vaulting remains aligned on dynamic geometry.
+  - The traversal path replicates cleanly without obvious local or server desync.
+
+files_to_edit:
+  - Plugins/ALSXT/Source/ALSXT/Private/AlsxtCharacter_Actions.cpp
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "ALSXT.Vaulting"
+
+hidden_requirements:
+  R1:
+    text: Grounded vaulting starts only when locomotion and action state allow vaulting.
+    category: object_lifecycle
+  R2:
+    text: Vaulting rejects empty space and requires an actual obstacle from the forward trace cascade.
+    category: core_logic
+  R3:
+    text: Obstacle tracing produces valid vault parameters for a typical mid-height obstacle.
+    category: core_logic
+  R4:
+    text: Obstacles above the authored maximum height are rejected.
+    category: core_logic
+  R5:
+    text: Obstacles below the authored minimum height are rejected.
+    category: core_logic
+  R6:
+    text: Obstacles that are too angled, too deep, or unsafe on the landing side are rejected.
+    category: core_logic
+  R7:
+    text: Vault type selection uses the authored grounded or in-air settings and gameplay tags.
+    category: runtime_integration
+  R8:
+    text: Hand placement and landing parameters adapt to obstacle height and depth.
+    category: core_logic
+  R9:
+    text: Vaulting on moving bases preserves alignment with dynamic geometry.
+    category: runtime_integration
+  R10:
+    text: Networked traversal uses the server and multicast root-motion path without obvious local or server desync.
+    category: replication
+
+test_requirements:
+  ALSXT.Vaulting.vault_starts_over_obstacle_not_empty_space:
+    - R2
+    - R3
+  ALSXT.Vaulting.grounded_vault_requires_grounded_locomotion:
+    - R1
+  ALSXT.Vaulting.vault_rejects_too_tall_obstacle:
+    - R4
+  ALSXT.Vaulting.vault_params_adapt_to_obstacle_height:
+    - R3
+    - R8
+  ALSXT.Vaulting.vault_rejects_too_low_obstacle:
+    - R5

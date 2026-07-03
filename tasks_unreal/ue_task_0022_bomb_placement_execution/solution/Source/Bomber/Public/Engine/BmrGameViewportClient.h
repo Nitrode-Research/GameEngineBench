@@ -1,0 +1,55 @@
+﻿// Copyright (c) Yevhenii Selivanov
+
+#pragma once
+
+#include "Engine/GameViewportClient.h"
+
+#include "BmrGameViewportClient.generated.h"
+
+enum EAspectRatioAxisConstraint : int;
+
+/**
+ * Is the engine's interface to a game viewport.
+ * Implements parent to have more control on input events.
+ */
+UCLASS()
+class BOMBER_API UBmrGameViewportClient final : public UGameViewportClient
+{
+	GENERATED_BODY()
+
+public:
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnAspectRatioChanged, float, NewAspectRatio, EAspectRatioAxisConstraint, NewAxisConstraint);
+
+	/** Called when the aspect ratio has been changed. */
+	UPROPERTY(BlueprintCallable, BlueprintAssignable, Transient, Category = "[Bomber]")
+	FOnAspectRatioChanged OnAspectRatioChanged;
+
+	/** Returns the Axis Constraint of the viewport based on current aspect ratio.
+	 * Alternative, UUtilsLibrary::GetViewportAspectRatioAxisConstraint() can be used. */
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "[Bomber]")
+	TEnumAsByte<EAspectRatioAxisConstraint> GetAxisConstraint() const;
+
+	/** Returns the last updated aspect ratio. */
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "[Bomber]")
+	int32 GetAspectRatio() const { return LastUpdatedAspectRatio; }
+
+	/** Gets whether or not the cursor should always be locked to the viewport. */
+	virtual bool ShouldAlwaysLockMouse() override { return true; }
+
+	/** Is called on applying different video settings like changing resolution and enabling fullscreen mode. */
+	virtual void RedrawRequested(FViewport* InViewport) override;
+
+	/** Dynamically changes aspect ratio constraint to support all screens like ultra-wide and vertical one.
+	 * It strongly affects how FOV is calculated and is called during viewport redraw request.
+	 * By Epic's default, only X-constrain was used, so only horizontal FOV was calculated, that makes ultra-wide to be unsupported.
+	 * This function makes it different:
+	 * Use Y-constrain (vertical FOV) for wide screens (16:9, ultra-wide 21:9 etc).
+	 * Use X-constrain (horizontal FOV) for vertical screens (9:16 etc) and square screens (1:1). */
+	UFUNCTION(BlueprintCallable, Category = "[Bomber]", meta = (BlueprintProtected))
+	void UpdateAspectRatio();
+
+protected:
+	/** Cached data about last broadcasted aspect ratio. */
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite, Transient, AdvancedDisplay, Category = "[Bomber]", meta = (BlueprintProtected))
+	float LastUpdatedAspectRatio = 0.f;
+};

@@ -1,0 +1,127 @@
+{
+    "_comment":  "Planned solver roster for the UnrealBench paper. Each entry defines ONE benchmarked configuration (a column in every figure). Matching keys: agent (exact), model and reasoning (exact string, a list of strings, \u0027*\u0027 for any, or an fnmatch glob containing \u0027*\u0027). Runs are assigned to the FIRST roster entry they match (order = priority). Configs listed here but absent from the data render as \u0027pending\u0027 placeholders. Any run that matches NO roster entry is auto-discovered and appended so new models appear automatically. Edit freely; the figure script reads this on every run.",
+    "models":  [
+                   {
+                       "key":  "codex-gpt55-xhigh",
+                       "label":  "GPT-5.5 (xhigh)",
+                       "agent":  "codex",
+                       "model":  "gpt-5.5",
+                       "reasoning":  "xhigh",
+                       "vendor":  "openai"
+                   },
+                   {
+                       "key":  "codex-gpt55-high",
+                       "label":  "GPT-5.5 (high)",
+                       "agent":  "codex",
+                       "model":  "gpt-5.5",
+                       "reasoning":  "high",
+                       "vendor":  "openai"
+                   },
+                   {
+                       "key":  "codex-gpt55-medium",
+                       "label":  "GPT-5.5 (medium)",
+                       "agent":  "codex",
+                       "model":  "gpt-5.5",
+                       "reasoning":  "medium",
+                       "vendor":  "openai"
+                   },
+                   {
+                       "key":  "cc-opus48-max",
+                       "label":  "Claude Opus 4.8 (max)",
+                       "agent":  "claude-code",
+                       "model":  "claude-opus-4-8",
+                       "reasoning":  "max",
+                       "vendor":  "anthropic"
+                   },
+                   {
+                       "key":  "cc-opus48-high",
+                       "label":  "Claude Opus 4.8 (high)",
+                       "agent":  "claude-code",
+                       "model":  "claude-opus-4-8",
+                       "reasoning":  "high",
+                       "vendor":  "anthropic"
+                   },
+                   {
+                       "key":  "cc-opus47-max",
+                       "label":  "Claude Opus 4.7 (max)",
+                       "agent":  "claude-code",
+                       "model":  "claude-opus-4-7",
+                       "reasoning":  "max",
+                       "vendor":  "anthropic"
+                   },
+                   {
+                       "key":  "cc-opus47-high",
+                       "label":  "Claude Opus 4.7 (high)",
+                       "agent":  "claude-code",
+                       "model":  "claude-opus-4-7",
+                       "reasoning":  "high",
+                       "vendor":  "anthropic"
+                   },
+                   {
+                       "key":  "cc-opus46",
+                       "label":  "Claude Opus 4.6",
+                       "agent":  "claude-code",
+                       "model":  "claude-opus-4-6",
+                       "reasoning":  "*",
+                       "vendor":  "anthropic"
+                   },
+                   {
+                       "key":  "antigravity-gemini",
+                       "label":  "Gemini 3.1 Pro (High)",
+                       "agent":  "antigravity-cli",
+                       "model":  [
+                                     "*Gemini*",
+                                     "gemini-pro-default"
+                                 ],
+                       "reasoning":  "*",
+                       "vendor":  "google"
+                   },
+                   {
+                       "comment":  "Some CLI harnesses (e.g. qwen-code) drive multiple vendors\u0027 models, so vendor entries below match on MODEL and leave the agent flexible. Keep these model globs specific enough not to collide.",
+                       "key":  "qwen-code",
+                       "label":  "Qwen 3.7 (Qwen Code)",
+                       "agent":  "*",
+                       "model":  [
+                                     "qwen*",
+                                     "*qwen*"
+                                 ],
+                       "reasoning":  "*",
+                       "vendor":  "qwen"
+                   },
+                   {
+                       "key":  "kimi-code",
+                       "label":  "Kimi 2.7 (Kimi Code)",
+                       "agent":  "*",
+                       "model":  [
+                                     "kimi*",
+                                     "moonshot*",
+                                     "*kimi*"
+                                 ],
+                       "reasoning":  "*",
+                       "vendor":  "kimi"
+                   },
+                   {
+                       "key":  "deepseek",
+                       "label":  "DeepSeek 4 Pro",
+                       "agent":  "*",
+                       "model":  [
+                                     "deepseek*",
+                                     "*deepseek*"
+                                 ],
+                       "reasoning":  "*",
+                       "vendor":  "deepseek"
+                   },
+                   {
+                       "key":  "glm",
+                       "label":  "GLM 5.2",
+                       "agent":  "*",
+                       "model":  [
+                                     "glm*",
+                                     "*glm*",
+                                     "chatglm*"
+                                 ],
+                       "reasoning":  "*",
+                       "vendor":  "zhipu"
+                   }
+               ]
+}

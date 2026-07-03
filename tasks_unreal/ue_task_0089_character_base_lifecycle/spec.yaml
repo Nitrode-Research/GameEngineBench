@@ -1,0 +1,70 @@
+task_id: ue_task_0089
+title: Character Base Lifecycle
+tier: hard
+
+instruction: |
+  GASShooter's base character class owns shared C++ behavior for ability-system characters: collision defaults, death cleanup, ability grants/removal, startup attributes/effects, damage number display, and attribute accessors. Implement this behavior in the task-owned files.
+
+  The base character lifecycle must preserve its public API and authority rules.
+
+  The implementation must satisfy the following behavior:
+
+  - Construction must use the GASShooter character movement component, configure capsule collision responses, mark characters always relevant, cache death/remove-on-death tags, and load the default damage-number widget class.
+  - `IsAlive` and attribute accessors must read values from `GSAttributeSetBase`, including move speed base value through the gameplay attribute data.
+  - Character ability grants/removals must run only on authority, use `bCharacterAbilitiesGiven` to avoid duplicates, grant specs with ability level/input IDs/source object, and clear only abilities originally granted from `CharacterAbilities`.
+  - Death must remove character abilities, disable collision and movement, broadcast the death delegate, cancel abilities, remove effects tagged for death removal, add the dead tag, play death audio, and either play the death montage or finish dying.
+  - Attribute initialization must build an effect context with this character as source, create an outgoing spec from `DefaultAttributes`, and apply it to self.
+  - Startup effects must run only once on authority, use this character as source, apply each startup gameplay effect to the ability system component, and set `bStartupEffectsApplied`.
+  - Damage numbers must queue damage/tag pairs, drive a timer, create/register/attach damage text widget components, set damage text, remove shown entries, and clear the timer when the queue is empty.
+  - Attribute setters must update the backing attribute set base values when the attribute set exists.
+
+files_to_edit:
+  - Source/GASShooter/Private/Characters/GSCharacterBase.cpp
+  - Source/GASShooter/Public/Characters/GSCharacterBase.h
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "GASShooter.CharacterBase"
+
+hidden_requirements:
+  R1:
+    text: Construction must configure the custom movement component, collision responses, relevancy, gameplay tags, and default damage number widget class.
+    category: construction
+  R2:
+    text: Attribute getters and IsAlive must read from GSAttributeSetBase, including current and base move speed values.
+    category: attributes
+  R3:
+    text: Character ability grants must be authority-only, duplicate guarded, and use ability level/input/source object data.
+    category: abilities
+  R4:
+    text: Character ability removal must be authority-only, remove only matching startup abilities sourced from the character, and reset the grant flag.
+    category: abilities
+  R5:
+    text: Death must remove abilities, disable collision/movement, broadcast death, cancel abilities, remove death-tagged effects, add DeadTag, play audio, and play montage or finish dying.
+    category: death_lifecycle
+  R6:
+    text: Attribute initialization must create a source-object effect context and apply the default attributes gameplay effect to self.
+    category: startup_effects
+  R7:
+    text: Startup effects must be authority-only, one-shot guarded, sourced from the character, applied to the ASC, and mark startup effects applied.
+    category: startup_effects
+  R8:
+    text: Damage numbers must queue entries, drive a timer, create/register/attach damage text components, set text, remove entries, and clear the timer when done.
+    category: ui_feedback
+  R9:
+    text: Attribute setters must update GSAttributeSetBase when present.
+    category: attributes
+
+test_requirements:
+  GASShooter.CharacterBase.source_contract:
+    - R1
+    - R2
+    - R3
+    - R4
+    - R5
+    - R6
+    - R7
+    - R8
+    - R9

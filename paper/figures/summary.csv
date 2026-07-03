@@ -1,0 +1,11 @@
+key,label,agent,model,reasoning,status,tasks_present,raw_pass,raw_rate,judge_rate,requirement_rate,test_micro_rate,compile_rate,median_minutes,mean_cost_usd,mean_output_tokens,mean_compile_calls,mean_compile_errors,missing_tasks
+gpt55-xhigh,GPT-5.5 (xhigh),codex,gpt-5.5,xhigh,complete,120,29,0.2417,0.2870,0.7871,0.5688,0.9583,13.52,10.2947,30661,,,
+opus48-max,Claude Opus 4.8 (max),claude-code,claude-opus-4-8,max,complete,120,51,0.4250,0.2348,0.7858,0.7073,0.9583,25.59,11.0118,117470,,,
+gpt55-high,GPT-5.5 (high),codex,gpt-5.5,high,complete,120,33,0.2750,0.1930,0.6882,0.5600,0.9583,10.05,5.6568,18916,,,
+gemini3pro,Gemini 3.1 Pro (High),antigravity-cli,"['*Gemini*', 'gemini-pro-default']",*,complete,120,31,0.2583,0.2442,0.5265,0.5279,0.7167,6.72,3.4455,11535,,,
+opus48-high,Claude Opus 4.8 (high),claude-code,claude-opus-4-8,high,complete,120,33,0.2750,0.1327,0.6980,0.6355,0.9417,12.34,4.4556,47278,,,
+opus47-high,Claude Opus 4.7 (high),claude-code,claude-opus-4-7,high,complete,120,28,0.2333,0.1043,0.6775,0.5794,0.9583,12.40,5.3606,38374,,,
+gpt55-medium,GPT-5.5 (medium),codex,gpt-5.5,medium,complete,120,23,0.1917,0.0965,0.6273,0.5235,0.9583,8.59,4.1970,13621,,,
+kimi-coding,Kimi for Coding,kimi-code,kimi-code/kimi-for-coding,default,complete,120,18,0.1500,0.1562,0.7380,0.5722,0.9083,17.30,8.1004,33979,,,
+deepseek,DeepSeek 4 Pro,qwen-code,deepseek-v4-pro,default,complete,120,10,0.0833,0.1667,0.6559,0.6849,0.4667,7.75,1.4078,26373,,,
+qwen37-plus,Qwen 3.7 Plus,qwen-code,qwen3.7-plus,default,complete,120,10,0.0833,0.1053,0.5295,0.5400,0.6417,18.02,1.3225,45956,,,

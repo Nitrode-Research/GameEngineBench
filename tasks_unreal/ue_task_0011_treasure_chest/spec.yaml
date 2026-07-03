@@ -1,0 +1,106 @@
+task_id: ue_task_0011
+title: Treasure Chest
+tier: medium
+
+instruction: |
+  # Treasure Chest
+
+  This repository is a third-person action roguelike built in Unreal Engine.
+  `ARogueTreasureChest` (`Source/ActionRoguelike/World/RogueTreasureChest.cpp`)
+  is an interactable, networked actor. Its declarations already exist in the
+  header — implement its behavior in the `.cpp`.
+
+  ## Desired Behavior
+
+  The chest is a heavy physical object that rests where it is placed in the
+  world. A player can interact with it to open it. Opening it is a one-time
+  event: the lid swings up over time on its hinge, a particle effect bursts,
+  and a sound plays. Once a chest has been opened it stays open — interacting
+  with an already-open chest does nothing further.
+
+  Before a chest is opened, it is completely quiet and still: no effect and no
+  sound should be playing or audible on a freshly spawned, unopened chest.
+
+  This is a multiplayer game with a server and connected clients, and the world
+  can be saved and restored. Whatever the open/closed state of a chest is, every
+  client must end up seeing it correctly, and a chest that was open when the game
+  was saved must appear open again after the save is loaded — in each of these
+  cases the chest should arrive at the same visual result a player would have
+  seen when it was first opened.
+
+  ## Notes
+
+  - The lid's motion is animation-curve-driven: its rotation is advanced over
+    time as the animation progresses, rather than snapped to a final pose.
+    Explore the project for the facility that already exists for running
+    curve-based animations and use it to drive the lid.
+  - No new classes, assets, or files are required. Implement everything within
+    the existing structure, using the members and functions already declared on
+    the actor.
+
+  ## Quality Bar
+
+  Opening is idempotent — interacting any number of times leaves the chest in a
+  single, consistent open state with no repeated or stacked effects. An unopened
+  chest shows and plays nothing. A chest's open state is reflected on every
+  client and survives a save/load round trip, in each case reproducing the same
+  visible open animation. The lid must actually move when the chest opens.
+
+hidden_requirements:
+  R1:
+    text: A newly spawned unopened chest must not have its opening effect or sound active.
+    category: defaults
+  R2:
+    text: The opening effect and sound components must be configured to auto-manage attachment so inactive components do not keep stale attachment behavior while the chest moves.
+    category: defaults
+  R3:
+    text: The chest base must simulate physics so the chest behaves as a heavy physical object in the world.
+    category: defaults
+  R4:
+    text: Interact must set the lid-opened state once, preserve it on repeated interactions, and avoid replaying an unopened chest's open sequence.
+    category: object_lifecycle
+  R5:
+    text: Opening the chest must run the open sequence, including visible lid motion driven by the existing curve-animation subsystem and the configured lid animation curve.
+    category: core_logic
+  R6:
+    text: Lid animation must rotate the lid on the intended pitch axis without introducing yaw or roll drift.
+    category: core_logic
+  R7:
+    text: Replication of the opened state must replay the same open visual sequence on clients when bLidOpened becomes true.
+    category: replication
+  R8:
+    text: Loading a previously opened chest must replay the open visual state so a saved open chest appears open after restore.
+    category: object_lifecycle
+  R9:
+    text: ConditionalOpenChest must guard on bLidOpened so replication or load callbacks with a closed state do not play effects or move the lid.
+    category: edge_case
+
+test_requirements:
+  ActionRoguelike.TreasureChest.VFXAndSoundNotAutoActivateOnSpawn:
+    - R1
+    - R2
+    - R3
+  ActionRoguelike.TreasureChest.VFXAutoManagesAttachment:
+    - R2
+  ActionRoguelike.TreasureChest.BaseMeshSimulatesPhysics:
+    - R3
+  ActionRoguelike.TreasureChest.InteractTriggersOpenSequence:
+    - R4
+    - R5
+    - R6
+  ActionRoguelike.TreasureChest.ConditionalOpenGuardBlocksWhenClosed:
+    - R4
+    - R5
+    - R9
+  ActionRoguelike.TreasureChest.RepAndLoadReplayOpenSequence:
+    - R7
+    - R8
+
+files_to_edit:
+  - Source/ActionRoguelike/World/RogueTreasureChest.cpp
+  
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "ActionRoguelike.TreasureChest"

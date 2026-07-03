@@ -1,0 +1,129 @@
+task_id: ue_task_0032
+title: AI Controller (bot survival behavior)
+tier: hard
+
+instruction: |
+  Each NPC bot has an AI controller that makes movement and bomb-placement decisions each time it completes a cell step. Currently bots stand still after possession.
+
+  The project already contains:
+  - a move-to-cell helper on the pawn
+  - safe-cell and free-cell filters in the cell utility library
+  - bomb placement ability callable from the controller
+
+  The system must satisfy these behavioral requirements:
+
+  Decision loop:
+  - Bots re-plan on each cell traversal completion, not every frame. Re-planning every frame causes oscillation.
+  - If the bot's current cell is in danger, it escapes using the safe-cell filter from its position. If no safe cells exist, it falls back to the free-cell filter.
+  - When not in danger and a powerup is directly reachable, the bot prefers it over filtering.
+  - Otherwise, the bot filters candidates through progressively stricter conditions (crossway cells, unoccupied by other players, within a near radius) and picks uniformly at random from the result. If a filter stage empties the set, the previous stage's result is kept.
+
+  Bomb placement:
+  - A bomb is placed only when all hold: the bot has budget remaining, is not in danger, the filter pipeline did not collapse, the bot did not just step onto a powerup, and a destructible target (box or player) is within fire radius.
+  - After placing, the bot invalidates its candidate set.
+
+  Lifecycle:
+  - On possession: initialize player state if absent, subscribe to game-state and movement-completion events, enable the loop only during the playing phase.
+  - On unpossess: clean up all subscriptions before the pawn reference is cleared.
+  - On game-state change: enable during the playing phase, disable in all others.
+  - On pawn death: disable the loop.
+
+  Use the repository to understand the categorical-filter semantics in the cell utility library — the filter names alone are not enough to infer correct behavior.
+
+hidden_requirements:
+  R1:
+    text: The AI decision loop must be disabled when no pawn or mover component is available.
+    category: object_lifecycle
+  R2:
+    text: AI re-planning must be driven by movement-completion events and throttled, not by per-frame replanning.
+    category: object_lifecycle
+  R3:
+    text: Danger detection must use the cell utility Safe path filter first and fall back to Free cells when no safe cells are reachable.
+    category: core_logic
+  R4:
+    text: The bot must not hand-roll bomb fuse projection or danger timing instead of using the safe-cell filter.
+    category: core_logic
+  R5:
+    text: When not in danger, directly reachable powerups must be preferred before the normal filter pipeline.
+    category: core_logic
+  R6:
+    text: The normal candidate pipeline must progressively filter crossways, player-free cells, secure crossways, and near-radius cells.
+    category: core_logic
+  R7:
+    text: If a filter stage produces no candidates, the previous candidate set must be preserved and the filtering-failed flag recorded.
+    category: edge_case
+  R8:
+    text: Final movement choice must be uniformly random across the retained filtered set.
+    category: core_logic
+  R9:
+    text: Movement must use the pawn mover's cell-intent primitive rather than navmesh or MoveToActor/MoveToLocation APIs.
+    category: core_logic
+  R10:
+    text: Bomb placement must require bomb budget, not being in danger, no filter collapse, no direct powerup target, and a box or player within fire radius.
+    category: core_logic
+  R11:
+    text: After placing a bomb, the bot must invalidate its candidate set so it does not immediately step back onto its own bomb.
+    category: object_lifecycle
+  R12:
+    text: On possession, the controller must initialize missing player state, subscribe to game-state, movement-completion, and death/removal events, and enable AI only in the playing phase.
+    category: object_lifecycle
+  R13:
+    text: On unpossess, the controller must disable AI and remove subscriptions before the base unpossess clears pawn state.
+    category: object_lifecycle
+  R14:
+    text: Reset must clear the in-flight target and stop pawn movement with a zero intent.
+    category: object_lifecycle
+  R15:
+    text: Game-state changes must enable AI only during the in-game phase and disable it in all other phases.
+    category: object_lifecycle
+  R16:
+    text: Pawn removal or death must disable the AI decision loop.
+    category: object_lifecycle
+  R17:
+    text: SetAI must run only on authority, guard against enabling dead or pawnless AI, reset state, and block or unblock movement through the mover component.
+    category: authority
+  R18:
+    text: The public bomb-budget setter and getter must be symmetric and used by the same gate that decides whether a bot can place a bomb.
+    category: defaults
+
+test_requirements:
+  Bomber.AIController.IsAIEnabledBailsWhenNoPawn:
+    - R1
+  Bomber.AIController.UpdateAIThrottleAndArrivalDriven:
+    - R2
+  Bomber.AIController.DangerDetectionUsesSafeFilter:
+    - R3
+    - R4
+  Bomber.AIController.DirectPowerupGrabShortcut:
+    - R5
+  Bomber.AIController.FilterPipelinePreservesOnEmpty:
+    - R6
+    - R7
+    - R8
+  Bomber.AIController.MoveByIntentNoNavmesh:
+    - R9
+  Bomber.AIController.BombGateAllFiveAndInvalidates:
+    - R10
+    - R11
+  Bomber.AIController.LifecyclePossessUnpossess:
+    - R12
+    - R13
+  Bomber.AIController.LifecycleResetGameStateAndDeath:
+    - R14
+    - R15
+    - R16
+  Bomber.AIController.SetAIAuthorityAndDeadGuard:
+    - R17
+  Bomber.AIController.PublicAPIBehavioralRuntime:
+    - R1
+    - R9
+    - R18
+
+files_to_edit:
+  - Source/Bomber/Private/Controllers/BmrAIController.cpp
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "Bomber.AIController"

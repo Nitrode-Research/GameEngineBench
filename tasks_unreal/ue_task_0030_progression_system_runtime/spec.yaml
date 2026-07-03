@@ -1,0 +1,57 @@
+task_id: ue_task_0030
+title: Progression System Runtime
+tier: hard
+
+instruction: |
+  Bomber's ProgressionSystem game feature tracks character progression, saves level progress, spawns star actors above the current menu spot, and drives star materials/animations. Implement the core runtime subsystem and star actor behavior in the task-owned files.
+
+  Save data must load, progression rows must initialize, spot components must register, stars must be spawned and pooled, progress materials must update, and star actors must animate in menu/cinematic states.
+
+files_to_edit:
+  - Plugins/GameFeatures/ProgressionSystem/Source/ProgressionSystemRuntime/Private/Data/PSWorldSubsystem.cpp
+  - Plugins/GameFeatures/ProgressionSystem/Source/ProgressionSystemRuntime/Private/LevelActors/PSStarActor.cpp
+  - Plugins/GameFeatures/ProgressionSystem/Source/ProgressionSystemRuntime/Public/Data/PSWorldSubsystem.h
+  - Plugins/GameFeatures/ProgressionSystem/Source/ProgressionSystemRuntime/Public/LevelActors/PSStarActor.h
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "Bomber.ProgressionSystem"
+
+hidden_requirements:
+  R1:
+    text: The world subsystem must initialize dynamic star materials and subscribe to local-pawn-ready and game-state global messages.
+    category: lifecycle
+  R2:
+    text: The subsystem must asynchronously load progression save data using the configured save slot and process the loaded save in its completion callback.
+    category: persistence
+  R3:
+    text: Loaded progression data must populate settings rows from the progression data table, create missing save-game data, initialize each progression row, set the first/current row, and broadcast initialization.
+    category: persistence
+  R4:
+    text: Spot registration must map character tags to rows and refresh star actors when the current row spot becomes available.
+    category: world_state
+  R5:
+    text: Updating progression stars must return prior pooled stars, request the current row's number of stars from the pool, and initialize spawned stars with locked/unlocked/partial progress state.
+    category: pooling
+  R6:
+    text: Star actors must animate hide/menu curves using curve-table transforms, reset or return to pool when animations finish, and restart looping menu animation.
+    category: animation
+  R7:
+    text: Star actors must initialize transforms from row data and offset subsequent stars from the previous actor location.
+    category: transform_semantics
+  R8:
+    text: Star actors must choose locked, partial, or unlocked dynamic materials and apply scalar progress parameters and overlay materials.
+    category: rendering
+
+test_requirements:
+  Bomber.ProgressionSystem.source_contract:
+    - R1
+    - R2
+    - R3
+    - R4
+    - R5
+    - R6
+    - R7
+    - R8

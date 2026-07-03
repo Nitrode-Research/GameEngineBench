@@ -1,0 +1,87 @@
+task_id: ue_task_0091
+title: Implement camera mode stack and penetration avoidance
+tier: hard
+
+instruction: |
+  Implement the camera mode system so player view modes blend correctly and the
+  third-person camera avoids world penetration.
+  
+  Expected behavior:
+  - Camera modes can be pushed, blended, evaluated, and removed using the existing camera component architecture.
+  - The active camera produces correct view location, rotation, field of view, and control rotation behavior.
+  - Camera mode blend weights progress over time and produce stable transitions without jumps.
+  - Third-person camera offsets account for crouch, character state, and target offsets defined by existing data.
+  - Penetration avoidance prevents the camera from clipping through world geometry or blocking actors.
+  - Camera collision feelers use the existing trace channels, ignore lists, and blocked-hit behavior.
+  - UI or static camera modes can take over and then restore gameplay camera state cleanly.
+  - The implementation must compile and fit the existing player camera manager, camera component, pawn, and input architecture.
+  
+  Constraints:
+  - Use the repository to infer camera mode lifecycle, stack evaluation order, blend functions, assist interfaces, and collision feeler behavior.
+  - Do not replace the stack with a single hardcoded camera.
+  - Do not require new assets or hidden manual setup.
+  
+  Quality bar:
+  The implementation must feel correct at runtime, not just compile. It should
+  support smooth transitions, correct local-player camera ownership, and robust
+  camera penetration avoidance in real maps.
+
+files_to_edit:
+  - Source/ECR/Private/Gameplay/Camera/ECRCameraComponent.cpp
+  - Source/ECR/Private/Gameplay/Camera/ECRCameraMode.cpp
+  - Source/ECR/Private/Gameplay/Camera/ECRCameraMode_PenetrationAvoidant.cpp
+  - Source/ECR/Private/Gameplay/Camera/ECRCameraMode_Static.cpp
+  - Source/ECR/Private/Gameplay/Camera/ECRCameraMode_ThirdPerson.cpp
+  - Source/ECR/Private/Gameplay/Camera/ECRPlayerCameraManager.cpp
+  - Source/ECR/Private/Gameplay/Camera/ECRUICameraManagerComponent.cpp
+  - Source/ECR/Public/Gameplay/Camera/ECRCameraComponent.h
+  - Source/ECR/Public/Gameplay/Camera/ECRCameraMode.h
+  - Source/ECR/Public/Gameplay/Camera/ECRCameraMode_PenetrationAvoidant.h
+  - Source/ECR/Public/Gameplay/Camera/ECRCameraMode_Static.h
+  - Source/ECR/Public/Gameplay/Camera/ECRCameraMode_ThirdPerson.h
+  - Source/ECR/Public/Gameplay/Camera/ECRPenetrationAvoidanceFeeler.h
+  - Source/ECR/Public/Gameplay/Camera/ECRPlayerCameraManager.h
+  - Source/ECR/Public/Gameplay/Camera/ECRUICameraManagerComponent.h
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "ECR.CameraModeStack"
+
+hidden_requirements:
+  R1:
+    text: Camera modes can be pushed, blended, evaluated, and removed using the existing camera component architecture.
+    category: camera
+  R2:
+    text: The active camera produces correct view location, rotation, field of view, and control rotation behavior.
+    category: camera
+  R3:
+    text: Camera mode blend weights progress over time and produce stable transitions without jumps.
+    category: camera
+  R4:
+    text: Third-person camera offsets account for crouch, character state, and target offsets defined by existing data.
+    category: camera
+  R5:
+    text: Penetration avoidance prevents the camera from clipping through world geometry or blocking actors.
+    category: camera
+  R6:
+    text: Camera collision feelers use the existing trace channels, ignore lists, and blocked-hit behavior.
+    category: camera
+  R7:
+    text: UI or static camera modes can take over and then restore gameplay camera state cleanly.
+    category: ui
+  R8:
+    text: The implementation must compile and fit the existing player camera manager, camera component, pawn, and input architecture.
+    category: ui
+
+test_requirements:
+  ECR.CameraModeStack.source_contract_tokens_present:
+    - R1
+    - R2
+    - R3
+    - R4
+    - R5
+    - R6
+    - R7
+    - R8

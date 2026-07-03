@@ -1,0 +1,91 @@
+task_id: ue_task_0054
+title: ALS-Refactored Actions
+tier: hard
+
+instruction: |
+  # Character Actions
+
+  This is a third-person character project built on the ALS-Refactored plugin.
+  `AlsCharacter_Actions.cpp` holds the character's action system; the declarations
+  already exist, so implement the behavior in the `.cpp` using the members and
+  functions already declared on the character.
+
+  ## Desired Behavior
+
+  The character performs three actions, and each one has to leave it in a correct,
+  coherent locomotion and action state — never stuck in an invalid one — and stay
+  consistent with the rest of the locomotion/action state machine as things change
+  over time.
+
+  Rolling is a quick roll the character can be asked to perform. It is not always
+  allowed: it may only begin from states that actually permit it, and a request
+  made from the wrong state must be refused. A roll that does start plays its
+  animation and turns the character to face the direction the roll should go —
+  either toward the current input or toward a specified facing — and the character
+  is considered to be in its rolling action while that happens.
+
+  Mantling is the character pulling itself up onto a ledge in front of it. It has
+  to actually find a real ledge worth mantling onto and decline when there is
+  nothing there — it must not lurch upward or fall back to some generic climb in
+  empty space. When a genuine ledge is found it begins the real mantle, going
+  through the game's existing networked, root-motion-driven path so that it plays
+  out correctly for everyone rather than as a local-only or teleport hack, and the
+  character enters its mantling action.
+
+  Ragdolling drops the character into a physics-driven ragdoll — and, just as much
+  a part of the feature, lets it get back up: the character has to be able to leave
+  ragdoll and return to a normal, valid movement, mesh, and animation state instead
+  of being left collapsed. While ragdolling, the body should be drawn toward its
+  target convincingly from the moment it starts.
+
+  ## Notes
+
+  - The project already provides the character and movement-component API, the
+    settings and animation content, the root-motion source type used for mantling,
+    and all the tags, state members, and delegates. No new classes or assets are
+    required.
+
+hidden_requirements:
+  R1:
+    text: Rolling can start only from valid locomotion and action states, and a valid roll must enter the Rolling locomotion action.
+    category: object_lifecycle
+  R2:
+    text: Rolling must select the appropriate montage and rotate according to the requested input or target-yaw rules.
+    category: core_logic
+  R3:
+    text: Grounded mantling must reject open space, detect a valid ledge, and enter the Mantling locomotion action only for a valid mantle target.
+    category: core_logic
+  R4:
+    text: Mantling must use the existing replicated mantle-start path and root-motion source rather than a teleport, generic climb, or local-only fallback.
+    category: replication
+  R5:
+    text: Ragdolling must enter the Ragdolling locomotion action and put the character into the expected ragdoll state.
+    category: object_lifecycle
+  R6:
+    text: Ragdoll recovery must leave the Ragdolling action and restore the character to a valid movement, mesh, and animation state.
+    category: object_lifecycle
+  R7:
+    text: Rolling, mantling, and ragdolling must remain coherent with the existing locomotion and action state machine over time.
+    category: integration
+  R8:
+    text: Starting a ragdoll must seed the ragdolling state's initial pull-to-target force to the configured non-zero value so the body is drawn toward its target from the first frame, rather than leaving it at rest (zero).
+    category: core_logic
+
+test_requirements:
+  ALS.Actions.roll_starts_from_grounded_state:
+    - R1
+  ALS.Actions.mantle_starts_over_ledge_not_open_space:
+    - R3
+  ALS.Actions.ragdoll_starts_and_recovers:
+    - R5
+    - R6
+    - R8
+
+files_to_edit:
+  - Plugins/ALS-Refactored/Source/ALS/Private/AlsCharacter_Actions.cpp
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "ALS.Actions"

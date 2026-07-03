@@ -1,0 +1,88 @@
+{
+    "_comment":  "Paper-scoped roster for the 1-120 UnrealBench analysis. Generate with: python results/util/make_figures.py --roster results/util/paper_roster.json --no-auto --headline calibrated --lo 1 --hi 120 --out-dir paper/figures . The general dashboard roster lives in model_roster.json.",
+    "models":  [
+                   {
+                       "key":  "gpt55-xhigh",
+                       "label":  "GPT-5.5 (xhigh)",
+                       "agent":  "codex",
+                       "model":  "gpt-5.5",
+                       "reasoning":  "xhigh",
+                       "vendor":  "openai"
+                   },
+                   {
+                       "key":  "gpt55-high",
+                       "label":  "GPT-5.5 (high)",
+                       "agent":  "codex",
+                       "model":  "gpt-5.5",
+                       "reasoning":  "high",
+                       "vendor":  "openai"
+                   },
+                   {
+                       "key":  "gpt55-medium",
+                       "label":  "GPT-5.5 (medium)",
+                       "agent":  "codex",
+                       "model":  "gpt-5.5",
+                       "reasoning":  "medium",
+                       "vendor":  "openai"
+                   },
+                   {
+                       "key":  "opus48-max",
+                       "label":  "Claude Opus 4.8 (max)",
+                       "agent":  "claude-code",
+                       "model":  "claude-opus-4-8",
+                       "reasoning":  "max",
+                       "vendor":  "anthropic"
+                   },
+                   {
+                       "key":  "opus48-high",
+                       "label":  "Claude Opus 4.8 (high)",
+                       "agent":  "claude-code",
+                       "model":  "claude-opus-4-8",
+                       "reasoning":  "high",
+                       "vendor":  "anthropic"
+                   },
+                   {
+                       "key":  "opus47-high",
+                       "label":  "Claude Opus 4.7 (high)",
+                       "agent":  "claude-code",
+                       "model":  "claude-opus-4-7",
+                       "reasoning":  "high",
+                       "vendor":  "anthropic"
+                   },
+                   {
+                       "key":  "gemini3pro",
+                       "label":  "Gemini 3.1 Pro (High)",
+                       "agent":  "antigravity-cli",
+                       "model":  [
+                                     "*Gemini*",
+                                     "gemini-pro-default"
+                                 ],
+                       "reasoning":  "*",
+                       "vendor":  "google"
+                   },
+                   {
+                       "key":  "qwen37-plus",
+                       "label":  "Qwen 3.7 Plus",
+                       "agent":  "qwen-code",
+                       "model":  "qwen3.7-plus",
+                       "reasoning":  "default",
+                       "vendor":  "qwen"
+                   },
+                   {
+                       "key":  "kimi-coding",
+                       "label":  "Kimi for Coding",
+                       "agent":  "kimi-code",
+                       "model":  "kimi-code/kimi-for-coding",
+                       "reasoning":  "default",
+                       "vendor":  "kimi"
+                   },
+                   {
+                       "key":  "deepseek",
+                       "label":  "DeepSeek 4 Pro",
+                       "agent":  "qwen-code",
+                       "model":  "deepseek-v4-pro",
+                       "reasoning":  "default",
+                       "vendor":  "deepseek"
+                   }
+               ]
+}

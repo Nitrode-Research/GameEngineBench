@@ -1,0 +1,116 @@
+task_id: ue_task_0006
+title: Round-Based Match Loop
+tier: hard
+
+instruction: |
+  # Task: Round-Based Match Loop
+
+  ## Context
+
+  You are working on a cooperative horde-survival game built in Unreal Engine 5
+  with C++. The game supports 1–4 players on a dedicated server.
+
+  The following behaviors must work correctly in multiplayer.
+
+  ## What must work
+
+  ### Match structure
+
+  After the lobby phase completes and the game starts, the match runs in a
+  repeating cycle:
+
+  1. **Pause phase** — a countdown during which the trader is open and
+     purchases are allowed.
+  2. **Active round** — the round timer runs and the trader is closed. The
+     round ends when either the timer expires or all enemies in the map have
+     been defeated.
+  3. Repeat from 1 until the match ends.
+
+  ### Pause phase
+
+  - When the pause phase begins, a flag is set that signals to the trader that
+    purchases are permitted.
+  - The pause lasts for a duration configured per map.
+  - When the pause countdown expires, the round counter increments, a
+    new-round sound plays for all players, and the active round begins.
+
+  ### Active round
+
+  - At the start of each round, the trader UI is closed for all players.
+  - The round ends when its configured time limit is reached, or when all
+    enemies have been defeated.
+
+  ### End of match
+
+  - When the maximum number of rounds is reached and the final round ends, the
+    match concludes.
+  - If all players die mid-match, the current level resets immediately.
+  - After the match ends, an end screen is shown for a configured countdown,
+    then the server travels to the next level in the map rotation. If the
+    current level has no sequel in the rotation, it wraps to the first.
+  - If enemies are still alive when a non-reset match end is triggered, the
+    end is refused and a message is broadcast to players.
+
+  ### Replication
+
+  - The current round number, pause state, round timer, pause timer, and
+    remaining enemy count must all be visible to clients in real time.
+  - State changes happen on the server; clients read replicated values.
+
+  ## Quality bar
+
+  - Starting a session with the maximum round count set to 2: the pause phase
+    runs, then round 1 starts with the trader closing, then after all enemies
+    are defeated the pause phase begins again, then round 2 starts, then after
+    all enemies are defeated the match ends.
+  - The trader accepts purchases during the pause phase and refuses them during
+    active rounds.
+  - Both players dying triggers a level reset without waiting for the round to
+    expire.
+  - After the end-screen countdown the server travels to the correct next level.
+  - The enemy counter displayed on screen stays accurate as enemies die.
+
+hidden_requirements:
+  R1:
+    text: Game status, round time, pause time, pause flag, round number, enemy count, and next-level state must replicate to clients.
+    category: replication
+  R2:
+    text: Starting the round loop must enter the pause phase, start the pause timer, mark the match paused, and clear active round timing.
+    category: object_lifecycle
+  R3:
+    text: Map rotation must advance to the next configured level, wrap after the final entry, and preserve the current level for reset requests.
+    category: core_logic
+  R4:
+    text: The enemy counter must reflect the number of living ZedPawn actors in the current world.
+    category: core_logic
+  R5:
+    text: Ending a round must clear the active round timer before branching to pause, next round, reset, or match-end behavior.
+    category: object_lifecycle
+
+test_requirements:
+  HordeTemplate.RoundBased.replication_surface:
+    - R1
+  HordeTemplate.RoundBased.pause_phase_entry:
+    - R2
+  HordeTemplate.RoundBased.map_rotation_wrap:
+    - R3
+  HordeTemplate.RoundBased.zeds_left_reflects_living_zed_count:
+    - R4
+  HordeTemplate.RoundBased.end_game_round_clears_active_round_timer:
+    - R5
+
+files_to_edit:
+  - Source/HordeTemplateV2Native/Public/Gameplay/HordeGameMode.h
+  - Source/HordeTemplateV2Native/Private/Gameplay/HordeGameMode.cpp
+  - Source/HordeTemplateV2Native/Public/Gameplay/HordeGameState.h
+  - Source/HordeTemplateV2Native/Private/Gameplay/HordeGameState.cpp
+  - Source/HordeTemplateV2Native/Public/Character/HordeBaseCharacter.h
+  - Source/HordeTemplateV2Native/Private/Character/HordeBaseCharacter.cpp
+  - Source/HordeTemplateV2Native/Public/AI/ZedPawn.h
+  - Source/HordeTemplateV2Native/Private/AI/ZedPawn.cpp
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "HordeTemplate.RoundBased"

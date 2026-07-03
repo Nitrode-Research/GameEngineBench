@@ -1,0 +1,4 @@
+#pragma once
+
+#define DATA_CONFIG_CORE_VERSION "1.7.5"
+#define DATA_CONFIG_CORE_VERSION_NUMBER 10705

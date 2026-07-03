@@ -1,0 +1,58 @@
+task_id: ue_task_0111
+title: HL2 Velocity + Braking System
+tier: hard
+instruction: "Implement the velocity calculation and braking system that provides HL2-style\nmovement physics. The system\
+  \ must handle ground/air acceleration, friction,\nspeed-dependent step height scaling, sub-stepped braking, and downward\
+  \ force\napplication for movable physics objects.\n\nExpected behaviors:\n\nVelocity calculation:\n- Apply ground acceleration\
+  \ multiplier when on ground\n- Apply air acceleration multiplier when airborne\n- Clamp acceleration to maximum speed limit\n\
+  - Apply different speed caps for ground vs air movement\n- Detect edges and apply increased friction when near edges\n-\
+  \ Scale step height based on current speed (higher speed = lower step height)\n- Clamp velocity to no-clip speed when flying\
+  \ mode is active\n- Reset velocity to zero when climbing a ladder\n\nVelocity braking:\n- Break braking into sub-steps for\
+  \ frame-rate independence\n- Apply friction opposite to velocity direction\n- Reduce friction during crouch slide boost\n\
+  - Stop braking when velocity reaches zero\n- Apply increased friction when near edges\n- Use separate braking friction when\
+  \ configured\n\nDownward force:\n- Check for valid floor with physics body\n- Only push movable physics objects\n- Skip\
+  \ small bodies (below size/mass threshold)\n- Apply gravity * mass * scale force downward\n- Skip static objects and when\
+  \ no floor exists\n\nEdge cases:\n- Zero velocity \u2014 skip braking, no crash\n- No floor \u2014 skip downward force\n\
+  - Small body \u2014 skip downward force\n- Static object \u2014 skip downward force\n- Crouch slide active \u2014 apply\
+  \ friction decay\n- Edge detected \u2014 apply increased friction\n- High speed \u2014 scale down step height\n- Low speed\
+  \ \u2014 use default step height\n- No clip active \u2014 clamp to no-clip speed\n- On ladder \u2014 reset velocity to zero\n\
+  \nQuality bar:\n- The implementation must compile as part of the PBCharacterMovement UE5 plugin\n- Follow the existing C++\
+  \ conventions, macro usage, and naming patterns\n- All public-facing methods must use the appropriate UFUNCTION macros\n\
+  - No new assets or classes outside the listed files\n- Must integrate with UCharacterMovementComponent lifecycle\n"
+hidden_requirements:
+  R1:
+    text: CalcVelocity must apply ground/air acceleration multipliers with different speed caps for airborne movement.
+    category: core_logic
+  R2:
+    text: Edge friction detection must trace downward to detect edges and apply increased friction multiplier.
+    category: core_logic
+  R3:
+    text: Speed-dependent step height must interpolate between maximum and minimum step height based on current speed.
+    category: core_logic
+  R4:
+    text: ApplyVelocityBraking must sub-step braking into fixed time increments for frame-rate independence.
+    category: core_logic
+  R5:
+    text: Crouch slide boost must reduce friction during boost with time-based decay.
+    category: core_logic
+  R6:
+    text: ApplyDownwardForce must check for valid floor with physics body, verify body mobility, skip small bodies, and apply
+      gravity * mass * scale force.
+    category: core_logic
+  R7:
+    text: No-clip mode must clamp velocity to no-clip speed limit, preventing normal movement physics from affecting airborne
+      speed.
+    category: core_logic
+  R8:
+    text: Ladder detection must reset velocity to zero when climbing.
+    category: core_logic
+test_requirements:
+  PB.Velocity.BrakingReducesSpeed:
+  - R4
+files_to_edit:
+- Plugins\PBCharacterMovement\Source\PBCharacterMovement\Private\Character\PBPlayerMovement.cpp
+tests:
+  runner: ue_automation
+  mode: editor
+  num_clients: 0
+  filter: PB.Velocity

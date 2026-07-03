@@ -1,0 +1,135 @@
+task_id: ue_task_0012
+title: Pickup System
+tier: hard
+
+instruction: |
+  # Pickup System
+
+  This repository is a third-person action roguelike built in Unreal Engine. The pickup system handles coins, health potions, credit drops, and ability grants. Implement the pickup system so pickups are visible, collectible, and functional.
+
+  ## Expected Behaviors
+
+  ### Coin Pickups (Instanced Static Mesh)
+  - Coins are represented as instanced static mesh instances managed by a subsystem — not individual actors. A single ISM component holds all coin positions.
+  - When coins are added, their world positions are tracked alongside their mesh instance IDs so they can be removed individually later.
+  - In multiplayer, coin data replicates to clients via the game state's fast array, so clients see coins without spawning actors.
+  - Each tick, the subsystem checks all living player pawns and collects any coins within pickup range — awarding credits to the player whose pawn was close enough and removing those coins from the ISM.
+  - Coin collection triggers a pickup sound that pitches up on rapid consecutive collections.
+  - The subsystem only ticks on the server and in standalone — clients never run the proximity check.
+  - The ISM component is created on the first coin addition, not at startup.
+
+  ### Pickup Actors (Health Potion, Credits, Grant Action)
+  - Each pickup actor has a sphere collision component for overlap detection and a mesh for visuals.
+  - Pickups that support auto-collection bind to the overlap event and interact immediately when a locally-controlled player pawn enters the sphere.
+  - Pickup actors replicate their active state. When the state changes, collision is enabled or disabled and the actor and its children are shown or hidden accordingly.
+  - When used, a pickup hides itself and starts a respawn timer. After the timer expires it becomes visible and collidable again.
+  - When destroyed, all pending timers are cleared.
+
+  ### Health Potion
+  - Can only be consumed if the player is not already at full health.
+  - Costs credits; the potion is only consumed if the player can afford it.
+  - On use, restores the player's health to maximum.
+  - Displays an interaction prompt showing the credit cost and effect. Shows a warning message if the player is already at full health.
+
+  ### Credits Pickup
+  - Auto-collected on overlap — no explicit interaction required.
+  - Awards a fixed credit amount to the player's state, then hides and starts the respawn timer.
+
+  ### Grant Action Pickup
+  - On interact, checks whether the player already has the configured action class. If they do, shows a message and does nothing.
+  - If the player does not have the action, adds it to their action component, then hides and starts the respawn timer.
+  - Requires a valid action class to be configured; logs an error if none is set.
+
+  ## Quality Bar
+
+  Use an instanced static mesh component for coins — do not spawn individual coin actors. The tick-based coin collection must run on the server and in standalone only. Pickups must respawn after a timer expires. Active state replication must show and hide the actor correctly for all clients. No new classes or assets are required — implement the behavior within the existing file structure.
+
+hidden_requirements:
+  R1:
+    text: Coin pickups must be represented by a lazily created instanced static mesh component, not by per-coin actors.
+    category: core_logic
+  R2:
+    text: Adding coin pickups must track each coin's world position and mesh instance ID so individual coins can be removed later.
+    category: core_logic
+  R3:
+    text: In networked games, coin pickup data must be replicated through the game state's fast array so clients can display server-created coins.
+    category: replication
+  R4:
+    text: Coin collection must run only on the server or standalone instance and must award collected coin amounts to living player pawns within pickup range.
+    category: authority
+  R5:
+    text: Coin collection must remove collected mesh instances and play the pickup sound sequence when coins are awarded.
+    category: object_lifecycle
+  R6:
+    text: The pickup subsystem must be tickable on server or standalone worlds and not tick on client-only worlds.
+    category: authority
+  R7:
+    text: The world coin ISM must not be created during subsystem initialization; it must remain absent until the first coin is added.
+    category: object_lifecycle
+  R8:
+    text: Base pickup actors must configure a powerup collision sphere with the intended radius and use a non-colliding mesh for visuals.
+    category: defaults
+  R9:
+    text: Auto-collection pickups must bind their overlap delegate after component initialization and only auto-interact for locally controlled player pawns.
+    category: object_lifecycle
+  R10:
+    text: Replicated active-state changes must hide or show the pickup and disable or enable collision consistently.
+    category: replication
+  R11:
+    text: Using a pickup must hide it immediately, start a respawn timer, and restore visibility and collision when the respawn callback fires.
+    category: object_lifecycle
+  R12:
+    text: Pickup actors must clear pending timers when they leave play so respawn callbacks do not fire on destroyed actors.
+    category: object_lifecycle
+  R13:
+    text: Health potions must refuse use at full health, require sufficient credits, heal to maximum only after payment succeeds, and hide only after a successful heal.
+    category: core_logic
+  R14:
+    text: Health potions must provide interaction text that communicates the credit cost and effect, and must show a full-health warning when appropriate.
+    category: core_logic
+  R15:
+    text: Credits pickups must auto-collect, award their configured credit amount to the player's state, then hide and respawn.
+    category: core_logic
+  R16:
+    text: Grant-action pickups must require a configured action class, refuse duplicate actions with player feedback, add the action when missing, then hide and respawn.
+    category: core_logic
+
+test_requirements:
+  ActionRoguelike.PickupSystem.ConstructorConfigSphereAndMesh:
+    - R8
+  ActionRoguelike.PickupSystem.CreditsPickupCDO:
+    - R9
+    - R15
+  ActionRoguelike.PickupSystem.OnRepIsActiveTogglesCollisionAndVisibility:
+    - R10
+  ActionRoguelike.PickupSystem.ISMNullBeforeCoinAdded:
+    - R7
+  ActionRoguelike.PickupSystem.CreditsInteractAwardsAndHidesPickup:
+    - R11
+    - R15
+  ActionRoguelike.PickupSystem.HideAndCooldownRespawnsPickup:
+    - R11
+    - R12
+  ActionRoguelike.PickupSystem.SubsystemTickableOnServer:
+    - R6
+  ActionRoguelike.PickupSystem.HealthPotionInteractText:
+    - R14
+  ActionRoguelike.PickupSystem.AddCoinsCreatesISMWithTracking:
+    - R1
+    - R2
+    - R7
+  ActionRoguelike.PickupSystem.CreditsOverlapDelegateBound:
+    - R9
+
+files_to_edit:
+  - Source/ActionRoguelike/Pickups/RoguePickupActor.cpp
+  - Source/ActionRoguelike/Pickups/RoguePickupActor_Credits.cpp
+  - Source/ActionRoguelike/Pickups/RoguePickupActor_GrantAction.cpp
+  - Source/ActionRoguelike/Pickups/RoguePickupActor_HealthPotion.cpp
+  - Source/ActionRoguelike/Pickups/RoguePickupSubsystem.cpp
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "ActionRoguelike.PickupSystem"

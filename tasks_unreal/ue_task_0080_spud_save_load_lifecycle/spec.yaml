@@ -1,0 +1,65 @@
+task_id: ue_task_0080
+title: SPUD Save Load Lifecycle
+tier: hard
+
+instruction: |
+  You are working in an Unreal Engine 5 project that uses the SPUD runtime save plugin.
+  Implement SPUD's high-level save/load lifecycle.
+
+  The save/load lifecycle must preserve save-header data, honor save blockers, and keep rejected saves from interfering with the normal slot lifecycle. Saving should capture the current world/global state plus save title, timestamp, custom metadata, and optional thumbnail data. Loading should read the selected slot, restore persistent globals before map travel, keep the destination world package alive, travel to the saved map, and complete restoration after the map loads.
+
+  Implement this inside the existing SPUD subsystem/state/archive design. Blocked, overlapping, blank-slot, and client-only saves or loads should fail safely and broadcast failure. Save blockers must be reason-based and nestable, clear on end game or map transition, and apply consistently to manual, quick, and auto saves. Quick/auto slots should support legacy and numbered rotation without deleting old saves when the new save is refused. Save listing should read header metadata efficiently and preserve filtering/sorting behavior. Async saves should capture UObject state on the game thread, serialize plain state off-thread, complete through the platform save path, and resume deferred EndGame/NewGame requests on the game thread.
+
+files_to_edit:
+  - "Plugins/SPUD/Source/SPUD/Public/SpudSubsystem.h"
+  - "Plugins/SPUD/Source/SPUD/Private/SpudSubsystem.cpp"
+  - "Plugins/SPUD/Source/SPUD/Public/SpudState.h"
+  - "Plugins/SPUD/Source/SPUD/Private/SpudState.cpp"
+  - "Plugins/SPUD/Source/SPUD/Public/SpudCustomSaveInfo.h"
+  - "Plugins/SPUD/Source/SPUD/Private/SpudCustomSaveInfo.cpp"
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "SPUD.SaveLoadLifecycle"
+
+hidden_requirements:
+  R1:
+    text: Save blockers must be reason-based, nestable, visible through IsSaveBlocked/GetSaveBlockers, and cleared by EndGame or map transition.
+    category: core_logic
+  R2:
+    text: Blocked manual, quick, and auto saves must fail before state capture and must not delete older numbered quick/auto slots.
+    category: runtime_integration
+  R3:
+    text: Save headers must round-trip title, timestamp, and copied custom save info through the archive header without retaining transient UObject identity.
+    category: serialization
+  R4:
+    text: Async saves must capture UObject/world state on the game thread, serialize only captured plain state off-thread, then dispatch platform save completion back to the game thread.
+    category: threading
+  R5:
+    text: Save completion must clear in-progress slot/title/custom-info state and resume exactly one deferred EndGame or NewGame request after async save completion.
+    category: object_lifecycle
+  R6:
+    text: LoadGame must load the selected archive, restore persistent global objects before map travel, and pin the destination world package against GC before OpenLevel.
+    category: runtime_integration
+  R7:
+    text: OnPostLoadMap must finalize a deferred load by restoring the loaded world, subscribing persistent actor events, broadcasting completion, and releasing the pinned world.
+    category: object_lifecycle
+
+test_requirements:
+  SPUD.SaveLoadLifecycle.save_blockers_are_reason_based_and_nestable:
+    - R1
+  SPUD.SaveLoadLifecycle.save_header_roundtrips_title_timestamp_and_custom_info:
+    - R3
+  SPUD.SaveLoadLifecycle.blocked_saves_fail_before_slot_cleanup_or_capture:
+    - R1
+    - R2
+  SPUD.SaveLoadLifecycle.async_save_serializes_plain_state_off_thread:
+    - R4
+  SPUD.SaveLoadLifecycle.save_completion_resumes_deferred_end_or_new_game:
+    - R5
+  SPUD.SaveLoadLifecycle.load_restores_globals_and_pins_world_before_travel:
+    - R6
+  SPUD.SaveLoadLifecycle.post_load_map_finalizes_restore_and_clears_world_pin:
+    - R7

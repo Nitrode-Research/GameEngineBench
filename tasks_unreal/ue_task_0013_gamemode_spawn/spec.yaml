@@ -1,0 +1,181 @@
+task_id: ue_task_0013
+title: Game Mode Spawn System
+tier: hard
+
+instruction: |
+  # Game Mode Spawn System
+
+  This repository is a third-person action roguelike built in Unreal Engine. The game mode controls enemy spawning, powerup placement, player respawn, and kill rewards. Implement the game mode behavior so enemies spawn and scale in difficulty, powerups appear in the world, and players respawn after death.
+
+  ## Expected Behaviors
+
+  ### Initialization
+  - On game initialization, load the save game via the save game subsystem. The save slot name is parsed from the URL options string; if absent the subsystem uses its default slot.
+
+  ### Game Start
+  - Initialize the available spawn credit to the configured starting amount.
+  - Start the repeating bot spawn timer.
+  - If any powerup classes are configured, kick off an environment query to find valid powerup spawn locations across the map.
+  - Pre-warm the actor pool after begin-play has finished so actors are not primed while mid-initialization.
+
+  ### Player Joining
+  - Before the player controller completes its startup, notify the save game subsystem so saved data is restored before the HUD or UI is created.
+  - After the player is fully started, apply the saved spawn transform so the player begins at their last saved position.
+
+  ### Actor Pool Pre-warming
+  - If actor pooling is enabled, iterate the configured pool class map and prime each class up to its configured count.
+
+  ### Bot Spawn Timer
+  - Start a repeating timer at the configured interval that drives bot spawn attempts.
+
+  ### Per-Timer Spawn Tick
+  - In non-shipping builds, if the developer settings flag to disable bot spawning is set, skip this tick.
+  - If a spawn credit curve is configured, accumulate credit based on the curve's value at the current world time.
+  - If a cooldown is still active from a previous failed spawn, skip this tick.
+  - Count all living AI characters in the world; if the count meets or exceeds the cap, skip this tick.
+  - Select a random monster from the monster data table using weighted random selection.
+  - If the selected monster costs more credit than currently available, enter a cooldown and skip this tick.
+  - Run an environment query to find a spawn location; pass the selected monster row along as context to the callback.
+
+  ### EQS Callback — Bot Spawn
+  - If the query failed, log a warning and return.
+  - If valid locations were returned, deduct the monster's spawn cost from available credit.
+  - Async-load the monster's primary asset; when loaded, spawn the monster and add its configured actions to its action component.
+
+  ### EQS Callback — Powerup Spawn
+  - If the query failed, log a warning and return.
+  - Place powerups at query result locations until the desired count is reached or locations run out. Skip locations that are too close to already-used ones. Pick a random class from the configured powerup classes for each placement. Spawn each powerup into the world.
+
+  ### Player Respawn
+  - Un-possess the dead pawn, then restart the player at a new player start.
+
+  ### Kill Notification
+  - Log the kill event.
+  - If the victim is a player: if auto-respawn is enabled, start a short timer to call the respawn function. Update the player's survival time record and write the save game.
+  - If the killer is a different pawn with a player state, grant kill credits to that player.
+
+  ## Quality Bar
+
+  Enemies must spawn progressively and scale in count and type over time. Powerups must appear distributed across the map without clustering. Players must respawn after a short delay when killed. Kill rewards must credit only the player who dealt the killing blow, not bots. Save/load must run at the right moments — before UI initializes for new players, and immediately after death. No new classes or assets are required — implement the behavior within the existing file structure.
+
+hidden_requirements:
+  R1:
+    text: InitGame must load the save game through the save-game subsystem, using the SaveGame URL option when supplied and the subsystem default otherwise.
+    category: object_lifecycle
+  R2:
+    text: StartPlay must initialize available spawn credit from the configured initial credit amount.
+    category: defaults
+  R3:
+    text: StartPlay must start a repeating bot-spawn timer using the configured spawn interval.
+    category: object_lifecycle
+  R4:
+    text: StartPlay must run the powerup EQS flow when powerup classes are configured.
+    category: core_logic
+  R5:
+    text: Actor pools must be pre-warmed after BeginPlay has completed, using each configured pool class and count.
+    category: object_lifecycle
+  R6:
+    text: HandleStartingNewPlayer must let the save-game subsystem restore player data before the controller finishes startup and UI creation.
+    category: object_lifecycle
+  R7:
+    text: After player startup, the save-game subsystem must apply any saved spawn transform to the new player.
+    category: object_lifecycle
+  R8:
+    text: The actor-pool class map must be exposed and consumed so configured actor pools can be primed.
+    category: defaults
+  R9:
+    text: The bot-spawn timer interval must be positive and must control the timer rate.
+    category: defaults
+  R10:
+    text: In non-shipping builds, the developer setting that disables bot spawning must cause spawn ticks to return without spawning new bots.
+    category: edge_case
+  R11:
+    text: SpawnBotTimerElapsed must accumulate spawn credit from the configured spawn-credit curve at the current world time.
+    category: core_logic
+  R12:
+    text: SpawnBotTimerElapsed must skip spawning while a failed-spawn cooldown is active.
+    category: object_lifecycle
+  R13:
+    text: SpawnBotTimerElapsed must count living AI characters and refuse to spawn above the configured maximum bot count.
+    category: core_logic
+  R14:
+    text: SpawnBotTimerElapsed must select a monster row from the monster table using weighted random selection.
+    category: core_logic
+  R15:
+    text: If the selected monster costs more than the available credit, the spawn tick must enter a cooldown and skip the spawn.
+    category: core_logic
+  R16:
+    text: SpawnBotTimerElapsed must execute the bot-spawn EQS query and pass the selected monster row into the completion callback.
+    category: core_logic
+  R17:
+    text: A failed bot-spawn EQS result must log and return without deducting credit or spawning.
+    category: edge_case
+  R18:
+    text: A successful bot-spawn EQS result must deduct the selected monster's cost before loading and spawning it.
+    category: core_logic
+  R19:
+    text: Once the monster asset loads, the game mode must spawn the monster and add each configured action to its action component.
+    category: core_logic
+  R20:
+    text: A failed powerup EQS result must log and return without spawning powerups.
+    category: edge_case
+  R21:
+    text: Successful powerup placement must choose valid EQS locations, enforce minimum spacing between spawned powerups, pick configured classes, and spawn them into the world.
+    category: core_logic
+  R22:
+    text: Player respawn must unpossess the dead pawn and restart the controller at a new player start after the respawn delay.
+    category: object_lifecycle
+  R23:
+    text: OnActorKilled must handle player deaths by scheduling auto-respawn when enabled.
+    category: object_lifecycle
+  R24:
+    text: On player death, the game mode must update the player's survival record and write the save game immediately.
+    category: object_lifecycle
+  R25:
+    text: Kill rewards must grant credits only when the killer is a different pawn with a player state; self-kills and bot-only killers must not receive player credits.
+    category: core_logic
+
+test_requirements:
+  ActionRoguelike.GameModeSpawn.CDOChecks:
+    - R2
+    - R8
+    - R9
+    - R10
+    - R11
+    - R14
+    - R21
+    - R22
+  ActionRoguelike.GameModeSpawn.RuntimeBehaviors:
+    - R1
+    - R2
+    - R3
+    - R4
+    - R5
+    - R6
+    - R7
+    - R9
+    - R10
+    - R11
+    - R12
+    - R13
+    - R14
+    - R15
+    - R16
+    - R17
+    - R18
+    - R19
+    - R20
+    - R21
+    - R22
+    - R23
+    - R24
+    - R25
+
+files_to_edit:
+  - Source/ActionRoguelike/Core/RogueGameModeBase.cpp
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "ActionRoguelike.GameModeSpawn"

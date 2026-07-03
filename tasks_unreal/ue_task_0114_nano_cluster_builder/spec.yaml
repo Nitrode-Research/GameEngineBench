@@ -1,0 +1,80 @@
+task_id: ue_task_0114
+title: Gaussian Cluster Builder
+tier: hard
+instruction: "You are working in a UE5 C++ plugin called NanoGaussianSplatting that implements\nGaussian Splatting rendering\
+  \ with Nanite-style hierarchical clustering. The plugin\nprovides spatial clustering for Gaussian splat data with Morton\
+  \ code sorting,\nrecursive bottom-up merge, and LOD generation.\n\nThe module already has:\n- A functional UE5 plugin setup\
+  \ with dependencies on Core, Rendering, and\n  ComputeShader integration\n- The Gaussian splat data structures (FGaussianSplatData,\
+  \ FGaussianSplatViewData)\n- Utility functions for Morton code encoding/decoding\n\nImplement the Gaussian Cluster Builder\
+  \ \u2014 hierarchical spatial clustering for\nGaussian splat data. Produces a cluster hierarchy suitable for Nanite-style\n\
+  LOD rendering.\n\nThe cluster builder must satisfy these behavioral requirements:\n\nBuildClusterHierarchy:\n- Must calculate\
+  \ global AABB bounds from all splats\n- Must sort splats by Morton code (Z-order curve) for spatial locality\n- Must create\
+  \ leaf clusters with configurable splats per cluster (default 128)\n- Must build parent levels bottom-up with greedy nearest-neighbor\
+  \ merge (8 children per parent)\n- Must compute error metrics during LOD generation (BoundingSphereRadius + MaxChildError)\n\
+  - Must generate LOD splats for non-leaf clusters with configurable reduction ratio (default 4)\n\nMorton Code Sorting:\n\
+  - Must normalize position to [0, 1] range using global bounds\n- Must interleave bits: x in positions 0,2,4,...; y in 1,3,5,...;\
+  \ z in 2,4,6,...\n- Must sort entries by Morton code ascending\n\nLeaf Cluster Creation:\n- Must partition sorted splats\
+  \ into leaves (ceil(NumSplats / SplatsPerCluster))\n- Must calculate AABB from splat positions\n- Must compute bounding\
+  \ sphere from AABB (center = AABB center, radius = half-diagonal)\n\nParent Cluster Build:\n- Must find first unclaimed\
+  \ child as seed\n- Must calculate distances from seed to all unclaimed children\n- Must claim seed + up to (MaxChildrenPerCluster\
+  \ - 1) nearest neighbors\n- Must create parent with expanded bounds from all claimed children\n\nError Metric:\n- Must compute\
+  \ MaxError = max(BoundingSphereRadius, MaxChildError + SMALL_NUMBER)\n- Must ensure monotonic increase up tree (LOD walk-up\
+  \ never skips a level)\n\nLOD Splat Generation:\n- Must merge original splats from child leaf clusters for Level 1\n- Must\
+  \ merge LOD splats from child clusters at level N-1 for Level N\n- Must use reduction ratio (default 4:1) for splat reduction\n\
+  - Must ensure minimum 1 LOD splat per cluster\n\nMerge Algorithm (Gaussians):\n- Position: opacity-weighted centroid\n-\
+  \ Scale: opacity-weighted average (don't add position spread)\n- Rotation: identity quaternion\n- SH_DC: opacity-weighted\
+  \ average\n- Opacity: 1 - product(1 - opacity_i) [probabilistic combination]\n- SH coefficients: zeroed (LOD splats don't\
+  \ need view-dependent effects)\n\nEdge cases:\n- 0 splats \u2014 return false with warning\n- 1 splat \u2014 single leaf\
+  \ cluster, no parents\n- SplatsPerCluster > NumSplats \u2014 single leaf cluster\n- Last leaf has fewer than SplatsPerCluster\
+  \ splats\n- All splats at same position \u2014 bounds.ExpandBy(1.0f) to avoid zero-size\n- ReductionRatio < 1 \u2014 default\
+  \ to 4\n\nQuality bar:\n- The implementation must compile as part of the NanoGaussianSplatting UE5 plugin\n- Follow the\
+  \ existing C++ conventions, macro usage, and naming patterns\n- No new assets or classes outside the listed files\n- Must\
+  \ integrate with existing Gaussian splat data structures\n"
+hidden_requirements:
+  R1:
+    text: BuildClusterHierarchy must calculate global AABB, sort by Morton code, create leaf clusters, build parent levels
+      bottom-up, compute error metrics, and generate LOD splats.
+    category: core_logic
+  R2:
+    text: Morton code sorting must normalize position to [0,1] range, interleave bits (x=0,2,4...; y=1,3,5...; z=2,4,6...),
+      and sort ascending.
+    category: core_logic
+  R3:
+    text: Leaf cluster creation must partition sorted splats into leaves with configurable SplatsPerCluster (default 128),
+      calculate AABB, and compute bounding sphere from AABB.
+    category: core_logic
+  R4:
+    text: Parent cluster build must use greedy nearest-neighbor merge with MaxChildrenPerCluster (default 8), claiming seed
+      + nearest neighbors.
+    category: core_logic
+  R5:
+    text: Error metric must compute MaxError = max(BoundingSphereRadius, MaxChildError + SMALL_NUMBER) ensuring monotonic
+      increase up tree.
+    category: core_logic
+  R6:
+    text: LOD splat generation must merge original splats from child leaves for Level 1, merge LOD splats from child clusters
+      at level N-1 for Level N, with configurable reduction ratio (default 4).
+    category: core_logic
+  R7:
+    text: Gaussian merge must use opacity-weighted centroid for position, opacity-weighted average for scale, identity quaternion
+      for rotation, opacity-weighted average for SH_DC, probabilistic opacity combination, and zero SH coefficients.
+    category: core_logic
+  R8:
+    text: Edge cases must handle 0 splats (return false), 1 splat (single leaf), SplatsPerCluster > NumSplats (single leaf),
+      last leaf with fewer splats, all splats at same position (bounds expansion), and ReductionRatio < 1 (default to 4).
+    category: core_logic
+test_requirements:
+  Nano.ClusterBuilder.HierarchyBuildsLeafAndParentClusters:
+  - R1
+  - R2
+  - R3
+  - R4
+  - R5
+files_to_edit:
+- Plugins\NanoGS\Source\NanoGS\Public\GaussianClusterBuilder.h
+- Plugins\NanoGS\Source\NanoGS\Private\GaussianClusterBuilder.cpp
+tests:
+  runner: ue_automation
+  mode: editor
+  num_clients: 0
+  filter: Nano.ClusterBuilder

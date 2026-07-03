@@ -1,0 +1,86 @@
+task_id: ue_task_0052
+title: ALSXT GAS Ability Async Tasks
+tier: hard
+
+instruction: |
+  TargetVector's ALSXT plugin includes several Gameplay Ability System ability tasks and Blueprint async action nodes. Implement these tasks and async nodes in the task-owned files.
+
+  Abilities must be able to receive tick events, perform targeting traces, wait for enhanced input, react to gameplay tag count changes, observe attribute changes, track cooldown begin/end state, and report gameplay effect stack changes.
+
+  The implementation must satisfy the following behavior:
+
+  - Tick ability tasks must enable ticking and broadcast delta time each tick while respecting normal ability-task lifecycle.
+  - Enhanced-input tasks must store the requested input action and trigger event, bind through the owning player controller's enhanced input component, broadcast received values, support trigger-once behavior, and clear bindings on destroy.
+  - Targeting tasks must perform avatar-based line traces and broadcast `FGameplayAbilityTargetData_SingleTargetHit` handles for hit and miss results.
+  - Gameplay-tag wait tasks must optionally fire at activation, register `AnyCountChange` callbacks, broadcast added/removed counts with deltas, and honor trigger-once behavior.
+  - Attribute async nodes must register and remove value-change delegates for one or many attributes and broadcast old/new values.
+  - Cooldown async nodes must register active-effect and cooldown-tag delegates, distinguish predicted and server cooldowns, broadcast begin/end events, and calculate the longest remaining cooldown duration.
+  - Effect-stack async nodes must register add/remove/stack-change delegates, broadcast stack count changes, and clean up delegates when ended.
+
+files_to_edit:
+  - Plugins/ALSXT/Source/ALSXT/Private/AbilitySystem/AbilityTasks/AlsxtAbilityTaskOnTickEvent.cpp
+  - Plugins/ALSXT/Source/ALSXT/Private/AbilitySystem/AbilityTasks/AlsxtAbilityTaskPerformTargeting.cpp
+  - Plugins/ALSXT/Source/ALSXT/Private/AbilitySystem/AbilityTasks/AlsxtAbilityTaskWaitEnhancedInputEvent.cpp
+  - Plugins/ALSXT/Source/ALSXT/Private/AbilitySystem/AbilityTasks/AlsxtAbilityTaskWaitGameplayTagChanged.cpp
+  - Plugins/ALSXT/Source/ALSXT/Private/AbilitySystem/Nodes/AlsxtAsyncTaskAttributeChanged.cpp
+  - Plugins/ALSXT/Source/ALSXT/Private/AbilitySystem/Nodes/AlsxtAsyncTaskCooldownChanged.cpp
+  - Plugins/ALSXT/Source/ALSXT/Private/AbilitySystem/Nodes/AlsxtAsyncTaskEffectStackChanged.cpp
+  - Plugins/ALSXT/Source/ALSXT/Public/AbilitySystem/AbilityTasks/AlsxtAbilityTaskOnTickEvent.h
+  - Plugins/ALSXT/Source/ALSXT/Public/AbilitySystem/AbilityTasks/AlsxtAbilityTaskPerformTargeting.h
+  - Plugins/ALSXT/Source/ALSXT/Public/AbilitySystem/AbilityTasks/AlsxtAbilityTaskWaitEnhancedInputEvent.h
+  - Plugins/ALSXT/Source/ALSXT/Public/AbilitySystem/AbilityTasks/AlsxtAbilityTaskWaitGameplayTagChanged.h
+  - Plugins/ALSXT/Source/ALSXT/Public/AbilitySystem/Nodes/AlsxtAsyncTaskAttributeChanged.h
+  - Plugins/ALSXT/Source/ALSXT/Public/AbilitySystem/Nodes/AlsxtAsyncTaskCooldownChanged.h
+  - Plugins/ALSXT/Source/ALSXT/Public/AbilitySystem/Nodes/AlsxtAsyncTaskEffectStackChanged.h
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "TargetVector.ALSXTGASAsync"
+
+hidden_requirements:
+  R1:
+    text: Tick ability tasks must enable ticking and broadcast delta time.
+    category: ability_task_lifecycle
+  R2:
+    text: Enhanced-input ability tasks must bind to enhanced input, broadcast values, support trigger-once semantics, and clear bindings on destroy.
+    category: input
+  R3:
+    text: Targeting ability tasks must trace from the avatar and emit single-target-hit target data handles.
+    category: targeting
+  R4:
+    text: Gameplay-tag ability tasks must register count-change callbacks and broadcast added/removed deltas.
+    category: gameplay_tags
+  R5:
+    text: Attribute async nodes must register and remove attribute delegates and broadcast old/new values.
+    category: attributes
+  R6:
+    text: Cooldown async nodes must register active-effect and cooldown-tag delegates.
+    category: cooldowns
+  R7:
+    text: Cooldown async nodes must distinguish predicted and server cooldowns and broadcast begin/end events.
+    category: cooldowns
+  R8:
+    text: Cooldown remaining-time calculation must query active effects and choose the longest remaining duration.
+    category: cooldowns
+  R9:
+    text: Effect-stack async nodes must register effect add/remove/stack delegates and broadcast stack counts.
+    category: gameplay_effects
+  R10:
+    text: Async nodes must clean up delegates and mark themselves ready for destruction.
+    category: cleanup
+
+test_requirements:
+  TargetVector.ALSXTGASAsync.ability_tasks_source:
+    - R1
+    - R2
+    - R3
+    - R4
+  TargetVector.ALSXTGASAsync.async_nodes_source:
+    - R5
+    - R6
+    - R7
+    - R8
+    - R9
+    - R10

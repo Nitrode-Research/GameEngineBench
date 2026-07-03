@@ -1,0 +1,88 @@
+task_id: ue_task_0106
+title: Implement ranged weapon fire control, targeting, and hit feedback
+tier: hard
+
+instruction: |
+  Implement the ranged weapon fire-control system so equipped weapons aim, fire,
+  apply hits, and update feedback correctly.
+  
+  Expected behavior:
+  - A locally controlled player can fire an equipped ranged weapon through the existing gameplay ability path.
+  - Weapon spread, heat, cooldown, and firing cadence affect shot accuracy and availability.
+  - Targeting uses the player's view direction and weapon data to produce valid trace or projectile results.
+  - Server-authoritative hit processing applies damage only to valid targets and ignores invalid or stale hit data.
+  - Hit confirmation, reticle spread, and weapon UI state update from the same runtime weapon state used by gameplay.
+  - Firing handles ammo, reload, burst or automatic fire behavior, and blocked states according to existing weapon data.
+  - Simulated clients receive appropriate cosmetic feedback without becoming authoritative for damage.
+  - Unequipping, death, respawn, or weapon replacement stops pending fire loops and clears stale hit confirmation state.
+  - The implementation must compile and fit the existing ability, equipment, inventory, UI, and networking architecture.
+  
+  Constraints:
+  - Use the repository to infer weapon instance state, ability activation rules, targeting data, hit marker flow, and replication boundaries.
+  - Do not implement a standalone shooter loop that bypasses Gameplay Ability System or equipment state.
+  - Do not require new assets or hidden manual setup.
+  
+  Quality bar:
+  The implementation must be multiplayer-correct and gameplay-integrated. A
+  compile-only solution that fires local traces but bypasses replicated weapon
+  state, damage execution, UI feedback, or authority checks is not sufficient.
+
+files_to_edit:
+  - Source/ECR/Private/Gameplay/Weapons/ECRGameplayAbility_RangedWeapon.cpp
+  - Source/ECR/Private/Gameplay/Weapons/ECRRangedWeaponInstance.cpp
+  - Source/ECR/Private/Gameplay/Weapons/ECRWeaponInstance.cpp
+  - Source/ECR/Private/Gameplay/Weapons/ECRWeaponStateComponent.cpp
+  - Source/ECR/Private/Gameplay/Weapons/ECRDamageLogDebuggerComponent.cpp
+  - Source/ECR/Private/GUI/Weapons/ECRWeaponUserInterface.cpp
+  - Source/ECR/Private/GUI/Weapons/HitMarkerConfirmationWidget.cpp
+  - Source/ECR/Public/Gameplay/Weapons/ECRGameplayAbility_RangedWeapon.h
+  - Source/ECR/Public/Gameplay/Weapons/ECRRangedWeaponInstance.h
+  - Source/ECR/Public/Gameplay/Weapons/ECRWeaponInstance.h
+  - Source/ECR/Public/Gameplay/Weapons/ECRWeaponStateComponent.h
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "ECR.RangedWeapon"
+
+hidden_requirements:
+  R1:
+    text: A locally controlled player can fire an equipped ranged weapon through the existing gameplay ability path.
+    category: ui
+  R2:
+    text: Weapon spread, heat, cooldown, and firing cadence affect shot accuracy and availability.
+    category: core_logic
+  R3:
+    text: Targeting uses the player's view direction and weapon data to produce valid trace or projectile results.
+    category: ui
+  R4:
+    text: Server-authoritative hit processing applies damage only to valid targets and ignores invalid or stale hit data.
+    category: replication
+  R5:
+    text: Hit confirmation, reticle spread, and weapon UI state update from the same runtime weapon state used by gameplay.
+    category: ui
+  R6:
+    text: Firing handles ammo, reload, burst or automatic fire behavior, and blocked states according to existing weapon data.
+    category: core_logic
+  R7:
+    text: Simulated clients receive appropriate cosmetic feedback without becoming authoritative for damage.
+    category: replication
+  R8:
+    text: Unequipping, death, respawn, or weapon replacement stops pending fire loops and clears stale hit confirmation state.
+    category: lifecycle
+  R9:
+    text: The implementation must compile and fit the existing ability, equipment, inventory, UI, and networking architecture.
+    category: ui
+
+test_requirements:
+  ECR.RangedWeapon.source_contract_tokens_present:
+    - R1
+    - R2
+    - R3
+    - R4
+    - R5
+    - R6
+    - R7
+    - R8
+    - R9

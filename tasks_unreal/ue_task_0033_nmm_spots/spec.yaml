@@ -1,0 +1,119 @@
+task_id: ue_task_0033
+title: Main Menu Character Selection (Spot Component and Subsystem)
+tier: hard
+
+instruction: |
+  The main menu shows a character carousel. The player cycles between preview slots, each playing a character cinematic. Selecting a slot commits the chosen character. Currently the carousel doesn't react and character selection doesn't propagate.
+
+  The project already contains:
+  - spot actors placed in the menu level, one per playable character
+  - cinematic assets per slot
+  - player state fields for persisting the committed character
+
+  The system must satisfy these behavioral requirements:
+
+  Cycling:
+  - Cycling left from the first slot wraps to the last; right from the last wraps to the first.
+  - Cycling plays the destination slot's cinematic. The player can skip mid-cinematic; skipping ends playback and applies the destination slot's state.
+  - The browsed slot index is local per client and is not replicated to other clients.
+
+  Loading:
+  - The active slot's cinematic loads immediately. Non-active slots load in the background.
+  - If a slot becomes active before its background load finishes, force a synchronous load on demand.
+
+  Character commitment:
+  - The committed character is written to the player state. The player state survives pool reuse, dormancy, and respawn — writing elsewhere loses the choice on any of those transitions.
+  - The committed choice replicates to other clients.
+  - On session restart, the menu opens on the previously chosen slot.
+
+  Readiness signal:
+  - The subsystem broadcasts exactly one signal when the active spot becomes ready. Other systems use this to trigger their own state transitions.
+
+  Use the repository to understand how the camera subsystem and main-menu state machine subscribe to the readiness signal.
+
+hidden_requirements:
+  R1:
+    text: Cycling must wrap across the sorted spot list in both directions, including left from the first slot and right from the last slot.
+    category: core_logic
+  R2:
+    text: Cinematic and browsing state changes must run only for the local player controller and must not execute on non-local controllers, the server, or render-movie cinematic mode.
+    category: authority
+  R3:
+    text: The browsed or active preview slot is client-local browsing state and must not be replicated as a shared multiplayer state.
+    category: replication
+  R4:
+    text: Moving to another menu spot must update the active spot priority, record the movement direction, and drive the main-menu state machine into the correct idle or transition state.
+    category: core_logic
+  R5:
+    text: Stopping or skipping the master sequence must route through the cinematic state machine so playback cleanup, state updates, and listeners observe the same transition path.
+    category: object_lifecycle
+  R6:
+    text: Transition menu state must be remapped to idle for spot cinematic playback so the camera rail owns the transition while the destination spot reaches a stable idle pose.
+    category: core_logic
+  R7:
+    text: The active spot must initialize its master sequence player as soon as its cinematic row and asset are available, including late-registered spots.
+    category: initialization
+  R8:
+    text: Non-active spot cinematics must be loaded through the data-registry/asynchronous loading path rather than eagerly synchronously loading every slot.
+    category: object_lifecycle
+  R9:
+    text: If a spot becomes active before background loading finishes, the system must complete initialization on demand before using that spot's sequence player.
+    category: object_lifecycle
+  R10:
+    text: The spots subsystem must bind game-feature lifecycle and data-registry load events so spot cinematic rows are reinitialized when menu content loads or unloads.
+    category: initialization
+  R11:
+    text: The active-menu-spot-ready signal must fire only after all relevant spot sequence players are ready, and it must identify the highest-priority loaded active spot.
+    category: initialization
+  R12:
+    text: Character commitment must write a valid mesh and skin choice to the persistent PlayerState rather than storing it only on the spot, pawn, or controller.
+    category: replication
+  R13:
+    text: Marking a cinematic as seen must apply only to the current active spot and persist the cinematic priority through the save-game path.
+    category: object_lifecycle
+  R14:
+    text: Cinematic-state application must safely no-op when the player controller, player state, or master sequence player is unavailable during loading, teardown, or dedicated-server paths.
+    category: edge_case
+  R15:
+    text: Returning to the menu must be able to restore the previously committed character slot from persistent player/save state.
+    category: object_lifecycle
+
+test_requirements:
+  Bomber.NMMSpots.ApplyCinematicStateNullPlayerGuard:
+    - R14
+  Bomber.NMMSpots.ApplyMeshWritesToPlayerState:
+    - R12
+  Bomber.NMMSpots.AsyncLoadingNoEagerBulkLoad:
+    - R7
+    - R8
+    - R9
+  Bomber.NMMSpots.BrowseStateIsLocalOnly:
+    - R2
+    - R3
+  Bomber.NMMSpots.CinematicLocalControllerOnly:
+    - R2
+  Bomber.NMMSpots.CyclingWrapArithmetic:
+    - R1
+  Bomber.NMMSpots.GameFeatureLifecycleBindsAsyncLoad:
+    - R10
+  Bomber.NMMSpots.MarkCinematicAsSeenPersistsChoice:
+    - R13
+    - R15
+  Bomber.NMMSpots.MoveMainMenuSpotUpdatesState:
+    - R4
+  Bomber.NMMSpots.NotifySpotLoadedGatesOnAllLoaded:
+    - R11
+  Bomber.NMMSpots.StopMasterSequenceRoutesThroughStateMachine:
+    - R5
+  Bomber.NMMSpots.TransitionRemapsToIdle:
+    - R6
+
+files_to_edit:
+  - Plugins/GameFeatures/NewMainMenu/Source/NewMainMenu/Private/Components/NMMSpotComponent.cpp
+  - Plugins/GameFeatures/NewMainMenu/Source/NewMainMenu/Private/Subsystems/NMMSpotsSubsystem.cpp
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "Bomber.NMMSpots"

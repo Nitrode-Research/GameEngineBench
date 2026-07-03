@@ -1,0 +1,103 @@
+{
+    "task_id":  "ue_task_0109",
+    "task_name":  "LASAA Anchor Management",
+    "capability_mode":  "ue_automation",
+    "engine":  "unreal",
+    "instruction":  "You are working in a UE5 C++ plugin called LASAA (Large-area Spatially Aligned Anchors)\nfor Meta XR headsets. The plugin provides persistent spatial anchor management for\nlarge-area multi-device spatial tracking.\n\nThe module already has:\n- a functional UE5 module setup (LASAA.Build.cs, LASAA.h/cpp) with dependencies on\n  Core, OculusXRAnchors, Json, JsonUtilities, and Eigen\n- the calibration, alignment, and helper subsystems implemented\n- the OculusXR plugin available for creating, saving, loading, and erasing spatial anchors\n\nImplement the AAnchor actor class and its supporting FAnchorStruct data structure to\nprovide the anchor management subsystem.\n\nUse the repository to infer the relevant patterns, API conventions, lifecycle rules,\nand integration points from the existing code. Do not replace the plugin with a toy\nimplementation  restore the missing system in production-quality code that fits the\nexisting architecture.\n\nThe anchor management system must satisfy these behavioral requirements:\n\nAnchor creation:\n- New spatial anchors must be creatable at any transform in the world.\n- When creating an anchor, the Oculus XR SDK should be invoked to create a persistent\n  spatial anchor. If an anchor component already exists on the actor, creation must be\n  rejected silently (return false) rather than creating a duplicate.\n- Upon successful SDK creation, the anchor\u0027s UUID must be recorded and the anchor must\n  be persisted to storage.\n\nAnchor persistence:\n- Anchors must be persisted to a JSON file on disk containing each anchor\u0027s UUID and\n  its external transform at creation time.\n- Anchors must be loadable from the JSON file, which restores the UUID and transform\n  data before spawning new actor instances.\n- Anchors must also be loadable from a raw JSON string buffer (for passing data between\n  levels or from external sources) using the same logic as file loading.\n- There is a hard cap of 64 anchors in storage. Attempts to add beyond this limit must\n  be silently ignored.\n\nAnchor lifecycle:\n- When an anchor actor begins play, it must register itself in a global static list of\n  all active anchors.\n- When an anchor actor ends play, it must unregister itself from the global list and\n  clean up its external paired actor if one exists.\n- A static reset function must destroy all active anchors, clear the storage struct,\n  and write an empty state to the JSON file.\n\nAnchor querying:\n- The system must provide a static method to query the current number of active anchors.\n- Each anchor must expose its UUID, the current location of its external paired actor,\n  and the full transform of its external paired actor.\n- Anchors with no external pair must return zero/identity defaults.\n\nExternal pose pairing:\n- Each anchor has an \"external pair\"  another actor representing the anchor\u0027s position\n  in the external tracking coordinate system.\n- When an external pair is assigned, its relative transform must be adjusted using the\n  current calibration offset.\n- When the global calibration offset changes, all existing anchors must update their\n  external pairs immediately.\n\nAnchor loading with spawning:\n- When loading anchors, the system must query the Oculus XR SDK for each stored UUID,\n  and for each successfully found anchor:\n  - Spawn a new actor of the specified anchor class at the queried position\n  - Assign the UUID and original external transform\n  - Spawn an external paired actor of the specified external class, attached to the\n    loader owner, at the stored transform\n  - Link the external pair to the spawned anchor and apply the calibration offset\n\nAverage pair distance:\n- The system must provide a static method that computes the average distance between\n  each anchor\u0027s internal position and its external paired actor\u0027s position, as a\n  measure of calibration quality.\n\nEdge cases:\n- Creating an anchor on an actor that already has an Oculus XR anchor component must\n  return false without creating a second component or corrupting state.\n- Saving an anchor when no Oculus XR anchor component exists must return false without\n  writing partial data to the storage file.\n- Erasing an anchor that was loaded from JSON (no SDK component) must still clean up\n  the storage entry and destroy the actor  it must not crash waiting for an SDK callback\n  that never arrives.\n- Destroying all anchors via reset must not iterate a collection that is being modified\n  during destruction, which would cause undefined behavior or access violations.\n- Loading anchors must not spawn actors for UUIDs that the SDK no longer recognizes \n  only successfully queried anchors should be spawned.\n\nQuality bar:\n- The implementation must compile as part of the LASAA UE5 module and follow the\n  existing C++ conventions, macro usage, and naming patterns in the kept files.\n- All public-facing methods that are called from blueprints or other subsystems must\n  use the appropriate UFUNCTION macros with Category=\"AnchorFunctions\".\n- The Oculus XR SDK is asynchronous  UUIDs and persistence are not available until\n  SDK delegates fire. The implementation must not assume synchronous completion.\n- Static state (global anchor list, storage struct, calibration offset) must be\n  consistent across create, load, erase, and reset operations.\n- No new assets, no new classes outside the listed files, and no changes to the\n  build configuration are required.\n",
+    "files_to_edit":  [
+                          "Source/LASAA/Public/Anchor.h",
+                          "Source/LASAA/Private/Anchor.cpp"
+                      ],
+    "hidden_requirements":  {
+                                "R1":  {
+                                           "text":  "Anchors must be stored in a static FAnchorStruct with parallel arrays of UUIDs (FString) and transforms (FTransform), providing a lookup method that returns FTransform::Identity for unknown UUIDs.",
+                                           "category":  "core_logic"
+                                       },
+                                "R2":  {
+                                           "text":  "The global anchor registry (static TArray of AAnchor pointers) must be updated in BeginPlay and EndPlay, not in createAnchor or erase.",
+                                           "category":  "object_lifecycle"
+                                       },
+                                "R3":  {
+                                           "text":  "createAnchor uses the Oculus SDK async delegate pattern  the UUID is not known until the delegate fires, so setUuid and save must be called inside the delegate callback, not before it.",
+                                           "category":  "authority"
+                                       },
+                                "R4":  {
+                                           "text":  "save() must also use the async delegate pattern  addToList and writeToJson must be called inside the SaveAnchor delegate, not before the SDK call returns.",
+                                           "category":  "authority"
+                                       },
+                                "R5":  {
+                                           "text":  "erase() must handle two code paths  if an OculusXRAnchorComponent exists, call EraseAnchor with a delegate that cleans up; if it does not exist, skip the SDK call and clean up directly.",
+                                           "category":  "core_logic"
+                                       },
+                                "R6":  {
+                                           "text":  "loadAnchorsInternal must convert stored UUID strings to FOculusXRUUID via UOculusXRAnchorBPFunctionLibrary::StringToAnchorUUID before calling QueryAnchors.",
+                                           "category":  "core_logic"
+                                       },
+                                "R7":  {
+                                           "text":  "loadAnchorsInternal spawns the external paired actor and attaches it to newOwner (not to the spawned anchor), using FAttachmentTransformRules::KeepRelativeTransform.",
+                                           "category":  "object_lifecycle"
+                                       },
+                                "R8":  {
+                                           "text":  "The 64-anchor cap is enforced in addToList (not in createAnchor or loadAnchors), checking anchorStorage.anchorUuids.Num() \u003e= 64 before appending.",
+                                           "category":  "core_logic"
+                                       },
+                                "R9":  {
+                                           "text":  "JSON serialization uses FJsonObjectConverter::UStructToJsonObject with FAnchorStruct::StaticStruct()  the struct must be USTRUCT() with UPROPERTY() on both arrays for this to work.",
+                                           "category":  "core_logic"
+                                       },
+                                "R10":  {
+                                            "text":  "setCalibrationOffset is static and propagates the new cam2xr transform to all currently active anchors by iterating allAnchors and calling addCalibrationOffset on each, which computes cam2xr.Inverse() * gtExtPose and applies it as the external pair\u0027s relative transform.",
+                                            "category":  "replication"
+                                        },
+                                "R11":  {
+                                            "text":  "The filePath for anchor storage is a static FString set to \"anchors.json\"  no directory prefix, meaning it resolves relative to the game\u0027s working directory.",
+                                            "category":  "core_logic"
+                                        },
+                                "R12":  {
+                                            "text":  "resetAnchors must copy allAnchors to a temporary array before iterating to destroy, since destroying an actor removes it from allAnchors during iteration which would cause undefined behavior.",
+                                            "category":  "object_lifecycle"
+                                        }
+                            },
+    "test_requirements":  {
+                              "LASAA.Anchor.creation_rejects_duplicate_component":  [
+                                                                                        "R1",
+                                                                                        "R3"
+                                                                                    ],
+                              "LASAA.Anchor.persistence_roundtrip_json":  [
+                                                                              "R2",
+                                                                              "R9",
+                                                                              "R11"
+                                                                          ],
+                              "LASAA.Anchor.load_from_buffer":  [
+                                                                    "R6"
+                                                                ],
+                              "LASAA.Anchor.sixty_four_cap_enforced":  [
+                                                                           "R8"
+                                                                       ],
+                              "LASAA.Anchor.lifecycle_register_unregister":  [
+                                                                                 "R2"
+                                                                             ],
+                              "LASAA.Anchor.erase_with_and_without_sdk_component":  [
+                                                                                        "R5"
+                                                                                    ],
+                              "LASAA.Anchor.calibration_offset_propagation":  [
+                                                                                  "R10"
+                                                                              ],
+                              "LASAA.Anchor.load_spawns_external_pairs_attached_to_owner":  [
+                                                                                                "R7"
+                                                                                            ],
+                              "LASAA.Anchor.reset_clears_everything":  [
+                                                                           "R12"
+                                                                       ],
+                              "LASAA.Anchor.average_pair_distance":  [
+                                                                         "R10"
+                                                                     ]
+                          },
+    "tests":  {
+                  "runner":  "ue_automation",
+                  "mode":  "editor",
+                  "num_clients":  0,
+                  "filter":  "LASAA.Anchor"
+              },
+    "tier":  "hard"
+}

@@ -1,0 +1,56 @@
+task_id: ue_task_0067
+title: EOSIntegrationKit User Auth
+tier: hard
+
+instruction: |
+  You are working in an Unreal Engine 5 project that uses the EOSIntegrationKit plugin.
+  Implement the behavior of the EOSIntegrationKit User Auth system in the task-owned files.
+  
+  The project already contains the public API surface, assets, build/module wiring, and surrounding gameplay or plugin integration points.
+  
+  Implement the following behavior:
+  
+  - Logging in routes through the existing EOS user-manager path and updates login state correctly.
+  - Logout cleans up the existing user-manager state rather than only toggling a flag.
+  - External-auth or linked-account paths continue to use the repo’s current account resolution flow.
+  - User-info queries and login-status transitions continue to populate the expected internal state and delegate callbacks.
+  - Failure cases remain informative and route through the established error/completion flow instead of silent no-op behavior.
+
+files_to_edit:
+  - "Plugins/EOSIntegrationKit/Source/OnlineSubsystemEIK/Private/UserManagerEOS.cpp"
+  - "Plugins/EOSIntegrationKit/Source/OnlineSubsystemEIK/Private/UserManagerEOS.h"
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "EOSIntegrationKit.UserAuth"
+
+hidden_requirements:
+  R1:
+    text: Login must validate the supplied credentials and dispatch through the real EOS user-manager login path rather than a benchmark-disabled no-op.
+    category: subsystem_architecture
+  R2:
+    text: Successful login must update the user-manager login state, user account cache, and unique net-id mappings through the async completion path.
+    category: object_lifecycle
+  R3:
+    text: Logout must clear the existing user-manager state, cached login session data, user ids, and delegate state instead of only toggling a local flag.
+    category: object_lifecycle
+  R4:
+    text: External authentication and linked-account handling must preserve the existing account-resolution flow, including continuance and account-linking cases.
+    category: subsystem_architecture
+  R5:
+    text: User-info, profile, presence, and login-status queries must populate the expected internal caches and callbacks through the EOS-backed interfaces.
+    category: subsystem_architecture
+  R6:
+    text: Authentication failures must route informative errors through the established completion and delegate flow instead of silently succeeding or failing.
+    category: core_logic
+  R7:
+    text: "The identity interface must report this project's own auth-type identifier for its EOS-backed login provider rather than the stock subsystem's generic provider string."
+    category: integration
+
+test_requirements:
+  EOSIntegrationKit.UserAuth.login_routes_through_real_user_manager_path:
+    - R1
+    - R6
+    - R7

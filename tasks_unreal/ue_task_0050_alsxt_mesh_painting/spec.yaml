@@ -1,0 +1,68 @@
+task_id: ue_task_0050
+title: ALSXT Mesh Painting
+tier: hard
+
+instruction: |
+  You are working in an Unreal Engine 5 third-person character project that uses the ALSXT plugin.
+  Implement the mesh painting system across AlsxtPaintableSkeletalMeshComponent.cpp and
+  AlsxtPaintableStaticMeshComponent.cpp.
+
+  The system handles paintable material initialization and dynamic material instance setup, runtime
+  render-target creation and assignment, physical-material mask lookup and paint-type routing,
+  scene-capture or world-to-texture projection plumbing, skeletal versus static mesh painting
+  behavior, and hit-location to paint-operation translation.
+
+  The project already contains:
+  - The public component APIs and interfaces for both component types
+  - Mesh-paint settings assets and paint and material struct definitions
+  - Existing material and content assets
+
+  Implement the following behavior:
+
+  - Paintable meshes initialize the required dynamic materials and render targets on startup.
+  - Paint accumulates correctly on the mesh surface and persists across frames — it does not disappear immediately after application.
+  - Both skeletal and static meshes support the intended painting workflow.
+  - Physical material or mask data influences which paint operation or output material path is used.
+  - Paint behavior adapts when mesh paint settings are changed — it is not hardcoded to specific material parameters or asset paths.
+
+files_to_edit:
+  - Plugins/ALSXT/Source/ALSXT/Private/Components/Mesh/AlsxtPaintableSkeletalMeshComponent.cpp
+  - Plugins/ALSXT/Source/ALSXT/Private/Components/Mesh/AlsxtPaintableStaticMeshComponent.cpp
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "ALSXT.MeshPainting"
+
+hidden_requirements:
+  R1:
+    text: Skeletal paintable components report configured only when the mesh asset, material slot, mesh-painting interface owner, and scene-capture component are available.
+    category: initialization
+  R2:
+    text: Static paintable components report configured only when the mesh asset, material slot, mesh-painting interface owner, and scene-capture component are available.
+    category: initialization
+  R3:
+    text: Paintable meshes initialize dynamic material instances and render targets before runtime paint operations.
+    category: initialization
+  R4:
+    text: Paint accumulates on the mesh surface and persists across frames through the render-target workflow.
+    category: runtime_integration
+  R5:
+    text: Skeletal and static mesh components both support the intended paint workflow.
+    category: runtime_integration
+  R6:
+    text: Physical material masks and surface data influence which paint operation or output material path is used.
+    category: runtime_integration
+  R7:
+    text: Paint behavior adapts to mesh-paint settings rather than hardcoded material parameters or asset paths.
+    category: configuration
+  R8:
+    text: Painting uses the scene-capture and material render-target path or an equivalent world-to-texture projection for hit-location painting.
+    category: runtime_integration
+
+test_requirements:
+  ALSXT.MeshPainting.skeletal_component_reports_configured:
+    - R1
+  ALSXT.MeshPainting.static_component_reports_configured:
+    - R2

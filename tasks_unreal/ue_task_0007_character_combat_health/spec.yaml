@@ -1,0 +1,100 @@
+task_id: ue_task_0007
+title: Character Combat and Health
+tier: hard
+
+instruction: |
+  # Task: Character Combat & Health
+
+  ## Context
+
+  You are working on a cooperative horde-survival game built in Unreal Engine 5
+  with C++. The game supports 1–4 players on a dedicated server.
+
+  The following behaviors must work correctly in multiplayer.
+
+  ## What must work
+
+  ### Taking damage and dying
+
+  - When a character takes damage, their health decreases. All health changes
+    happen on the server. The damage is ignored if the character is already dead.
+  - When health reaches zero, the character dies. On death:
+    - The equipped weapon drops into the world as a pickup.
+    - Death transitions the player into the project's existing post-death flow.
+    - The character body ragdolls and the physics change is visible to every
+      connected player.
+  - When a living character takes damage but survives, a sound plays for all
+    connected players.
+  - Other systems that display health (such as the overhead nameplate) must
+    reflect the updated value after damage is taken.
+
+  ### Healing
+
+  - Healing increases the character's health up to the maximum value.
+    It cannot exceed the cap.
+
+  ### Sprint and stamina
+
+  - Players can request sprinting. The server validates and applies it.
+  - Sprinting is only allowed when the character is moving on the ground and
+    not already sprinting.
+  - While sprinting, stamina drains over time. The character moves at sprint
+    speed. Both sprint state and movement speed must be consistent across all
+    clients.
+  - When stamina is exhausted, sprinting stops automatically.
+  - After sprinting stops, stamina recovers over time at a fixed rate.
+  - Movement speed during and outside of sprint must propagate to all clients.
+
+  ### Equipping weapons
+
+  - Switching the active inventory slot updates the visible equipped weapon
+    for all connected players.
+  - Weapon attachment and animation mode must match the selected item's data.
+  - Switching to a non-weapon item should leave the character unarmed while
+    still updating the animation state appropriately.
+
+  ## Quality bar
+
+  - Shooting a player reduces their health; the change is visible on the
+    overhead nameplate of the hit player for all connected players.
+  - When a player's health reaches zero: the corpse ragdolls on all clients,
+    the weapon appears in the world, and the dying player enters spectator mode.
+  - An already-dead character cannot take further damage.
+  - Sprinting drains stamina; the character automatically stops at zero;
+    stamina recovers when not sprinting. A second observer client sees the
+    correct sprint state.
+  - Switching to a different weapon slot replaces the visible weapon on the
+    character for all players.
+  - Healing a player with the medical weapon increases their health correctly
+    and does not push it above the maximum.
+
+hidden_requirements:
+  R1:
+    text: Damage must reduce health, lethal damage must clamp health to zero, mark the character dead, enable ragdoll physics, switch collision profile, and enter the post-death lifespan window.
+    category: object_lifecycle
+  R2:
+    text: Healing must restore health but never exceed the maximum health cap.
+    category: core_logic
+  R3:
+    text: Sprinting must start only from valid grounded movement, increase movement speed, drain stamina, stop at exhaustion, and later recover stamina and walking speed.
+    category: object_lifecycle
+
+test_requirements:
+  HordeTemplate.CharacterCombat.damage_and_death:
+    - R1
+  HordeTemplate.CharacterCombat.healing_clamp:
+    - R2
+  HordeTemplate.CharacterCombat.sprint_lifecycle:
+    - R3
+
+files_to_edit:
+  - Source/HordeTemplateV2Native/Public/Character/HordeBaseCharacter.h
+  - Source/HordeTemplateV2Native/Private/Character/HordeBaseCharacter.cpp
+  - Source/HordeTemplateV2Native/Public/AI/ZedPawn.h
+  - Source/HordeTemplateV2Native/Private/AI/ZedPawn.cpp
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "HordeTemplate.CharacterCombat.healing_clamp"

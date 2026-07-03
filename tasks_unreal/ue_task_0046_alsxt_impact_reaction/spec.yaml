@@ -1,0 +1,68 @@
+task_id: ue_task_0046
+title: ALSXT Impact Reaction
+tier: hard
+
+instruction: |
+  You are working in an Unreal Engine 5 third-person character project that uses the ALSXT plugin.
+  Implement the impact reaction system in ALSXTImpactReactionComponent.cpp.
+
+  The component classifies incoming impacts, selects the appropriate reaction family (bump, crowd,
+  attack, impact, fall, get-up), maps side/height/velocity/form/health tags to state, sequences
+  anticipation and response stages, replicates reaction-state updates, drives physical animation
+  and timer-based refresh loops, and coordinates effects, sounds, decals, and recovery cleanup.
+
+  The project already contains:
+  - All type declarations, state structs, settings structs, tags, and delegates
+  - Root-motion source types and their serialization
+  - Montage, effect, and sound asset references and settings assets
+  - The existing combat and collision interfaces
+
+  Implement the following behavior:
+
+  - Combat hits and movement impacts resolve into the appropriate reaction family instead of a generic fallback.
+  - Reaction choice depends on impact side, velocity, form, locomotion mode, defensive state, and relevant health and status tags.
+  - Multi-stage reactions transition correctly through anticipation, response, fall, and recovery.
+  - Replicated state changes trigger the correct local cosmetic and animation behavior on clients.
+  - Recovery paths return the character to a valid locomotion state instead of leaving it stuck.
+  - Effect selection and physical animation response adapt correctly when settings data is changed — reactions are not hardcoded to fixed asset references.
+
+files_to_edit:
+  - Plugins/ALSXT/Source/ALSXT/Private/Components/Character/ALSXTImpactReactionComponent.cpp
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "ALSXT.ImpactReaction"
+
+hidden_requirements:
+  R1:
+    text: Incoming impacts populate observable impact-reaction state with the incoming hit data and velocity classification.
+    category: core_logic
+  R2:
+    text: Combat hits and movement impacts resolve into the appropriate reaction family rather than a generic fallback.
+    category: core_logic
+  R3:
+    text: Reaction selection uses impact side, velocity, form, locomotion mode, defensive state, and relevant health or status tags.
+    category: core_logic
+  R4:
+    text: Multi-stage reactions transition through anticipation, response, fall, and recovery where those stages apply.
+    category: object_lifecycle
+  R5:
+    text: Replicated reaction-state changes trigger local cosmetic and animation behavior on clients.
+    category: replication
+  R6:
+    text: Recovery paths return the character to a valid locomotion state instead of leaving it stuck.
+    category: object_lifecycle
+  R7:
+    text: Effects and physical animation responses are selected from settings data rather than hardcoded fixed assets.
+    category: runtime_integration
+  R8:
+    text: Obstacle, anticipation, bump, and reaction timer flows are active during normal component updates.
+    category: object_lifecycle
+
+test_requirements:
+  ALSXT.ImpactReaction.impact_resolves_into_reaction_state:
+    - R1
+    - R2
+    - R3

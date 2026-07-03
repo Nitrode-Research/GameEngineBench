@@ -1,0 +1,890 @@
+{
+	"devices": [
+		{
+			"deviceName": "JAROD-PC",
+			"instance": "EAB01B3A437E63AE950789AAA089868D",
+			"instanceName": "JAROD-PC-51108",
+			"platform": "WindowsEditor",
+			"oSVersion": "Windows 11 (25H2) [10.0.26200.6584] ",
+			"model": "Default",
+			"gPU": "NVIDIA GeForce RTX 4090",
+			"cPUModel": "AMD Ryzen 9 7950X 16-Core Processor            ",
+			"rAMInGB": 128,
+			"renderMode": "D3D12_SM6",
+			"rHI": "D3D12 (SM6)",
+			"appInstanceLog": ""
+		}
+	],
+	"reportCreatedOn": "2026.06.26-04.18.59",
+	"succeeded": 7,
+	"succeededWithWarnings": 4,
+	"failed": 5,
+	"notRun": 0,
+	"inProcess": 0,
+	"totalDuration": 20.680356979370117,
+	"comparisonExported": false,
+	"comparisonExportDirectory": "",
+	"tests": [
+		{
+			"testDisplayName": "beginplay_loads_calibration",
+			"fullTestPath": "LASAA.Calibration.beginplay_loads_calibration",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"EAB01B3A437E63AE950789AAA089868D"
+			],
+			"duration": 6.1967415809631348,
+			"dateTime": "2026.06.26-04.18.38",
+			"entries": [
+				{
+					"event":
+					{
+						"type": "Warning",
+						"message": "LogEditorServer: Can't find file 'Y:/Development/WORK/nitrode_ue_lasaa/Content/Maps/Prep.umap'",
+						"context": "log",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.06.26-04.18.38"
+				}
+			],
+			"warnings": 1,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "calibrate_requires_enough_anchors",
+			"fullTestPath": "LASAA.Calibration.calibrate_requires_enough_anchors",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"EAB01B3A437E63AE950789AAA089868D"
+			],
+			"duration": 3.640721321105957,
+			"dateTime": "2026.06.26-04.18.44",
+			"entries": [
+				{
+					"event":
+					{
+						"type": "Warning",
+						"message": "LogEditorServer: Can't find file 'Y:/Development/WORK/nitrode_ue_lasaa/Content/Maps/Prep.umap'",
+						"context": "log",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.06.26-04.18.44"
+				}
+			],
+			"warnings": 1,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "change_calibration_toggles_files",
+			"fullTestPath": "LASAA.Calibration.change_calibration_toggles_files",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"EAB01B3A437E63AE950789AAA089868D"
+			],
+			"duration": 3.2610480785369873,
+			"dateTime": "2026.06.26-04.18.48",
+			"entries": [
+				{
+					"event":
+					{
+						"type": "Warning",
+						"message": "LogEditorServer: Can't find file 'Y:/Development/WORK/nitrode_ue_lasaa/Content/Maps/Prep.umap'",
+						"context": "log",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.06.26-04.18.48"
+				}
+			],
+			"warnings": 1,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "eigen_to_unreal_roundtrip",
+			"fullTestPath": "LASAA.Calibration.eigen_to_unreal_roundtrip",
+			"tags": [],
+			"state": "Fail",
+			"deviceInstance": [
+				"EAB01B3A437E63AE950789AAA089868D"
+			],
+			"duration": 0.085913196206092834,
+			"dateTime": "2026.06.26-04.18.51",
+			"entries": [
+				{
+					"event":
+					{
+						"type": "Error",
+						"message": "Expected 'eigenVectorToUnreal  unrealVectorToEigen roundtrip' to be true.",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "Y:\\Development\\WORK\\nitrode_ue_lasaa\\Plugins\\LASAA\\Source\\LASAA\\Private\\Tests\\CalibrationTests.cpp",
+					"lineNumber": 208,
+					"timestamp": "2026.06.26-04.18.51"
+				}
+			],
+			"warnings": 0,
+			"errors": 1,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "extrinsic_from_rt_structure",
+			"fullTestPath": "LASAA.Calibration.extrinsic_from_rt_structure",
+			"tags": [],
+			"state": "Fail",
+			"deviceInstance": [
+				"EAB01B3A437E63AE950789AAA089868D"
+			],
+			"duration": 0.012439798563718796,
+			"dateTime": "2026.06.26-04.18.51",
+			"entries": [
+				{
+					"event":
+					{
+						"type": "Error",
+						"message": "Expected 'extrinsicFromRt: translation column matches t' to be true.",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "Y:\\Development\\WORK\\nitrode_ue_lasaa\\Plugins\\LASAA\\Source\\LASAA\\Private\\Tests\\CalibrationTests.cpp",
+					"lineNumber": 180,
+					"timestamp": "2026.06.26-04.18.51"
+				}
+			],
+			"warnings": 0,
+			"errors": 1,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "icp_fewer_than_3_points",
+			"fullTestPath": "LASAA.Calibration.icp_fewer_than_3_points",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"EAB01B3A437E63AE950789AAA089868D"
+			],
+			"duration": 0.0091083012521266937,
+			"dateTime": "2026.06.26-04.18.51",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "icp_identity_points",
+			"fullTestPath": "LASAA.Calibration.icp_identity_points",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"EAB01B3A437E63AE950789AAA089868D"
+			],
+			"duration": 0.0087736025452613831,
+			"dateTime": "2026.06.26-04.18.51",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "icp_known_rotation",
+			"fullTestPath": "LASAA.Calibration.icp_known_rotation",
+			"tags": [],
+			"state": "Fail",
+			"deviceInstance": [
+				"EAB01B3A437E63AE950789AAA089868D"
+			],
+			"duration": 0.011448699980974197,
+			"dateTime": "2026.06.26-04.18.51",
+			"entries": [
+				{
+					"event":
+					{
+						"type": "Error",
+						"message": "Expected 'ICP recovers 90 Y rotation for (1,0,0)  ~ (0,0,1)' to be true.",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "Y:\\Development\\WORK\\nitrode_ue_lasaa\\Plugins\\LASAA\\Source\\LASAA\\Private\\Tests\\CalibrationTests.cpp",
+					"lineNumber": 325,
+					"timestamp": "2026.06.26-04.18.51"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "LogCalibrationTests: [ICP Rotation] Transform(1,0,0) = (1.000, 0.000, 0.000)",
+						"context": "log",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.06.26-04.18.51"
+				}
+			],
+			"warnings": 0,
+			"errors": 1,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "icp_reflection_fix",
+			"fullTestPath": "LASAA.Calibration.icp_reflection_fix",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"EAB01B3A437E63AE950789AAA089868D"
+			],
+			"duration": 0.0095974989235401154,
+			"dateTime": "2026.06.26-04.18.51",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "opencv_axes_mapping",
+			"fullTestPath": "LASAA.Calibration.opencv_axes_mapping",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"EAB01B3A437E63AE950789AAA089868D"
+			],
+			"duration": 0.0090996026992797852,
+			"dateTime": "2026.06.26-04.18.51",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "reset_calibration_clears_state",
+			"fullTestPath": "LASAA.Calibration.reset_calibration_clears_state",
+			"tags": [],
+			"state": "Fail",
+			"deviceInstance": [
+				"EAB01B3A437E63AE950789AAA089868D"
+			],
+			"duration": 3.6677522659301758,
+			"dateTime": "2026.06.26-04.18.51",
+			"entries": [
+				{
+					"event":
+					{
+						"type": "Warning",
+						"message": "LogEditorServer: Can't find file 'Y:/Development/WORK/nitrode_ue_lasaa/Content/Maps/Prep.umap'",
+						"context": "log",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.06.26-04.18.51"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "LogEditorAutomationTests: Untitled took 0.001 to load.",
+						"context": "log",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.06.26-04.18.51"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "LogWorldPartition: GenerateStreaming for 'OpenWorld.Engine' started...",
+						"context": "log",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.06.26-04.18.51"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "LogWorldPartition: GenerateStreaming for 'OpenWorld.Engine' took 2.495 ms (total: 8.054 ms)",
+						"context": "log",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.06.26-04.18.51"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "LogWorldPartition: UWorldPartition::PostDuplicatePIE started...",
+						"context": "log",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.06.26-04.18.51"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "LogWorldPartition: UWorldPartition::PostDuplicatePIE took 290 us (total: 1.021 ms)",
+						"context": "log",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.06.26-04.18.51"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "LogWorldPartition: WorldPartition initialize started...",
+						"context": "log",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.06.26-04.18.51"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "LogWorldPartition: WorldPartition initialize took 1.382 ms (total: 164.125 ms)",
+						"context": "log",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.06.26-04.18.51"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "LogAudio: Creating Audio Device:                 Id: 5, Scope: Unique, Realtime: True",
+						"context": "log",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.06.26-04.18.51"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "LogAudioMixer: Audio Mixer Platform Settings:",
+						"context": "log",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.06.26-04.18.51"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "LogAudioMixer: \tSample Rate:\t\t\t\t\t\t  48000",
+						"context": "log",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.06.26-04.18.51"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "LogAudioMixer: \tCallback Buffer Frame Size Requested: 1024",
+						"context": "log",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.06.26-04.18.51"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "LogAudioMixer: \tCallback Buffer Frame Size To Use:\t  1024",
+						"context": "log",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.06.26-04.18.51"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "LogAudioMixer: \tNumber of buffers to queue:\t\t\t  1",
+						"context": "log",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.06.26-04.18.51"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "LogAudioMixer: \tMax Channels (voices):\t\t\t\t  32",
+						"context": "log",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.06.26-04.18.51"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "LogAudioMixer: \tNumber of Async Source Workers:\t\t  4",
+						"context": "log",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.06.26-04.18.51"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "LogAudio: AudioDevice MaxSources: 32",
+						"context": "log",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.06.26-04.18.51"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "LogAudio: Audio Spatialization Plugin: None (built-in).",
+						"context": "log",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.06.26-04.18.51"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "LogAudio: Audio Reverb Plugin: None (built-in).",
+						"context": "log",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.06.26-04.18.51"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "LogAudio: Audio Occlusion Plugin: None (built-in).",
+						"context": "log",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.06.26-04.18.51"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "LogAudioMixer: Initializing audio mixer using platform API: 'XAudio2'",
+						"context": "log",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.06.26-04.18.51"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "LogAudioEnumeration: FWindowsMMDeviceCache: Default Render Role='Console', Device='Voicemeeter VAIO3 Input (VB-Audio Voicemeeter VAIO)'",
+						"context": "log",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.06.26-04.18.51"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "LogAudioEnumeration: FWindowsMMDeviceCache: Default Capture Role='Console', Device='Voicemeeter Out B1 (VB-Audio Voicemeeter VAIO)'",
+						"context": "log",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.06.26-04.18.51"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "LogAudioEnumeration: FWindowsMMDeviceCache: Default Render Role='Multimedia', Device='Voicemeeter VAIO3 Input (VB-Audio Voicemeeter VAIO)'",
+						"context": "log",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.06.26-04.18.51"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "LogAudioEnumeration: FWindowsMMDeviceCache: Default Capture Role='Multimedia', Device='Voicemeeter Out B1 (VB-Audio Voicemeeter VAIO)'",
+						"context": "log",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.06.26-04.18.51"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "LogAudioEnumeration: FWindowsMMDeviceCache: Default Render Role='Communications', Device='Voicemeeter VAIO3 Input (VB-Audio Voicemeeter VAIO)'",
+						"context": "log",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.06.26-04.18.51"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "LogAudioEnumeration: FWindowsMMDeviceCache: Default Capture Role='Communications', Device='Voicemeeter Out B1 (VB-Audio Voicemeeter VAIO)'",
+						"context": "log",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.06.26-04.18.51"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "LogAudioMixer: Using Audio Hardware Device Voicemeeter VAIO3 Input (VB-Audio Voicemeeter VAIO)",
+						"context": "log",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.06.26-04.18.51"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "LogAudioMixer: Initializing Sound Submixes...",
+						"context": "log",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.06.26-04.18.51"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "LogAudioMixer: Creating Master Submix 'MasterSubmixDefault'",
+						"context": "log",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.06.26-04.18.51"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "LogAudioMixer: Creating Master Submix 'MasterReverbSubmixDefault'",
+						"context": "log",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.06.26-04.18.51"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "LogAudioMixer: Output buffers initialized: Frames=1024, Channels=2, Samples=2048, InstanceID=5",
+						"context": "log",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.06.26-04.18.51"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "LogAudioMixer: Starting AudioMixerPlatformInterface::RunInternal(), InstanceID=5",
+						"context": "log",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.06.26-04.18.51"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "LogAudioMixer: FMixerPlatformXAudio2::SubmitBuffer() called for the first time. InstanceID=5",
+						"context": "log",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.06.26-04.18.51"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "LogAudio: Audio Device (ID: 5) registered with world 'Untitled_1'.",
+						"context": "log",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.06.26-04.18.51"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "LogStreaming: FlushAsyncLoading(689,688,687,686,685,684,683,682,681,680,679,678,677,676,675,674,673,672,671,670,669,668,667,666,665,664,663,662,661,660,659,658,657,656,655,654,653,652,651,650,649,648,647,646): 44 QueuedPackages, 0 AsyncPackages",
+						"context": "log",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.06.26-04.18.51"
+				},
+				{
+					"event":
+					{
+						"type": "Error",
+						"message": "Expected 'resetCalibration sets rotation to identity' to be true.",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "Y:\\Development\\WORK\\nitrode_ue_lasaa\\Plugins\\LASAA\\Source\\LASAA\\Private\\Tests\\CalibrationPIETests.cpp",
+					"lineNumber": 202,
+					"timestamp": "2026.06.26-04.18.55"
+				},
+				{
+					"event":
+					{
+						"type": "Error",
+						"message": "Expected 'resetCalibration sets translation to identity' to be true.",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "Y:\\Development\\WORK\\nitrode_ue_lasaa\\Plugins\\LASAA\\Source\\LASAA\\Private\\Tests\\CalibrationPIETests.cpp",
+					"lineNumber": 202,
+					"timestamp": "2026.06.26-04.18.55"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "LogPlayLevel: Shutting down PIE online subsystems",
+						"context": "log",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.06.26-04.18.55"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "LogAudioMixer: FMixerPlatformXAudio2::StopAudioStream() called. InstanceID=5, StreamState=4",
+						"context": "log",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.06.26-04.18.55"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "LogAudioMixer: FMixerPlatformXAudio2::StopAudioStream() called. InstanceID=5, StreamState=2",
+						"context": "log",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.06.26-04.18.55"
+				}
+			],
+			"warnings": 1,
+			"errors": 2,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "rodrigues_nonzero_is_rotation",
+			"fullTestPath": "LASAA.Calibration.rodrigues_nonzero_is_rotation",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"EAB01B3A437E63AE950789AAA089868D"
+			],
+			"duration": 0.0094752013683319092,
+			"dateTime": "2026.06.26-04.18.55",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "rodrigues_zero_is_identity",
+			"fullTestPath": "LASAA.Calibration.rodrigues_zero_is_identity",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"EAB01B3A437E63AE950789AAA089868D"
+			],
+			"duration": 0.0082871019840240479,
+			"dateTime": "2026.06.26-04.18.55",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "unreal_to_opencv_roundtrip",
+			"fullTestPath": "LASAA.Calibration.unreal_to_opencv_roundtrip",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"EAB01B3A437E63AE950789AAA089868D"
+			],
+			"duration": 0.0084252990782260895,
+			"dateTime": "2026.06.26-04.18.55",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "variance_computation",
+			"fullTestPath": "LASAA.Calibration.variance_computation",
+			"tags": [],
+			"state": "Fail",
+			"deviceInstance": [
+				"EAB01B3A437E63AE950789AAA089868D"
+			],
+			"duration": 0.010767500847578049,
+			"dateTime": "2026.06.26-04.18.55",
+			"entries": [
+				{
+					"event":
+					{
+						"type": "Error",
+						"message": "Expected 'variance of non-constant vector is positive' to be true.",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "Y:\\Development\\WORK\\nitrode_ue_lasaa\\Plugins\\LASAA\\Source\\LASAA\\Private\\Tests\\CalibrationTests.cpp",
+					"lineNumber": 242,
+					"timestamp": "2026.06.26-04.18.55"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "LogCalibrationTests: [Variance] constant=0.00e+00, non-constant=0.0000",
+						"context": "log",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.06.26-04.18.55"
+				}
+			],
+			"warnings": 0,
+			"errors": 1,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "write_load_roundtrip",
+			"fullTestPath": "LASAA.Calibration.write_load_roundtrip",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"EAB01B3A437E63AE950789AAA089868D"
+			],
+			"duration": 3.7307553291320801,
+			"dateTime": "2026.06.26-04.18.55",
+			"entries": [
+				{
+					"event":
+					{
+						"type": "Warning",
+						"message": "LogEditorServer: Can't find file 'Y:/Development/WORK/nitrode_ue_lasaa/Content/Maps/Prep.umap'",
+						"context": "log",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.06.26-04.18.55"
+				}
+			],
+			"warnings": 1,
+			"errors": 0,
+			"artifacts": []
+		}
+	]
+}

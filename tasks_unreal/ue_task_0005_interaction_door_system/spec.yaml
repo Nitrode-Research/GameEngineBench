@@ -1,0 +1,117 @@
+task_id: ue_task_0005
+title: Interaction and Door System
+tier: hard
+
+instruction: |
+  # Task: Interaction & Door System
+
+  ## Context
+
+  You are working on a cooperative horde-survival game built in Unreal Engine 5
+  with C++. The game supports 1–4 players on a dedicated server.
+
+  The following behaviors must work correctly in multiplayer.
+
+  ## What must work
+
+  ### Focus and prompt
+
+  - While playing, the game periodically checks what the local player is
+    looking at. If the focused object is something the player can interact
+    with, a prompt appears in the HUD showing what will happen.
+  - When the player looks away, the prompt clears.
+  - This detection runs only for the locally-controlled player — not on the
+    server, not for other clients.
+
+  ### Interaction hold
+
+  - Pressing the interaction key begins a timed hold. The player must hold
+    for a duration specific to the object.
+  - Door interactions must expose a positive hold duration.
+  - Releasing the key or losing focus on the target cancels the interaction.
+  - When the hold completes, the interaction is sent to the server, which
+    applies the effect on the target object.
+
+  ### Normal doors
+
+  - A normal door toggles between open and closed when interacted with.
+  - The door state is authoritative on the server and visible to all players.
+  - The interaction prompt reflects that the door can currently be interacted
+    with.
+  - A player joining mid-session sees the correct door state immediately.
+
+  ### Safe zone doors
+
+  - A safe zone door opens permanently on first interaction. It cannot be
+    closed again.
+  - A closed safe zone door exposes an interaction prompt.
+  - Subsequent interactions with an already-open safe zone door do nothing.
+  - The open state replicates to all players.
+
+  ### End-game trigger
+
+  - A specific trigger volume in the world ends the current match when any
+    player walks into it. This is server-authoritative.
+
+  ## Quality bar
+
+  - Looking at a door shows the correct prompt; looking away clears it
+    promptly.
+  - A door toggled by one player is visually open or closed for all connected
+    players immediately.
+  - A client joining after a door has been opened sees it open without any
+    server push after join.
+  - Interacting with a safe zone door opens it permanently; a second
+    interaction attempt has no effect.
+  - Walking into the end-game trigger volume ends the match on the server.
+  - No crashes or log spam during a 2-player session.
+
+hidden_requirements:
+  R1:
+    text: Normal doors and safe zone doors must replicate their open state so all players and late joiners observe the authoritative state.
+    category: replication
+  R2:
+    text: A closed normal door must expose an interaction prompt, require a positive hold duration, and open when interacted with.
+    category: core_logic
+  R3:
+    text: An open normal door must remain interactable and close when interacted with again.
+    category: core_logic
+  R4:
+    text: A closed safe zone door must expose an interaction prompt, require a positive hold duration, and open permanently on first interaction.
+    category: core_logic
+  R5:
+    text: Further interaction attempts on an already-open safe zone door must leave it open.
+    category: object_lifecycle
+  R6:
+    text: The end-game trigger must end the match through server-authoritative overlap handling.
+    category: authority
+
+test_requirements:
+  HordeTemplate.InteractionDoor.replication_surface:
+    - R1
+  HordeTemplate.InteractionDoor.normal_door_toggle:
+    - R2
+    - R3
+  HordeTemplate.InteractionDoor.safe_zone_permanent_open:
+    - R4
+    - R5
+  HordeTemplate.InteractionDoor.end_game_trigger_surface:
+    - R6
+
+files_to_edit:
+  - Source/HordeTemplateV2Native/Public/Misc/Door.h
+  - Source/HordeTemplateV2Native/Private/Misc/Door.cpp
+  - Source/HordeTemplateV2Native/Public/Misc/SafeZoneDoor.h
+  - Source/HordeTemplateV2Native/Private/Misc/SafeZoneDoor.cpp
+  - Source/HordeTemplateV2Native/Public/Misc/EndGameTrigger.h
+  - Source/HordeTemplateV2Native/Private/Misc/EndGameTrigger.cpp
+  - Source/HordeTemplateV2Native/Public/Character/HordeBaseCharacter.h
+  - Source/HordeTemplateV2Native/Private/Character/HordeBaseCharacter.cpp
+  - Source/HordeTemplateV2Native/Public/AI/ZedPawn.h
+  - Source/HordeTemplateV2Native/Private/AI/ZedPawn.cpp
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "HordeTemplate.InteractionDoor"

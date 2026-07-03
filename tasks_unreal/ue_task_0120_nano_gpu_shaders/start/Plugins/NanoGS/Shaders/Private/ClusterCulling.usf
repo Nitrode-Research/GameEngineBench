@@ -1,0 +1,4 @@
+#include "/Engine/Public/Platform.ush"
+RWStructuredBuffer<uint> VisibleClusterIndices; RWStructuredBuffer<uint> VisibleClusterCount; uint ClusterCount;
+[numthreads(64,1,1)] void MainCS(uint3 DispatchThreadId : SV_DispatchThreadID) { }
+[numthreads(64,1,1)] void ResetCounterCS(uint3 DispatchThreadId : SV_DispatchThreadID) { if (DispatchThreadId.x == 0) { VisibleClusterCount[0] = 0; } }

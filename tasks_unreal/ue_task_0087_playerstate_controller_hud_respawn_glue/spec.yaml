@@ -1,0 +1,120 @@
+task_id: ue_task_0087
+title: PlayerState, PlayerController, HUD, And Respawn Glue
+tier: hard
+
+instruction: |
+  # Implement PlayerState, PlayerController, HUD, And Respawn Glue
+  
+  This repository stores important Gameplay Ability System state on the PlayerState and uses the PlayerController to create HUD, coordinate client-side UI, and request respawn flow. Implement the PlayerState, PlayerController, HUD, and respawn glue so player-owned gameplay state, UI, and respawn behavior work correctly in multiplayer.
+  
+  Use the repository to infer the existing PlayerState-owned ability system model, pawn possession flow, HUD widgets, respawn rules, gameplay tags, replicated attributes, and controller responsibilities. Do not move durable gameplay state into a pawn-only or UI-only workaround.
+  
+  ## Expected PlayerState Behavior
+  
+  - Each player has a PlayerState-owned ability system component that survives the expected pawn lifecycle.
+  - Attribute sets are created, replicated, and accessible to pawns, UI, abilities, and helper code.
+  - Player level, experience, score, deaths, and related player-facing state are initialized and updated correctly.
+  - Ability actor info is initialized or refreshed when possession and pawn replication make the owner/avatar relationship available.
+  - Gameplay tag listeners on the PlayerState react to important state changes such as death, knockdown, revive, or other player status changes.
+  - Replicated attribute and status state is available to clients without requiring hidden manual setup.
+  
+  ## Expected PlayerController Behavior
+  
+  - The local PlayerController creates and owns the HUD at the correct time.
+  - HUD creation is safe across initial possession, delayed PlayerState replication, respawn, and listen-server play.
+  - PlayerController helpers expose the currently controlled hero, HUD, and ability-system-facing data expected by Blueprints and C++ code.
+  - Respawn requests are routed to the server through the existing authoritative flow.
+  - Client-side UI setup does not run for non-local controllers.
+  
+  ## HUD And UI Integration
+  
+  - The HUD initializes from the current character, PlayerState, ability system component, attributes, current weapon, ammo, and reticle state.
+  - Health, shield, mana, stamina, ammo, weapon icons, and status indicators update when underlying gameplay state changes.
+  - HUD creation should not duplicate widgets after respawn or repeated possession.
+  - UI should recover when the pawn changes but the PlayerState-owned ability system remains the durable state owner.
+  
+  ## Respawn And Lifecycle Behavior
+  
+  - Death and respawn flow updates PlayerState and pawn state coherently.
+  - Respawn should restore the player to a usable hero with initialized attributes, abilities, inventory, HUD, and camera/perspective state.
+  - Death count, score, and experience behavior should remain consistent with gameplay events.
+  - Server and clients must converge after respawn without stale references to destroyed pawns or old HUD bindings.
+  
+  ## Multiplayer Constraints
+  
+  - The server is authoritative for respawn, score, deaths, and durable gameplay state.
+  - Clients receive replicated PlayerState and attribute state and initialize UI from that state.
+  - Listen-server behavior must be correct for the host player and for remote clients.
+  - The implementation must respect the repository's architecture where the PlayerState, not just the pawn, owns key ability-system state.
+  
+  ## Integration Expectations
+  
+  - Existing hero characters, HUD widgets, Gameplay Abilities, Gameplay Effects, attributes, weapons, pickups, game mode respawn logic, and UI Blueprints should work without asset changes.
+  - Do not move durable gameplay state into a toy pawn-only system.
+  - Avoid broad rewrites outside the requested subsystem unless they are required to maintain integration with existing possession, HUD, respawn, or ability-system flow.
+  
+  ## Validation Expectations
+  
+  - Build the project successfully.
+  - Verify initial player spawn creates a usable PlayerState, ability system, attribute sets, pawn, and HUD.
+  - Verify delayed PlayerState or pawn replication does not leave clients without HUD bindings or ability-system access.
+  - Verify death and respawn preserve durable player state while creating a usable new pawn.
+  - Verify score, deaths, experience, player level, and status tags update and replicate as expected.
+  - Verify listen-server host and remote clients both get correct local-only HUD behavior.
+  
+  ## Quality Bar
+  
+  The implementation must compile cleanly and deliver production-quality PlayerState, PlayerController, HUD, and respawn integration. It should handle lifecycle ordering, replicated PlayerState availability, local-only UI creation, death/respawn state transitions, and durable ability-system ownership.
+
+files_to_edit:
+  - Source/GASShooter/GASShooterGameModeBase.cpp
+  - Source/GASShooter/GASShooterGameModeBase.h
+  - Source/GASShooter/Private/Player/GSPlayerController.cpp
+  - Source/GASShooter/Private/Player/GSPlayerState.cpp
+  - Source/GASShooter/Public/Player/GSPlayerController.h
+  - Source/GASShooter/Public/Player/GSPlayerState.h
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "GASShooter.PlayerStateController"
+
+hidden_requirements:
+  R1:
+    text: The Ability System Component and attribute sets must be owned by PlayerState and accessible to pawns, UI, abilities, and helper code.
+    category: player_state
+  R2:
+    text: Ability actor info must be initialized or refreshed across possession and delayed pawn/PlayerState replication ordering.
+    category: lifecycle
+  R3:
+    text: HUD creation must be local-only, safe across delayed replication and respawn, and must not duplicate widgets.
+    category: ui
+  R4:
+    text: PlayerController helpers must expose the current hero, HUD, and ability-system data expected by C++ and Blueprints.
+    category: api_contract
+  R5:
+    text: Respawn requests must route through server authority and create a usable new pawn.
+    category: respawn
+  R6:
+    text: Death, score, experience, level, and related durable PlayerState values must initialize, update, and replicate correctly.
+    category: player_state
+  R7:
+    text: Respawn must refresh HUD bindings and ASC avatar references without stale pawn, listener, or UI state.
+    category: lifecycle
+  R8:
+    text: Listen-server behavior must preserve both local HUD behavior and server authority for remote players.
+    category: replication
+
+test_requirements:
+  GASShooter.PlayerStateController.playerstate_asc_attribute_paths_present:
+    - R1
+    - R2
+    - R6
+  GASShooter.PlayerStateController.local_hud_and_controller_helper_paths_present:
+    - R3
+    - R4
+    - R8
+  GASShooter.PlayerStateController.server_respawn_lifecycle_paths_present:
+    - R5
+    - R7

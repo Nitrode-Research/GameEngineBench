@@ -1,0 +1,54 @@
+task_id: ue_task_0115
+title: Gaussian Splat Data Compression
+tier: hard
+instruction: "Implement the Gaussian Splat data compression and packing utilities. The system\nmust handle position compression,\
+  \ color compression, quaternion packing, scale\nencoding, Morton code encoding/decoding, and spherical harmonics conversion.\n\
+  \nExpected behaviors:\n\nPosition compression:\n- Support Float32 (12 bytes/splat)\n- Support Norm16 (6 bytes/splat)\n-\
+  \ Support Norm11 (4 bytes/splat)\n- Support Norm6 (2 bytes/splat)\n\nColor compression:\n- Support Float32x4 (16 bytes/splat)\n\
+  - Support Float16x4 (8 bytes/splat)\n- Support Norm8x4 (4 bytes/splat)\n- Support BC7 (~1 byte/splat)\n\nQuaternion packing:\n\
+  - Use octahedral axis-angle encoding (3 bytes per quaternion)\n- Normalize quaternion and ensure W >= 0\n- Compute rotation\
+  \ angle and extract axis\n- Map to [-1,1] and quantize to uint8\n\nScale encoding:\n- Use log-encoded uint8 (1 byte per\
+  \ scale component)\n- Encode scale range from very small to very large\n- Use sentinel value for zero scale\n\nMorton code\
+  \ encoding:\n- Support 2D Morton code for 16x16 tile\n- Interleave bits of X and Y coordinates\n- Convert splat index to\
+  \ texture coordinate\n\nSpherical harmonics:\n- Convert SH DC to color\n- Support SH band detection (0-3 bands)\n- Apply\
+  \ sigmoid function for opacity\n\nEdge cases:\n- Scale < threshold \u2014 encode as zero sentinel\n- Quaternion with W <\
+  \ 0 \u2014 flip sign\n- Zero-length quaternion \u2014 use identity rotation\n- Morton code for 16x16 tile \u2014 clamp to\
+  \ 4 bits\n- SH order 0 \u2014 use DC color only\n- SH order 1-3 \u2014 correct coefficient counts\n\nQuality bar:\n- The\
+  \ implementation must compile as part of the NanoGaussianSplatting UE5 plugin\n- Follow the existing C++ conventions, macro\
+  \ usage, and naming patterns\n- All public-facing methods must use the appropriate UFUNCTION macros\n- No new assets or\
+  \ classes outside the listed files\n- Must integrate with existing Gaussian splat data structures\n"
+hidden_requirements:
+  R1:
+    text: Position compression must support Float32, Norm16, Norm11, Norm6 formats with proper quantization.
+    category: core_logic
+  R2:
+    text: Color compression must support Float32x4, Float16x4, Norm8x4, BC7 formats with proper quantization.
+    category: core_logic
+  R3:
+    text: Quaternion packing must use octahedral axis-angle encoding with normalization and quantization.
+    category: core_logic
+  R4:
+    text: Scale encoding must use log-encoded uint8 with sentinel for zero scale.
+    category: core_logic
+  R5:
+    text: Morton code encoding must support 2D bit-interleaving and splat index to texture coordinate conversion.
+    category: core_logic
+  R6:
+    text: Spherical harmonics must support DC to color conversion, band detection, and sigmoid function.
+    category: core_logic
+  R7:
+    text: Edge cases must handle zero scale, negative W quaternion, zero-length quaternion, Morton clamping, SH order 0-3.
+    category: core_logic
+test_requirements:
+  Nano.Compression.BitPackingRoundTrips:
+  - R1
+  - R3
+  - R4
+  - R6
+files_to_edit:
+- Plugins\NanoGS\Source\NanoGS\Public\GaussianDataTypes.h
+tests:
+  runner: ue_automation
+  mode: editor
+  num_clients: 0
+  filter: Nano.Compression

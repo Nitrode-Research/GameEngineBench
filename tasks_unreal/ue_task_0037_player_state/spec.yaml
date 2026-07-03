@@ -1,0 +1,107 @@
+task_id: ue_task_0037
+title: Player State (Chosen Character Persistence and GAS)
+tier: hard
+
+instruction: |
+  The player state is the persistent identity for a player — it holds their chosen character, their ability system, their round stats, and their player identity. Currently the ability system setup is missing, character selection does nothing, and end-game tabulation never runs.
+
+  The project already contains:
+  - a GAS component and attribute sets as defined subobjects with replication enabled
+  - a character data asset with per-character mesh and player tag data
+  - a pool-managed pawn that can be absent during death
+
+  The system must satisfy these behavioral requirements:
+
+  Ability system:
+  - Attributes must be initialized through the engine's standard attribute initter to preserve the stat cascade that drives derived attributes. Bot and human pawns require different replication modes.
+
+  Character selection:
+  - Non-authority clients request a character change through the server; the server validates, applies, and replicates it. Both the server apply-path and the client replication-path converge on the same apply function.
+  - The apply function updates the pawn's visuals and broadcasts the change.
+  - The player's identity tag (derived from their chosen character) must be resolvable even when the pawn is absent — it comes from the data asset, not the pawn.
+
+  End-game tabulation:
+  - When a round ends, each player's result is computed, applied, and replicated.
+  - Tabulation must be deferred one tick after death — multiple simultaneous deaths would tabulate before each other's death states are visible if run synchronously.
+
+  Lifecycle:
+  - On BeginPlay, subscribe to game-state and settings changes, then run an initial apply pass for attributes, replication mode, and chosen character.
+  - When the possessed pawn changes, reapply character visuals to the new pawn.
+  - The player state must not be destroyed on disconnect — it must survive for reconnect and pool reuse.
+
+hidden_requirements:
+  R1:
+    text: Chosen character, end-game state, dead state, kill count, ability system component, and reused engine identity fields must be registered for replication.
+    category: replication
+  R2:
+    text: Reused inherited PlayerState fields such as player id, bot state, inactive state, and unique id must replicate after reconnect or pool reuse, not only during initial actor replication.
+    category: replication
+  R3:
+    text: Default attributes must be initialized through the engine attribute-set initter so derived attribute cascades are preserved.
+    category: initialization
+  R4:
+    text: Bot and human player states must apply different ASC replication modes, using minimal mode for bots and mixed mode for human-controlled players.
+    category: replication
+  R5:
+    text: A non-authority locally controlled player state must route chosen-character changes through the server RPC path.
+    category: authority
+  R6:
+    text: The authoritative chosen-character path must validate structurally valid mesh data, write the replicated chosen mesh field, mark it dirty, and apply it locally.
+    category: replication
+  R7:
+    text: Server apply and client OnRep paths for chosen mesh data must converge on the same apply function.
+    category: replication
+  R8:
+    text: Applying chosen mesh data must update the possessed pawn's visuals when a pawn is present and broadcast the chosen-mesh change.
+    category: object_lifecycle
+  R9:
+    text: The player identity tag must resolve from the persistent chosen character data asset and remain valid when the pawn is absent.
+    category: object_lifecycle
+  R10:
+    text: End-game state must be computed on authority from death status, alive-player count, opponent kills, and game phase, then applied and replicated.
+    category: core_logic
+  R11:
+    text: Death-driven end-game tabulation must be deferred to the next tick so simultaneous deaths see each other's replicated death state before results are computed.
+    category: object_lifecycle
+  R12:
+    text: BeginPlay and player-state initialization must subscribe to game-state/settings changes and run initial apply passes for attributes, ASC actor info, replication mode, and chosen character state.
+    category: initialization
+  R13:
+    text: When the possessed pawn changes, the player state must reinitialize ASC actor info and reapply pawn-dependent visual state.
+    category: object_lifecycle
+  R14:
+    text: OnDeactivated must not call the base implementation because this player state must survive disconnect, reconnect, and pool reuse.
+    category: object_lifecycle
+
+test_requirements:
+  Bomber.PlayerState.ApplyDefaultAttributesUsesEngineInitter:
+    - R3
+  Bomber.PlayerState.ApplyIsPlayerDeadDefersUpdateEndGameState:
+    - R10
+    - R11
+  Bomber.PlayerState.GetLifetimeReplicatedPropsRegistersRequiredProperties:
+    - R1
+    - R2
+  Bomber.PlayerState.OnDeactivatedDoesNotChainSuper:
+    - R14
+  Bomber.PlayerState.PIE_ApplyIsABotSwitchesAscReplicationMode:
+    - R4
+  Bomber.PlayerState.PIE_AuthoritySetChosenMeshDataWritesField:
+    - R6
+    - R8
+  Bomber.PlayerState.PIE_GetPlayerTagReadsFromChosenMeshDataNotPawn:
+    - R9
+  Bomber.PlayerState.SetChosenMeshDataNonAuthorityRoutesAndApplyChain:
+    - R5
+    - R6
+    - R7
+    - R8
+
+files_to_edit:
+  - Source/Bomber/Private/GameFramework/BmrPlayerState.cpp
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "Bomber.PlayerState"

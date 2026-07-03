@@ -1,0 +1,81 @@
+task_id: ue_task_0102
+title: Implement interactable target scanning and option generation
+tier: hard
+
+instruction: |
+  Implement the interactable target scanner so gameplay abilities can discover
+  usable interaction options from the world.
+  
+  Expected behavior:
+  - A local player can scan from their view or camera direction and discover nearby interactable actors.
+  - The scanner returns interaction options exposed by actors, components, or native interaction interfaces.
+  - Line traces and overlap-style targeting respect the existing collision channels and range settings.
+  - Duplicate options from the same target are filtered so UI does not show repeated actions.
+  - Invalid, hidden, destroyed, or out-of-range targets are ignored safely.
+  - The ability task follows Unreal ability-task lifecycle rules and stops ticking or delegating when ended.
+  - Interaction option data remains suitable for UI prompts and for the gameplay ability that executes the interaction.
+  - The implementation must compile and fit the existing Gameplay Ability System and interaction architecture.
+  
+  Constraints:
+  - Use the repository to infer trace profiles, query objects, option structures, ability task activation rules, and how interactable objects expose options.
+  - Do not replace the system with hardcoded actor classes or one-off traces.
+  - Do not require new assets or hidden manual setup.
+  
+  Quality bar:
+  The implementation must be robust in normal gameplay and during ability
+  cancellation. It should support UI prompt updates without stale options,
+  duplicate options, or lingering task work after shutdown.
+
+files_to_edit:
+  - Source/ECR/Private/Gameplay/Interaction/Abilities/ECRGameplayAbility_Interact.cpp
+  - Source/ECR/Private/Gameplay/Interaction/Abilities/GameplayAbilityTargetActor_Interact.cpp
+  - Source/ECR/Private/Gameplay/Interaction/InteractionStatics.cpp
+  - Source/ECR/Public/Gameplay/Interaction/Abilities/ECRGameplayAbility_Interact.h
+  - Source/ECR/Public/Gameplay/Interaction/Abilities/GameplayAbilityTargetActor_Interact.h
+  - Source/ECR/Public/Gameplay/Interaction/IInteractableTarget.h
+  - Source/ECR/Public/Gameplay/Interaction/InteractionOption.h
+  - Source/ECR/Public/Gameplay/Interaction/InteractionQuery.h
+  - Source/ECR/Public/Gameplay/Interaction/InteractionStatics.h
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "ECR.InteractionScanner"
+
+hidden_requirements:
+  R1:
+    text: A local player can scan from their view or camera direction and discover nearby interactable actors.
+    category: ui
+  R2:
+    text: The scanner returns interaction options exposed by actors, components, or native interaction interfaces.
+    category: core_logic
+  R3:
+    text: Line traces and overlap-style targeting respect the existing collision channels and range settings.
+    category: core_logic
+  R4:
+    text: Duplicate options from the same target are filtered so UI does not show repeated actions.
+    category: ui
+  R5:
+    text: Invalid, hidden, destroyed, or out-of-range targets are ignored safely.
+    category: lifecycle
+  R6:
+    text: The ability task follows Unreal ability-task lifecycle rules and stops ticking or delegating when ended.
+    category: core_logic
+  R7:
+    text: Interaction option data remains suitable for UI prompts and for the gameplay ability that executes the interaction.
+    category: ui
+  R8:
+    text: The implementation must compile and fit the existing Gameplay Ability System and interaction architecture.
+    category: core_logic
+
+test_requirements:
+  ECR.InteractionScanner.source_contract_tokens_present:
+    - R1
+    - R2
+    - R3
+    - R4
+    - R5
+    - R6
+    - R7
+    - R8

@@ -1,0 +1,85 @@
+task_id: ue_task_0099
+title: Implement game UI policy and layer stack behavior
+tier: hard
+
+instruction: |
+  Implement the game UI policy and layer stack so screens, dialogs, and async
+  widget pushes route through the correct player-owned UI layout.
+  
+  Expected behavior:
+  - Each local player receives the correct root layout and UI policy state.
+  - UI content can be pushed to named layers and removed without corrupting other layers.
+  - Async widget creation and async layer pushes complete or cancel safely when players, worlds, or layouts change.
+  - Confirmation dialogs and error dialogs use the existing messaging subsystem and return results to callers.
+  - UI extension helpers find the correct local player, controller, layout, and layer without relying on global state.
+  - Split-screen or multiple local-player scenarios do not route UI to the wrong player.
+  - Teardown removes widgets, cancels pending async work, and avoids stale callbacks.
+  - The implementation must compile and fit the existing CommonGame, CommonUI, local player, and game instance architecture.
+  
+  Constraints:
+  - Use the repository to infer UI policy ownership, primary layout behavior, layer names, async action lifecycle, and messaging flow.
+  - Do not create a parallel HUD stack or hardcode a single global viewport widget.
+  - Do not require new assets or hidden manual setup.
+  
+  Quality bar:
+  The implementation must be UI-lifecycle-safe. It should handle async widget
+  loading, player/layout replacement, cancellation, and layer routing without
+  leaking widgets or sending UI to the wrong local player.
+
+files_to_edit:
+  - Plugins/CommonGame/Source/Private/GameUIPolicy.cpp
+  - Plugins/CommonGame/Source/Private/GameUIManagerSubsystem.cpp
+  - Plugins/CommonGame/Source/Private/PrimaryGameLayout.cpp
+  - Plugins/CommonGame/Source/Private/CommonUIExtensions.cpp
+  - Plugins/CommonGame/Source/Private/Actions/AsyncAction_CreateWidgetAsync.cpp
+  - Plugins/CommonGame/Source/Private/Actions/AsyncAction_PushContentToLayerForPlayer.cpp
+  - Plugins/CommonGame/Source/Private/Actions/AsyncAction_ShowConfirmation.cpp
+  - Plugins/CommonGame/Source/Private/Messaging/CommonMessagingSubsystem.cpp
+  - Plugins/CommonGame/Source/Private/Messaging/CommonGameDialog.cpp
+  - Plugins/CommonGame/Source/Public/GameUIPolicy.h
+  - Plugins/CommonGame/Source/Public/GameUIManagerSubsystem.h
+  - Plugins/CommonGame/Source/Public/PrimaryGameLayout.h
+  - Plugins/CommonGame/Source/Public/CommonUIExtensions.h
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "ECR.GameUIPolicy"
+
+hidden_requirements:
+  R1:
+    text: Each local player receives the correct root layout and UI policy state.
+    category: ui
+  R2:
+    text: UI content can be pushed to named layers and removed without corrupting other layers.
+    category: ui
+  R3:
+    text: Async widget creation and async layer pushes complete or cancel safely when players, worlds, or layouts change.
+    category: lifecycle
+  R4:
+    text: Confirmation dialogs and error dialogs use the existing messaging subsystem and return results to callers.
+    category: ui
+  R5:
+    text: UI extension helpers find the correct local player, controller, layout, and layer without relying on global state.
+    category: ui
+  R6:
+    text: Split-screen or multiple local-player scenarios do not route UI to the wrong player.
+    category: ui
+  R7:
+    text: Teardown removes widgets, cancels pending async work, and avoids stale callbacks.
+    category: lifecycle
+  R8:
+    text: The implementation must compile and fit the existing CommonGame, CommonUI, local player, and game instance architecture.
+    category: ui
+
+test_requirements:
+  ECR.GameUIPolicy.source_contract_tokens_present:
+    - R1
+    - R2
+    - R3
+    - R4
+    - R5
+    - R6
+    - R7
+    - R8

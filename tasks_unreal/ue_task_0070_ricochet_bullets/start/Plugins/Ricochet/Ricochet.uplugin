@@ -1,0 +1,46 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "Ricochet",
+	"Description": "A GAS based, replicated, Projectile and Ballistics system aiming to be suitable for large open world games and simulations.",
+	"Category": "Ballistics",
+	"CreatedBy": "Uriel Ballinas, VOIDWARE Prohibited",
+	"CreatedByURL": "https://github.com/Voidware-Prohibited",
+	"DocsURL": "https://github.com/Voidware-Prohibited/Ricochet",
+	"MarketplaceURL": "",
+	"SupportURL": "https://github.com/Voidware-Prohibited/Ricochet/discussions",
+	"CanContainContent": true,
+	"IsBetaVersion": true,
+	"IsExperimentalVersion": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "Ricochet",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}
+	],
+	"Plugins": [
+		{
+			"Name": "GameplayTagsEditor",
+			"Enabled": true
+		},
+		{
+			"Name": "GameplayAbilities",
+			"Enabled": true
+		},
+		{
+			"Name": "NetworkPrediction",
+			"Enabled": true
+		},
+		{
+			"Name": "Metasound",
+			"Enabled": true
+		},
+		{
+			"Name": "Niagara",
+			"Enabled": true
+		}
+	]
+}

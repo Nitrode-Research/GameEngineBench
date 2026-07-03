@@ -1,0 +1,122 @@
+task_id: ue_task_0003
+title: Inventory System
+tier: hard
+
+instruction: |
+  # Task: Inventory System
+
+  ## Context
+
+  You are working on a cooperative horde-survival game built in Unreal Engine 5
+  with C++. The game supports 1–4 players on a dedicated server.
+
+  The following behaviors must work correctly in multiplayer.
+
+  ## What must work
+
+  ### Acquiring items
+
+  - Items are defined in a data table. Players acquire items by ID from that
+    table.
+  - World pickup actors can be interacted with to add an item to the interacting
+    player's inventory.
+  - When a match starts, each player receives starting items configured per map.
+    These are granted on the server only.
+
+  ### Active slot and weapon switching
+
+  - Only one inventory slot is active at a time.
+  - Players can switch to a weapon by category (primary, secondary, etc.). The
+    first item of that category becomes active. Scroll input cycles through
+    available categories, skipping empty ones.
+  - Switching is blocked while the player is reloading or dead.
+  - The currently equipped weapon must be observable by other players and by
+    systems that read the active firearm. This must remain correct on a
+    dedicated server with multiple clients.
+
+  ### Ammo
+
+  - Ammo is stored per stack in the inventory.
+  - The HUD shows the total available ammo for the active weapon's ammo type.
+    This value must update when the active weapon changes and when ammo is
+    consumed. It must be readable by the HUD without the client iterating the
+    full inventory.
+  - Reload draws from matching ammo stacks. The total ammo in the world is
+    conserved — what leaves the stacks enters the weapon chamber.
+
+  ### Drop and pickup
+
+  - Dropping an item spawns a world actor in front of the player carrying the
+    item's current ammo. Picking that actor back up merges it into inventory
+    using the actor's stored state, not a fresh data table lookup.
+  - Dropping the active weapon transitions the active slot to another available
+    weapon, or to an empty state if none exists.
+  - The hands/empty slot cannot be dropped.
+
+  ### Multiplayer correctness
+
+  - All inventory mutations are server-authoritative. Clients request changes;
+    the server validates and applies them.
+  - A second client must see the correct equipped weapon on another player
+    when they switch.
+  - A client joining mid-session must see the correct state without requiring
+    a server push after join.
+
+  ## Quality bar
+
+  - In a 2-player session: player A switches weapon and player B immediately
+    sees the correct weapon mesh on player A's character.
+  - The HUD ammo count updates after switching weapons and after reloading
+    across multiple ammo stacks.
+  - Dropping and re-picking-up a weapon preserves its loaded ammo count.
+  - Starting items from the map configuration are granted at match start on
+    both clients.
+  - A client cannot directly mutate inventory state; only server-side paths
+    have effect.
+
+hidden_requirements:
+  R1:
+    text: Active item index and current-weapon ammo must replicate, and inventory mutation entry points must be server RPCs.
+    category: replication
+  R2:
+    text: Ammo counting and removal must total matching ammo stacks, conserve ammo across stacks, and refresh the current-weapon ammo display.
+    category: core_logic
+  R3:
+    text: Weapon switching must be blocked while reloading or dead, and otherwise select the first matching available category.
+    category: core_logic
+  R4:
+    text: Picking up a dropped item must preserve the world actor's stored ammo and category state instead of recreating a fresh item from defaults.
+    category: object_lifecycle
+  R5:
+    text: Dropping a valid item must remove it from inventory, while dropping the hands or empty sentinel must be blocked.
+    category: core_logic
+
+test_requirements:
+  HordeTemplate.Inventory.replication_surface:
+    - R1
+  HordeTemplate.Inventory.ammo_accounting:
+    - R2
+  HordeTemplate.Inventory.switch_guards:
+    - R3
+  HordeTemplate.Inventory.pickup_preserves_stored_state:
+    - R4
+  HordeTemplate.Inventory.drop_item_removes_from_inventory:
+    - R5
+
+files_to_edit:
+  - Source/HordeTemplateV2Native/Public/Inventory/InventoryBaseItem.h
+  - Source/HordeTemplateV2Native/Private/Inventory/InventoryBaseItem.cpp
+  - Source/HordeTemplateV2Native/Public/Inventory/InventoryComponent.h
+  - Source/HordeTemplateV2Native/Private/Inventory/InventoryComponent.cpp
+  - Source/HordeTemplateV2Native/Public/Inventory/InventoryHelpers.h
+  - Source/HordeTemplateV2Native/Private/Inventory/InventoryHelpers.cpp
+  - Source/HordeTemplateV2Native/Public/Character/HordeBaseCharacter.h
+  - Source/HordeTemplateV2Native/Private/Character/HordeBaseCharacter.cpp
+  - Source/HordeTemplateV2Native/Public/AI/ZedPawn.h
+  - Source/HordeTemplateV2Native/Private/AI/ZedPawn.cpp
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "HordeTemplate.Inventory"

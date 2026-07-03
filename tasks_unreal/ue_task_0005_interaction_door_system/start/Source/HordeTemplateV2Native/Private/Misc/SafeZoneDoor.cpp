@@ -1,0 +1,36 @@
+#include "SafeZoneDoor.h"
+#include "ConstructorHelpers.h"
+#include "Animation/AnimBlueprintGeneratedClass.h"
+
+ASafeZoneDoor::ASafeZoneDoor()
+{
+	SetReplicates(true);
+	PrimaryActorTick.bCanEverTick = false;
+	PrimaryActorTick.bStartWithTickEnabled = false;
+
+	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Scene Root"));
+	DoorMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Door Mesh"));
+	DoorMesh->SetupAttachment(RootComponent);
+	DoorMesh->SetCollisionProfileName("BlockAll");
+	const ConstructorHelpers::FObjectFinder<USkeletalMesh> DoorMeshAsset(TEXT("SkeletalMesh'/Game/HordeTemplateBP/Assets/Meshes/Misc/SK_SafeZoneDoor.SK_SafeZoneDoor'"));
+	if (DoorMeshAsset.Succeeded())
+	{
+		DoorMesh->SetSkeletalMesh(DoorMeshAsset.Object);
+	}
+
+	const ConstructorHelpers::FObjectFinder<UAnimBlueprintGeneratedClass> AnimBlueprint(TEXT("AnimBlueprint'/Game/HordeTemplateBP/Assets/Meshes/Misc/ABP_SafeZoneDoor.ABP_SafeZoneDoor_C'"));
+	if (AnimBlueprint.Succeeded())
+	{
+		DoorMesh->AnimClass = AnimBlueprint.Object;
+	}
+}
+
+void ASafeZoneDoor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(ASafeZoneDoor, bIsOpen);
+}
+
+void ASafeZoneDoor::Interact_Implementation(AActor* InteractingOwner) {}
+
+FInteractionInfo ASafeZoneDoor::GetInteractionInfo_Implementation() { return FInteractionInfo{}; }

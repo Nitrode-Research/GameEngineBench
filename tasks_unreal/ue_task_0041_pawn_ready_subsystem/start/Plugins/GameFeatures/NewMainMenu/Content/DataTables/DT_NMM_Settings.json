@@ -1,0 +1,269 @@
+[
+	{
+		"Name": "Settings.Slider.CinematicsVolume",
+		"SettingsPicker":
+		{
+			"SettingsType": "Slider",
+			"PrimaryData":
+			{
+				"Tag":
+				{
+					"TagName": "Settings.Slider.CinematicsVolume"
+				},
+				"Owner":
+				{
+					"FunctionClass": "/Script/CoreUObject.Class'/Script/NewMainMenu.NMMUtils'",
+					"FunctionName": "GetInGameSettingsSubsystem"
+				},
+				"Setter":
+				{
+					"FunctionClass": "/Script/CoreUObject.Class'/Script/NewMainMenu.NMMInGameSettingsSubsystem'",
+					"FunctionName": "SetCinematicsVolume"
+				},
+				"Getter":
+				{
+					"FunctionClass": "/Script/CoreUObject.Class'/Script/NewMainMenu.NMMInGameSettingsSubsystem'",
+					"FunctionName": "GetCinematicsVolume"
+				},
+				"Caption": "NSLOCTEXT(\"[AA1F16E2D6ABE7075C32DD123060C4A5]\", \"86265E184FAB18B9B9FB90BFC4DE5350\", \"Cinematics Volume\")",
+				"Tooltip": "NSLOCTEXT(\"[AA1F16E2D6ABE7075C32DD123060C4A5]\", \"203B035045FD7A93D3127EBEF3AB1527\", \"Set the sound volume for music in cinematics\")",
+				"Padding":
+				{
+					"Left": 0,
+					"Top": 0,
+					"Right": 30,
+					"Bottom": 15
+				},
+				"LineHeight": 48,
+				"bStartOnNextColumn": false,
+				"bApplyImmediately": false,
+				"SettingsToUpdate":
+				{
+					"GameplayTags": [],
+					"ParentTags": []
+				},
+				"ShowNextToSettingOverride":
+				{
+					"TagName": "Settings.Slider.SFXVolume"
+				}
+			},
+			"Button":
+			{
+				"VerticalAlignment": "Content",
+				"HorizontalAlignment": "HAlign_Fill"
+			},
+			"Checkbox":
+			{
+			},
+			"Combobox":
+			{
+				"SetMembers":
+				{
+					"FunctionClass": "None",
+					"FunctionName": "None"
+				},
+				"GetMembers":
+				{
+					"FunctionClass": "None",
+					"FunctionName": "None"
+				},
+				"Members": [],
+				"TextJustify": "Center"
+			},
+			"Slider":
+			{
+			},
+			"TextLine":
+			{
+				"VerticalAlignment": "Content",
+				"HorizontalAlignment": "HAlign_Fill"
+			},
+			"UserInput":
+			{
+				"MaxCharactersNumber": 0
+			},
+			"CustomWidget":
+			{
+				"CustomWidgetClass": "None"
+			}
+		}
+	},
+	{
+		"Name": "Settings.Checkbox.AutoSkipCinematics",
+		"SettingsPicker":
+		{
+			"SettingsType": "Checkbox",
+			"PrimaryData":
+			{
+				"Tag":
+				{
+					"TagName": "Settings.Checkbox.AutoSkipCinematics"
+				},
+				"Owner":
+				{
+					"FunctionClass": "/Script/CoreUObject.Class'/Script/NewMainMenu.NMMUtils'",
+					"FunctionName": "GetInGameSettingsSubsystem"
+				},
+				"Setter":
+				{
+					"FunctionClass": "/Script/CoreUObject.Class'/Script/NewMainMenu.NMMInGameSettingsSubsystem'",
+					"FunctionName": "SetAutoSkipCinematics"
+				},
+				"Getter":
+				{
+					"FunctionClass": "/Script/CoreUObject.Class'/Script/NewMainMenu.NMMInGameSettingsSubsystem'",
+					"FunctionName": "IsAutoSkipCinematicsEnabled"
+				},
+				"Caption": "NSLOCTEXT(\"[AA1F16E2D6ABE7075C32DD123060C4A5]\", \"FBD836DA43867C99430837AB192AC411\", \"Auto Skip Cinematics\")",
+				"Tooltip": "NSLOCTEXT(\"[AA1F16E2D6ABE7075C32DD123060C4A5]\", \"D7FDF58942D61D96F3BE3D8A3A768353\", \"Skips previously seen cinematics automatically. With other players, cinematics are always skipped.\")",
+				"Padding":
+				{
+					"Left": 0,
+					"Top": 0,
+					"Right": 30,
+					"Bottom": 15
+				},
+				"LineHeight": 48,
+				"bStartOnNextColumn": false,
+				"bApplyImmediately": false,
+				"SettingsToUpdate":
+				{
+					"GameplayTags": [],
+					"ParentTags": []
+				},
+				"ShowNextToSettingOverride":
+				{
+					"TagName": "Settings.Checkbox.CameraLock"
+				}
+			},
+			"Button":
+			{
+				"VerticalAlignment": "Content",
+				"HorizontalAlignment": "HAlign_Fill"
+			},
+			"Checkbox":
+			{
+			},
+			"Combobox":
+			{
+				"SetMembers":
+				{
+					"FunctionClass": "None",
+					"FunctionName": "None"
+				},
+				"GetMembers":
+				{
+					"FunctionClass": "None",
+					"FunctionName": "None"
+				},
+				"Members": [],
+				"TextJustify": "Center"
+			},
+			"Slider":
+			{
+			},
+			"TextLine":
+			{
+				"VerticalAlignment": "Content",
+				"HorizontalAlignment": "HAlign_Fill"
+			},
+			"UserInput":
+			{
+				"MaxCharactersNumber": 0
+			},
+			"CustomWidget":
+			{
+				"CustomWidgetClass": "None"
+			}
+		}
+	},
+	{
+		"Name": "Settings.Checkbox.InstantCharacterSwitch",
+		"SettingsPicker":
+		{
+			"SettingsType": "Checkbox",
+			"PrimaryData":
+			{
+				"Tag":
+				{
+					"TagName": "Settings.Checkbox.InstantCharacterSwitch"
+				},
+				"Owner":
+				{
+					"FunctionClass": "/Script/CoreUObject.Class'/Script/NewMainMenu.NMMUtils'",
+					"FunctionName": "GetInGameSettingsSubsystem"
+				},
+				"Setter":
+				{
+					"FunctionClass": "/Script/CoreUObject.Class'/Script/NewMainMenu.NMMInGameSettingsSubsystem'",
+					"FunctionName": "SetInstantCharacterSwitchEnabled"
+				},
+				"Getter":
+				{
+					"FunctionClass": "/Script/CoreUObject.Class'/Script/NewMainMenu.NMMInGameSettingsSubsystem'",
+					"FunctionName": "IsInstantCharacterSwitchEnabled"
+				},
+				"Caption": "NSLOCTEXT(\"[AA1F16E2D6ABE7075C32DD123060C4A5]\", \"133CE1A54FB74149840C359483971700\", \"Instant Character Switch\")",
+				"Tooltip": "NSLOCTEXT(\"[AA1F16E2D6ABE7075C32DD123060C4A5]\", \"2655A68E4BD4612B7F1EFF9309F3F4DC\", \"Enable/disable smooth transitions when switching characters in the Main Menu\")",
+				"Padding":
+				{
+					"Left": 0,
+					"Top": 0,
+					"Right": 30,
+					"Bottom": 15
+				},
+				"LineHeight": 48,
+				"bStartOnNextColumn": false,
+				"bApplyImmediately": false,
+				"SettingsToUpdate":
+				{
+					"GameplayTags": [],
+					"ParentTags": []
+				},
+				"ShowNextToSettingOverride":
+				{
+					"TagName": "None"
+				}
+			},
+			"Button":
+			{
+				"VerticalAlignment": "Content",
+				"HorizontalAlignment": "HAlign_Fill"
+			},
+			"Checkbox":
+			{
+			},
+			"Combobox":
+			{
+				"SetMembers":
+				{
+					"FunctionClass": "None",
+					"FunctionName": "None"
+				},
+				"GetMembers":
+				{
+					"FunctionClass": "None",
+					"FunctionName": "None"
+				},
+				"Members": [],
+				"TextJustify": "Center"
+			},
+			"Slider":
+			{
+			},
+			"TextLine":
+			{
+				"VerticalAlignment": "Content",
+				"HorizontalAlignment": "HAlign_Fill"
+			},
+			"UserInput":
+			{
+				"MaxCharactersNumber": 0
+			},
+			"CustomWidget":
+			{
+				"CustomWidgetClass": "None"
+			}
+		}
+	}
+]

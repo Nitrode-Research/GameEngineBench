@@ -1,0 +1,127 @@
+task_id: ue_task_0020
+title: Cell Math + Cell Utility Library
+tier: hard
+
+instruction: |
+  The game uses a rotation-aware grid coordinate system for all spatial reasoning — level generation, AI pathing, bomb explosions, and cell snapping. The grid math library is hollow; every function returns a safe default.
+
+  The project already contains:
+  - grid coordinate types used throughout the codebase
+  - consumers including the AI controller, bomb system, and map generator
+
+  The system must satisfy these behavioral requirements:
+
+  Grid construction:
+  - Given an origin transform (position, yaw, size), produce the full cell set for that grid. A rotated map must produce a rotated cell set, not an axis-aligned one.
+  - Look up a cell by column/row index in a grid, and the reverse: look up a cell's column/row given the cell and grid.
+  - Derive grid width, height, and size back from a cell set.
+
+  Coordinate conversion:
+  - Snapping a world position to the grid must round to the nearest cell, accounting for the map's yaw and scale.
+  - The round-trip (world position → cell → world position) must return a position within half a cell of the input, including when the map is rotated.
+
+  Scanning:
+  - Walking outward from a cell along cardinal directions must stop at the correct obstacles per scan type: walls only; walls and bombs/boxes; walls/bombs/boxes/dangerous cells; all of the above plus player cells.
+  - Path existence between cells must be testable via a traversal that respects wall and obstacle blocking.
+
+  Correctness:
+  - An invalid sentinel cell must be distinguishable from any valid cell.
+  - Tiebreaks on nearest-cell lookups must be deterministic across peers.
+
+  Use the repository to understand the full public API surface from the headers, and the integration points in the AI controller, bomb system, and map generator.
+
+hidden_requirements:
+  R1:
+    text: FBmrCell construction from vectors must round coordinates deterministically to integer cell locations.
+    category: core_logic
+  R2:
+    text: Converting a cell back to a vector must return the stored cell location without additional snapping.
+    category: core_logic
+  R3:
+    text: The invalid-cell sentinel must be distinguishable from valid cells, hash stably, and work in cell sets.
+    category: defaults
+  R4:
+    text: Cell arithmetic operators must operate component-wise on the stored location.
+    category: core_logic
+  R5:
+    text: MakeCellGridByTransform must produce width times height cells from the transform scale and preserve map yaw rotation.
+    category: core_logic
+  R6:
+    text: Rotated grids must round-trip through cell construction and keep their geometric center within half a cell.
+    category: core_logic
+  R7:
+    text: Grid index lookup must map column and row to the correct cell and return InvalidCell for out-of-range positions.
+    category: core_logic
+  R8:
+    text: Reverse grid lookup must map a cell back to its column and row and return (-1,-1) for cells outside the grid.
+    category: core_logic
+  R9:
+    text: Grid dimension helpers must recover width, height, center position, transform, rotation, and size from the cell set.
+    category: core_logic
+  R10:
+    text: Corner helpers must return the four documented corner cells and the specific requested corner.
+    category: core_logic
+  R11:
+    text: Nearest-cell lookup must deterministically return the closest cell from a set and InvalidCell for an empty set.
+    category: edge_case
+  R12:
+    text: SnapCell and world-to-cell snapping must quantize to the nearest grid cell without moving already aligned cells.
+    category: core_logic
+  R13:
+    text: Rotation helpers must rotate cells around the grid origin and snap the rotated result back to the grid.
+    category: core_logic
+  R14:
+    text: Level actor queries must return cells containing requested actor types and filter existing cell sets by actor masks.
+    category: core_logic
+  R15:
+    text: Path-type scanning must implement the distinct blocking rules for Any, Explosion, Free, Safe, and Secure scans.
+    category: core_logic
+  R16:
+    text: Dangerous cells must affect Safe and Secure scans but not Free or Explosion scans.
+    category: core_logic
+  R17:
+    text: Path-existence checks must traverse the level grid with BFS and return true only when all requested target cells are reachable.
+    category: core_logic
+
+test_requirements:
+  Bomber.CellMath.VectorCtorRounds:
+    - R1
+    - R2
+  Bomber.CellMath.RoundTripUnderRotation:
+    - R5
+    - R6
+  Bomber.CellMath.InvalidCellSentinel:
+    - R3
+  Bomber.CellMath.MathOperators:
+    - R4
+  Bomber.CellMath.MakeCellGridByTransform:
+    - R5
+    - R9
+  Bomber.CellMath.GridIndexingRoundTrip:
+    - R7
+    - R8
+  Bomber.CellMath.CornerCells:
+    - R10
+  Bomber.CellMath.RotateCellAroundOrigin:
+    - R13
+  Bomber.CellMath.GridDimensionRecovery:
+    - R9
+  Bomber.CellMath.GetCellArrayNearest:
+    - R11
+  Bomber.CellMath.SnapCellQuantizes:
+    - R12
+  Bomber.CellMath.LevelPIE_PathTypesActorsAndReachability:
+    - R14
+    - R15
+    - R16
+    - R17
+
+files_to_edit:
+  - Source/Bomber/Private/Structures/BmrCell.cpp
+  - Source/Bomber/Private/UtilityLibraries/BmrCellUtilsLibrary.cpp
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "Bomber.CellMath"

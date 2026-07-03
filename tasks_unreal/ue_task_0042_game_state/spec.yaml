@@ -1,0 +1,105 @@
+task_id: ue_task_0042
+title: Game State (StateTree-Driven, ASC Tag Bridge)
+tier: hard
+
+instruction: |
+  The game tracks its current phase — menu, cinematic, game starting, in-game, end-game — and notifies other systems when it changes. Currently the state machine never starts, no notifications ever fire, and the ability system accessor returns null.
+
+  The project already contains:
+  - a state machine component on the game state actor
+  - gameplay tags representing each game phase, owned by a persistent actor that survives map transitions
+  - systems that subscribe to phase-change notifications (camera, input, AI, etc.)
+
+  The system must satisfy these behavioral requirements:
+
+  Phase transitions:
+  - The state machine must not auto-start — it is gated on a condition not stable at init time. Starting and stopping must be authority-gated and idempotent.
+  - When the game phase changes, all subscribed systems must receive a notification containing the current phase tags. The notification must use a generic tag listener, not per-tag registration — per-tag registration requires re-registration every time a new phase tag is added.
+  - Only leaf phase tags must trigger notifications — the parent tag must not.
+
+  Client catch-up:
+  - On non-authority peers, notifications must suppress themselves when the local pawn is not yet ready — downstream viewmodels assume a possessed pawn. Suppressed clients must catch up when the pawn becomes ready, if a phase tag is already set.
+
+  State tag ownership:
+  - Phase tags live on the generated map actor, not the game state actor. The game state must delegate its ability system accessor to the generated map so tags survive game-state respawns between maps and replicate through the map's already-replicated ability system.
+
+  Initialization:
+  - The framework component manager receiver must be registered before the parent class initializes components — otherwise game-feature-added components are silently dropped.
+
+hidden_requirements:
+  R1:
+    text: The game-state constructor must create the StateTree component and disable automatic StateTree startup.
+    category: initialization
+  R2:
+    text: The game state must not host its own ASC for phase tags; it must delegate gameplay tag access to the generated map actor's ASC.
+    category: object_lifecycle
+  R3:
+    text: CanStartGameStateTree must report true for a fresh non-running actor unless the cinematic startup gate is active.
+    category: core_logic
+  R4:
+    text: Starting the StateTree must be authority-gated, idempotent, and load the configured StateTree asset before starting logic.
+    category: authority
+  R5:
+    text: Stopping the StateTree must be authority-gated and must no-op when the StateTree is already stopped.
+    category: authority
+  R6:
+    text: Game-state tag listeners must use the generic gameplay tag event and filter to added leaf tags under the game-state parent tag.
+    category: core_logic
+  R7:
+    text: Parent game-state tags and tag-removal events must not trigger phase-change notifications.
+    category: edge_case
+  R8:
+    text: BroadcastGameStateChanged must include the current filtered leaf phase tags in the global message payload.
+    category: core_logic
+  R9:
+    text: Non-authority clients must suppress phase-change broadcasts until the local pawn is ready.
+    category: authority
+  R10:
+    text: When the local pawn becomes ready on a non-authority client, the game state must replay the current phase notification if a phase tag is already present.
+    category: authority
+  R11:
+    text: Framework component manager receiver registration must happen before the parent PostInitializeComponents call.
+    category: initialization
+  R12:
+    text: Runtime BeginPlay behavior must bind tag listeners, start the StateTree when allowed, and subscribe to local-pawn-ready catch-up.
+    category: object_lifecycle
+  R13:
+    text: The class reflection surface must expose the StateTree component, ASC delegation, and runtime methods expected by other systems and tests.
+    category: initialization
+
+test_requirements:
+  Bomber.GameState.BindOnGameStateTagChangedAppliesAllThreeFilters:
+    - R6
+    - R7
+  Bomber.GameState.BroadcastGameStateChangedGuardsClientOnLocalPawnReady:
+    - R8
+    - R9
+  Bomber.GameState.CanStartGameStateTreeReportsTrueOnFreshActor:
+    - R3
+  Bomber.GameState.ClassReflectionShape:
+    - R13
+  Bomber.GameState.ConstructorWiresStateTreeWithAutoStartDisabled:
+    - R1
+  Bomber.GameState.DoesNotHostItsOwnAbilitySystemComponent:
+    - R2
+  Bomber.GameState.GetAbilitySystemComponentDelegatesToGeneratedMap:
+    - R2
+  Bomber.GameState.OnLocalPawnReadyTriggersClientCatchUp:
+    - R10
+  Bomber.GameState.PIE_LiveGameStateRuntimeBehaviors:
+    - R4
+    - R8
+    - R12
+  Bomber.GameState.PostInitializeComponentsRegistersReceiverBeforeSuper:
+    - R11
+  Bomber.GameState.StopGameStateTreeHasIsRunningGuard:
+    - R5
+
+files_to_edit:
+  - Source/Bomber/Private/GameFramework/BmrGameState.cpp
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "Bomber.GameState"

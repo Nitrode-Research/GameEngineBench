@@ -1,0 +1,29 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "Axos",
+	"Description": "Replicated True North Game State Component",
+	"Category": "Gameplay",
+	"CreatedBy": "VOIDWARE Prohibited, Uriel Ballinas",
+	"CreatedByURL": "https://github.com/Voidware-Prohibited",
+	"DocsURL": "https://github.com/Voidware-Prohibited/Axos",
+	"MarketplaceURL": "",
+	"SupportURL": "https://github.com/Voidware-Prohibited/Axos/discussions",
+	"CanContainContent": true,
+	"IsBetaVersion": true,
+	"IsExperimentalVersion": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "Axos",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}
+	],"Plugins": [
+	{
+		"Name": "DaySequence",
+		"Enabled": true
+	}
+	]
+}

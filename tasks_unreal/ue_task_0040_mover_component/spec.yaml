@@ -1,0 +1,123 @@
+task_id: ue_task_0040
+title: Mover Component (Input Collection and Sync State)
+tier: hard
+
+instruction: |
+  The pawn's mover component collects directional input each tick and writes the pawn's position back to the grid after each step. Currently the pawn stands still and grid position is never updated.
+
+  The project already contains:
+  - a Mover 2.0 backend handling movement physics and sync state
+  - a cell grid for tracking pawn positions
+  - a Skate powerup attribute that affects movement speed
+
+  The system must satisfy these behavioral requirements:
+
+  Movement blocking:
+  - Movement can be blocked by the cheat manager, the AI controller, or game-state transitions — independently. The block state must be tracked through a gameplay tag, not a boolean — external systems add the tag directly and a boolean would diverge.
+  - When blocked, inject neutral input and zero the current move direction.
+
+  Input production:
+  - Server-side unpossessed pawns and blocked pawns inject neutral input.
+  - Simulated proxies inject nothing — their movement arrives via replication.
+  - Locally-controlled pawns pass their directional input, rotated by the map grid's yaw. Without this rotation, WASD diverges from the cell grid when the map is rotated.
+
+  Post-move cell update:
+  - After each move step, inject the cached Skate value into the movement sync state.
+  - Then update the pawn's grid cell, but only if movement is not blocked.
+  - The authority and the locally-controlled non-authority client must not both update the cell simultaneously — authority updates on the server, local client updates client-side, remote proxies skip.
+
+  Skate caching:
+  - Cache the Skate attribute value when the pawn becomes ready. Update via attribute-change delegate. Guard against duplicate delegate registration — the pawn is pool-reused across rounds.
+
+  Teleport:
+  - Applies a height offset from the data asset and routes through the movement backend's instant-movement path. Calling the actor's location setter directly causes the backend to rubber-band clients.
+
+  Lifecycle:
+  - On BeginPlay: bind to post-movement, pawn-ready, game-state-changed, pre-removal-from-level, and controller-changed events.
+  - Controller loss, non-InGame state transitions, and pre-removal all trigger a movement block.
+
+hidden_requirements:
+  R1:
+    text: Movement blocking must be represented by the project block-movement gameplay tag/effect on the owner ASC, not by a separate boolean.
+    category: core_logic
+  R2:
+    text: Missing ASC state must default to blocked movement because the component cannot safely produce movement without the tag store.
+    category: edge_case
+  R3:
+    text: Enabling movement block must apply the configured block-movement effect and clear current move input; disabling must remove effects granted by the block-movement tag.
+    category: core_logic
+  R4:
+    text: Server-side unpossessed authority pawns must inject neutral movement input; simulated proxies must not synthesize local input.
+    category: authority
+  R5:
+    text: Blocked pawns must inject neutral movement input and skip normal directional intent.
+    category: core_logic
+  R6:
+    text: Locally controlled movement input must be rotated by the generated map grid yaw before being sent into the mover backend.
+    category: core_logic
+  R7:
+    text: Teleport must add the generated-map actor height offset and use the mover backend instant-movement effect path when available.
+    category: object_lifecycle
+  R8:
+    text: Post-move handling must inject the cached Skate attribute value into the mover sync state before the state is replicated.
+    category: replication
+  R9:
+    text: Post-move handling must skip all sync-state and cell-update side effects while movement is blocked.
+    category: core_logic
+  R10:
+    text: Grid-cell updates after movement must be mutually exclusive by network role; authority updates server state, locally controlled clients update local responsiveness, and remote proxies skip.
+    category: authority
+  R11:
+    text: Pawn-ready handling must cache the current Skate attribute and bind an attribute-change delegate only once across pool reuse.
+    category: object_lifecycle
+  R12:
+    text: BeginPlay must bind post-movement, pawn-ready, game-state-changed, pre-removal-from-level, and controller-changed events.
+    category: initialization
+  R13:
+    text: Pre-removal from the generated map must block movement immediately.
+    category: object_lifecycle
+  R14:
+    text: Controller loss and non-InGame phase transitions must block movement, while a return to playable InGame state must be able to clear the block through the same tag path.
+    category: object_lifecycle
+  R15:
+    text: The component must expose the runtime UClass surface expected by input, movement, teleport, and event-binding tests.
+    category: initialization
+
+test_requirements:
+  Bomber.MoverComponent.BeginPlayBindsAllEvents:
+    - R12
+  Bomber.MoverComponent.IsBlockedMovementQueriesTag:
+    - R1
+  Bomber.MoverComponent.IsBlockedMovementRuntimeDefaults:
+    - R2
+  Bomber.MoverComponent.OnPawnReadyGuardsAgainstDuplicateBind:
+    - R11
+  Bomber.MoverComponent.OnPostMoveCellUpdateMutuallyExclusive:
+    - R10
+  Bomber.MoverComponent.OnPostMoveEarlyReturnsWhenBlocked:
+    - R9
+  Bomber.MoverComponent.OnPostMoveUsesCachedSkate:
+    - R8
+  Bomber.MoverComponent.OnPreRemovedFromLevelBlocksMovement:
+    - R13
+  Bomber.MoverComponent.ProduceInputRotatesByLevelGrid:
+    - R4
+    - R5
+    - R6
+  Bomber.MoverComponent.RuntimeUClassSurface:
+    - R15
+  Bomber.MoverComponent.SetBlockMovementAppliesAndRemovesByTag:
+    - R1
+    - R3
+    - R14
+  Bomber.MoverComponent.TeleportUsesInstantMovementEffect:
+    - R7
+
+files_to_edit:
+  - Source/Bomber/Private/Components/BmrMoverComponent.cpp
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "Bomber.MoverComponent"

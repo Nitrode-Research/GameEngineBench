@@ -1,0 +1,512 @@
+﻿# InGameSettings French translation.
+# Copyright (c) Yevhenii Selivanov
+# 
+msgid ""
+msgstr ""
+"Project-Id-Version: InGameSettings\n"
+"POT-Creation-Date: 2025-03-07 05:00\n"
+"PO-Revision-Date: 2025-03-07 05:00\n"
+"Language-Team: \n"
+"Language: fr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#. Key:	179AD8E441B78C87BD46E4886566273F
+#. SourceLocation:	/CreditsSystem/Data/DT_Credits_Settings.DT_Credits_Settings.Settings.Button.OpenCredits.SettingsPicker.PrimaryData.Caption
+#: /CreditsSystem/Data/DT_Credits_Settings.DT_Credits_Settings.Settings.Button.OpenCredits.SettingsPicker.PrimaryData.Caption
+msgctxt ",179AD8E441B78C87BD46E4886566273F"
+msgid "Credits"
+msgstr "Crédits"
+
+#. Key:	CAB0379B421FCD6A538C59B209008B55
+#. SourceLocation:	/CreditsSystem/Data/DT_Credits_Settings.DT_Credits_Settings.Settings.Button.OpenCredits.SettingsPicker.PrimaryData.Tooltip
+#: /CreditsSystem/Data/DT_Credits_Settings.DT_Credits_Settings.Settings.Button.OpenCredits.SettingsPicker.PrimaryData.Tooltip
+msgctxt ",CAB0379B421FCD6A538C59B209008B55"
+msgid "Opens Credits"
+msgstr "Ouvre les crédits"
+
+#. Key:	CFC97B654007D0E10720D4B425844586
+#. SourceLocation:	/Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Button.CloseSettings.SettingsPicker.PrimaryData.Caption
+#: /Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Button.CloseSettings.SettingsPicker.PrimaryData.Caption
+msgctxt ",CFC97B654007D0E10720D4B425844586"
+msgid "Back"
+msgstr "Retour"
+
+#. Key:	A31C26AB4E3A28D6819DC4A4D7EFA70D
+#. SourceLocation:	/Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Button.CloseSettings.SettingsPicker.PrimaryData.Tooltip
+#: /Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Button.CloseSettings.SettingsPicker.PrimaryData.Tooltip
+msgctxt ",A31C26AB4E3A28D6819DC4A4D7EFA70D"
+msgid "Return back to the main menu"
+msgstr "Retour au menu principal"
+
+#. Key:	2214E63746C2245B5A145EB3F845C43F
+#. SourceLocation:	/Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Checkbox.CameraLock.SettingsPicker.PrimaryData.Caption
+#: /Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Checkbox.CameraLock.SettingsPicker.PrimaryData.Caption
+msgctxt ",2214E63746C2245B5A145EB3F845C43F"
+msgid "Camera Lock"
+msgstr "Verrouillage caméra"
+
+#. Key:	F8AA30AC44F4BED1BADAD780A53DB7E5
+#. SourceLocation:	/Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Checkbox.CameraLock.SettingsPicker.PrimaryData.Tooltip
+#: /Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Checkbox.CameraLock.SettingsPicker.PrimaryData.Tooltip
+msgctxt ",F8AA30AC44F4BED1BADAD780A53DB7E5"
+msgid "Check if you want to lock camera on center"
+msgstr "Cochez pour centrer la caméra"
+
+#. Key:	E0880BDD4241E60FB2A3008CDB5CCA63
+#. SourceLocation:	/Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Checkbox.FPSCounter.SettingsPicker.PrimaryData.Caption
+#: /Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Checkbox.FPSCounter.SettingsPicker.PrimaryData.Caption
+msgctxt ",E0880BDD4241E60FB2A3008CDB5CCA63"
+msgid "Show FPS"
+msgstr "Afficher FPS"
+
+#. Key:	0523A0DC4613786EE0EB51BC0004E9E5
+#. SourceLocation:	/Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Checkbox.FPSCounter.SettingsPicker.PrimaryData.Tooltip
+#: /Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Checkbox.FPSCounter.SettingsPicker.PrimaryData.Tooltip
+msgctxt ",0523A0DC4613786EE0EB51BC0004E9E5"
+msgid "Check to show the current FPS"
+msgstr "Cochez pour afficher les FPS"
+
+#. Key:	30E1B9914168CFDFD022ACAAF72408A2
+#. SourceLocation:	/Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Checkbox.FullscreenMode.SettingsPicker.PrimaryData.Caption
+#: /Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Checkbox.FullscreenMode.SettingsPicker.PrimaryData.Caption
+msgctxt ",30E1B9914168CFDFD022ACAAF72408A2"
+msgid "Fullscreen"
+msgstr "Plein écran"
+
+#. Key:	D4DAAF084A3BE24A202DE68898F1E2E5
+#. SourceLocation:	/Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Checkbox.FullscreenMode.SettingsPicker.PrimaryData.Tooltip
+#: /Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Checkbox.FullscreenMode.SettingsPicker.PrimaryData.Tooltip
+msgctxt ",D4DAAF084A3BE24A202DE68898F1E2E5"
+msgid "Check to enable the fullscreen mode"
+msgstr "Cochez pour activer le plein écran"
+
+#. Key:	E3C445BF447C7C7057DD6FBC4387E065
+#. SourceLocation:	/Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Checkbox.VSync.SettingsPicker.PrimaryData.Caption
+#: /Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Checkbox.VSync.SettingsPicker.PrimaryData.Caption
+msgctxt ",E3C445BF447C7C7057DD6FBC4387E065"
+msgid "V-Sync"
+msgstr "V-Sync"
+
+#. Key:	B7FFF44B423CD59EE733BCA69238F83E
+#. SourceLocation:	/Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Checkbox.VSync.SettingsPicker.PrimaryData.Tooltip
+#: /Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Checkbox.VSync.SettingsPicker.PrimaryData.Tooltip
+msgctxt ",B7FFF44B423CD59EE733BCA69238F83E"
+msgid "Check to enable vertical synchronization"
+msgstr "Cochez pour activer la V-Sync"
+
+#. Key:	AA661EBE442C495F179EEB9102E7D050
+#. SourceLocation:	/Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.AntiAliasing.SettingsPicker.PrimaryData.Caption
+#: /Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.AntiAliasing.SettingsPicker.PrimaryData.Caption
+msgctxt ",AA661EBE442C495F179EEB9102E7D050"
+msgid "Anti Aliasing"
+msgstr "Anticrénelage"
+
+#. Key:	7DB3E7A5495F4715BDBC5AA25156ABBC
+#. SourceLocation:	/Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.AntiAliasing.SettingsPicker.PrimaryData.Tooltip
+#: /Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.AntiAliasing.SettingsPicker.PrimaryData.Tooltip
+msgctxt ",7DB3E7A5495F4715BDBC5AA25156ABBC"
+msgid "Choose the anti-aliasing quality level"
+msgstr "Choisissez la qualité de l’anticrénelage"
+
+#. Key:	2503BD4742C4B5A090040F8662F3745C
+#. SourceLocation:	/Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.Difficulty.SettingsPicker.Combobox.Members(0).Members
+#: /Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.Difficulty.SettingsPicker.Combobox.Members(0).Members
+msgctxt ",2503BD4742C4B5A090040F8662F3745C"
+msgid "Easy Difficulty"
+msgstr "Difficulté facile"
+
+#. Key:	7BD11C2F446ACF6089175E9887F5CF84
+#. SourceLocation:	/Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.Difficulty.SettingsPicker.Combobox.Members(1).Members
+#: /Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.Difficulty.SettingsPicker.Combobox.Members(1).Members
+msgctxt ",7BD11C2F446ACF6089175E9887F5CF84"
+msgid "Normal Difficulty"
+msgstr "Difficulté normale"
+
+#. Key:	69C060234A1322FB2F98A180AA66382E
+#. SourceLocation:	/Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.Difficulty.SettingsPicker.Combobox.Members(2).Members
+#: /Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.Difficulty.SettingsPicker.Combobox.Members(2).Members
+msgctxt ",69C060234A1322FB2F98A180AA66382E"
+msgid "Hard Difficulty"
+msgstr "Difficulté élevée"
+
+#. Key:	17E689074C021878363191A8850A44C3
+#. SourceLocation:	/Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.Difficulty.SettingsPicker.PrimaryData.Caption
+#: /Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.Difficulty.SettingsPicker.PrimaryData.Caption
+msgctxt ",17E689074C021878363191A8850A44C3"
+msgid "Difficulty"
+msgstr "Difficulté"
+
+#. Key:	E54B28574670C217638965A02A8D7B71
+#. SourceLocation:	/Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.Difficulty.SettingsPicker.PrimaryData.Tooltip
+#: /Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.Difficulty.SettingsPicker.PrimaryData.Tooltip
+msgctxt ",E54B28574670C217638965A02A8D7B71"
+msgid "Set new difficulty level that affects AI behavior"
+msgstr "Définissez une nouvelle difficulté affectant l’IA"
+
+#. Key:	84B5B6574293D5119E2DEEBFCD7F6029
+#. SourceLocation:	/Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.Effects.SettingsPicker.PrimaryData.Caption
+#: /Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.Effects.SettingsPicker.PrimaryData.Caption
+msgctxt ",84B5B6574293D5119E2DEEBFCD7F6029"
+msgid "Effects"
+msgstr "Effets"
+
+#. Key:	90F005634B366C90B26D718257A450B2
+#. SourceLocation:	/Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.Effects.SettingsPicker.PrimaryData.Tooltip
+#: /Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.Effects.SettingsPicker.PrimaryData.Tooltip
+msgctxt ",90F005634B366C90B26D718257A450B2"
+msgid "Choose the effects quality level"
+msgstr "Choisissez la qualité des effets"
+
+#. Key:	09E71C2742B9A57C9C3AEDA5CA9F1D82
+#. SourceLocation:	/Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.Foliage.SettingsPicker.PrimaryData.Caption
+#: /Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.Foliage.SettingsPicker.PrimaryData.Caption
+msgctxt ",09E71C2742B9A57C9C3AEDA5CA9F1D82"
+msgid "Foliage"
+msgstr "Feuillage"
+
+#. Key:	D9BD4EBD465AA125DD46D6B2ED2AB23B
+#. SourceLocation:	/Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.Foliage.SettingsPicker.PrimaryData.Tooltip
+#: /Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.Foliage.SettingsPicker.PrimaryData.Tooltip
+msgctxt ",D9BD4EBD465AA125DD46D6B2ED2AB23B"
+msgid "Choose the foliage quality level"
+msgstr "Choisissez la qualité du feuillage"
+
+#. Key:	C4A2940F4B4653B88F4EFCB4BFDB963B
+#. SourceLocation:	/Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.FramerateLock.SettingsPicker.Combobox.Members(0).Members
+#: /Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.FramerateLock.SettingsPicker.Combobox.Members(0).Members
+msgctxt ",C4A2940F4B4653B88F4EFCB4BFDB963B"
+msgid "Uncapped"
+msgstr "Sans limite"
+
+#. Key:	830704614CB4A9294A1192AC105A706A
+#. SourceLocation:	/Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.FramerateLock.SettingsPicker.PrimaryData.Caption
+#: /Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.FramerateLock.SettingsPicker.PrimaryData.Caption
+msgctxt ",830704614CB4A9294A1192AC105A706A"
+msgid "Framerate Lock"
+msgstr "Verrouillage FPS"
+
+#. Key:	102752ED4A6BFCA0C118E998176772A4
+#. SourceLocation:	/Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.FramerateLock.SettingsPicker.PrimaryData.Tooltip
+#: /Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.FramerateLock.SettingsPicker.PrimaryData.Tooltip
+msgctxt ",102752ED4A6BFCA0C118E998176772A4"
+msgid "Choose a limit on the allowed FPS"
+msgstr "Choisissez une limite de FPS"
+
+#. Key:	CAD098984DE1C4FA4FCEF188053EB0B8
+#. SourceLocation:	/Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.Language.SettingsPicker.PrimaryData.Caption
+#: /Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.Language.SettingsPicker.PrimaryData.Caption
+msgctxt ",CAD098984DE1C4FA4FCEF188053EB0B8"
+msgid "Language"
+msgstr "Langue"
+
+#. Key:	CD547BAA44610F362727FF9F020DBEAD
+#. SourceLocation:	/Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.Language.SettingsPicker.PrimaryData.Tooltip
+#: /Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.Language.SettingsPicker.PrimaryData.Tooltip
+msgctxt ",CD547BAA44610F362727FF9F020DBEAD"
+msgid "Select your preferred language for in-game text and menus"
+msgstr "Sélectionnez votre langue pour les textes et menus"
+
+#. Key:	4BD5AC644E575D63EA6A51BAE630502E
+#. SourceLocation:	/Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.OverallQuality.SettingsPicker.Combobox.Members(0).Members
+#: /Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.OverallQuality.SettingsPicker.Combobox.Members(0).Members
+msgctxt ",4BD5AC644E575D63EA6A51BAE630502E"
+msgid "Custom Quality"
+msgstr "Qualité personnalisée"
+
+#. Key:	9DF5FE0544F93D49F8AE25AF6371B067
+#. SourceLocation:	/Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.OverallQuality.SettingsPicker.Combobox.Members(1).Members
+#: /Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.OverallQuality.SettingsPicker.Combobox.Members(1).Members
+msgctxt ",9DF5FE0544F93D49F8AE25AF6371B067"
+msgid "Low Quality"
+msgstr "Basse qualité"
+
+#. Key:	8642E36749EAEB860B2005BC52CFE5CF
+#. SourceLocation:	/Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.OverallQuality.SettingsPicker.Combobox.Members(2).Members
+#: /Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.OverallQuality.SettingsPicker.Combobox.Members(2).Members
+msgctxt ",8642E36749EAEB860B2005BC52CFE5CF"
+msgid "Medium Quality"
+msgstr "Qualité moyenne"
+
+#. Key:	E8B2577745E0DD87448B218C5E6D0519
+#. SourceLocation:	/Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.OverallQuality.SettingsPicker.Combobox.Members(3).Members
+#: /Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.OverallQuality.SettingsPicker.Combobox.Members(3).Members
+msgctxt ",E8B2577745E0DD87448B218C5E6D0519"
+msgid "High Quality"
+msgstr "Haute qualité"
+
+#. Key:	EB7E162D4837053CBA6760BF2CE2786A
+#. SourceLocation:	/Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.OverallQuality.SettingsPicker.Combobox.Members(4).Members
+#: /Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.OverallQuality.SettingsPicker.Combobox.Members(4).Members
+msgctxt ",EB7E162D4837053CBA6760BF2CE2786A"
+msgid "Very High Quality"
+msgstr "Très haute qualité"
+
+#. Key:	E9E2CACB4D4D0906038317A4A422AF02
+#. SourceLocation:	/Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.OverallQuality.SettingsPicker.Combobox.Members(5).Members
+#: /Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.OverallQuality.SettingsPicker.Combobox.Members(5).Members
+msgctxt ",E9E2CACB4D4D0906038317A4A422AF02"
+msgid "Ultra Quality"
+msgstr "Qualité ultra"
+
+#. Key:	C5758D8D4760AC9C55185480331D72DB
+#. SourceLocation:	/Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.OverallQuality.SettingsPicker.PrimaryData.Caption
+#: /Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.OverallQuality.SettingsPicker.PrimaryData.Caption
+msgctxt ",C5758D8D4760AC9C55185480331D72DB"
+msgid "Overall Quality"
+msgstr "Qualité globale"
+
+#. Key:	67193396456DFF30A0D91E85F3A0A62D
+#. SourceLocation:	/Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.OverallQuality.SettingsPicker.PrimaryData.Tooltip
+#: /Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.OverallQuality.SettingsPicker.PrimaryData.Tooltip
+msgctxt ",67193396456DFF30A0D91E85F3A0A62D"
+msgid "Choose the overall quality level"
+msgstr "Choisissez la qualité globale"
+
+#. Key:	47AE80804DE9530F324B9BBBC8695072
+#. SourceLocation:	/Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.PostProcessing.SettingsPicker.PrimaryData.Caption
+#: /Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.PostProcessing.SettingsPicker.PrimaryData.Caption
+msgctxt ",47AE80804DE9530F324B9BBBC8695072"
+msgid "Post Processing"
+msgstr "Post-traitement"
+
+#. Key:	35B9A2684BF5179C3B6934A6AFD61ECE
+#. SourceLocation:	/Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.PostProcessing.SettingsPicker.PrimaryData.Tooltip
+#: /Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.PostProcessing.SettingsPicker.PrimaryData.Tooltip
+msgctxt ",35B9A2684BF5179C3B6934A6AFD61ECE"
+msgid "Choose the post processing quality level"
+msgstr "Choisissez la qualité du post-traitement"
+
+#. Key:	CDB22C8D449DFC08EA86DC8127FB526E
+#. SourceLocation:	/Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.Resolution.SettingsPicker.PrimaryData.Caption
+#: /Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.Resolution.SettingsPicker.PrimaryData.Caption
+msgctxt ",CDB22C8D449DFC08EA86DC8127FB526E"
+msgid "Screen Resolution"
+msgstr "Résolution d'écran"
+
+#. Key:	C17A26CF44C13399941A65A8751FC629
+#. SourceLocation:	/Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.Resolution.SettingsPicker.PrimaryData.Tooltip
+#: /Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.Resolution.SettingsPicker.PrimaryData.Tooltip
+msgctxt ",C17A26CF44C13399941A65A8751FC629"
+msgid "Choose screen resolution"
+msgstr "Choisissez la résolution d'écran"
+
+#. Key:	A7FA66064B59FEC6F8E727B54716A864
+#. SourceLocation:	/Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.Shading.SettingsPicker.PrimaryData.Caption
+#: /Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.Shading.SettingsPicker.PrimaryData.Caption
+msgctxt ",A7FA66064B59FEC6F8E727B54716A864"
+msgid "Shading"
+msgstr "Ombrage"
+
+#. Key:	BBC7603A441AE43F7F852CAA459CA4B2
+#. SourceLocation:	/Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.Shading.SettingsPicker.PrimaryData.Tooltip
+#: /Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.Shading.SettingsPicker.PrimaryData.Tooltip
+msgctxt ",BBC7603A441AE43F7F852CAA459CA4B2"
+msgid "Choose the shading quality level"
+msgstr "Choisissez la qualité de l’ombrage"
+
+#. Key:	DF0944CD4A8D9C68EEB68FBB2F915930
+#. SourceLocation:	/Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.Shadows.SettingsPicker.PrimaryData.Caption
+#: /Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.Shadows.SettingsPicker.PrimaryData.Caption
+msgctxt ",DF0944CD4A8D9C68EEB68FBB2F915930"
+msgid "Shadows"
+msgstr "Ombres"
+
+#. Key:	9B41F86548F28A5428EAEFA29E041C32
+#. SourceLocation:	/Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.Shadows.SettingsPicker.PrimaryData.Tooltip
+#: /Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.Shadows.SettingsPicker.PrimaryData.Tooltip
+msgctxt ",9B41F86548F28A5428EAEFA29E041C32"
+msgid "Choose the shadows quality level"
+msgstr "Choisissez la qualité des ombres"
+
+#. Key:	450D242C4BCE9E1D850422BAD4296944
+#. SourceLocation:	/Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.Textures.SettingsPicker.PrimaryData.Caption
+#: /Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.Textures.SettingsPicker.PrimaryData.Caption
+msgctxt ",450D242C4BCE9E1D850422BAD4296944"
+msgid "Textures"
+msgstr "Textures"
+
+#. Key:	C54F71644D8F097BBE0C398598564C47
+#. SourceLocation:	/Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.Textures.SettingsPicker.PrimaryData.Tooltip
+#: /Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.Textures.SettingsPicker.PrimaryData.Tooltip
+msgctxt ",C54F71644D8F097BBE0C398598564C47"
+msgid "Choose the textures quality level"
+msgstr "Choisissez la qualité des textures"
+
+#. Key:	0AFFFA6E41922B98E518148C195366C8
+#. SourceLocation:	/Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.ViewDistance.SettingsPicker.PrimaryData.Caption
+#: /Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.ViewDistance.SettingsPicker.PrimaryData.Caption
+msgctxt ",0AFFFA6E41922B98E518148C195366C8"
+msgid "View Distance"
+msgstr "Distance d'affichage"
+
+#. Key:	85CAA36A40052F6A6E2916BBA604F756
+#. SourceLocation:	/Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.ViewDistance.SettingsPicker.PrimaryData.Tooltip
+#: /Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Combobox.ViewDistance.SettingsPicker.PrimaryData.Tooltip
+msgctxt ",85CAA36A40052F6A6E2916BBA604F756"
+msgid "Choose the view distance quality level"
+msgstr "Choisissez la distance d'affichage"
+
+#. Key:	034DA8B649A7D12B0CE11488B7A32D41
+#. SourceLocation:	/Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.CustomWidget.InputControls.SettingsPicker.PrimaryData.Caption
+#: /Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.CustomWidget.InputControls.SettingsPicker.PrimaryData.Caption
+msgctxt ",034DA8B649A7D12B0CE11488B7A32D41"
+msgid "CONTROLS"
+msgstr "COMMANDES"
+
+#. Key:	3FC144E945D22BA8DB903BB7FBD1AE1E
+#. SourceLocation:	/Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Slider.MasterVolume.SettingsPicker.PrimaryData.Caption
+#: /Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Slider.MasterVolume.SettingsPicker.PrimaryData.Caption
+msgctxt ",3FC144E945D22BA8DB903BB7FBD1AE1E"
+msgid "Master Volume"
+msgstr "Volume principal"
+
+#. Key:	B94B90AB43C910906DA3658FE85EBDDC
+#. SourceLocation:	/Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Slider.MasterVolume.SettingsPicker.PrimaryData.Tooltip
+#: /Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Slider.MasterVolume.SettingsPicker.PrimaryData.Tooltip
+msgctxt ",B94B90AB43C910906DA3658FE85EBDDC"
+msgid "Set the overall volume for all sounds in the game"
+msgstr "Ajustez le volume général du jeu"
+
+#. Key:	FDDC03E84D349EAC5743FEB1C9E6B87D
+#. SourceLocation:	/Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Slider.MusicVolume.SettingsPicker.PrimaryData.Caption
+#: /Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Slider.MusicVolume.SettingsPicker.PrimaryData.Caption
+msgctxt ",FDDC03E84D349EAC5743FEB1C9E6B87D"
+msgid "Music Volume"
+msgstr "Volume musique"
+
+#. Key:	3EC174FB4DEA3029A69CEEA9C382A9DD
+#. SourceLocation:	/Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Slider.MusicVolume.SettingsPicker.PrimaryData.Tooltip
+#: /Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Slider.MusicVolume.SettingsPicker.PrimaryData.Tooltip
+msgctxt ",3EC174FB4DEA3029A69CEEA9C382A9DD"
+msgid "Set the sound volume for the background music"
+msgstr "Ajustez le volume de la musique de fond"
+
+#. Key:	DC1E69F1449E9C4CD8B1D58CFCBB7676
+#. SourceLocation:	/Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Slider.SFXVolume.SettingsPicker.PrimaryData.Caption
+#: /Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Slider.SFXVolume.SettingsPicker.PrimaryData.Caption
+msgctxt ",DC1E69F1449E9C4CD8B1D58CFCBB7676"
+msgid "Sound Effects Volume"
+msgstr "Volume des effets"
+
+#. Key:	CE6CBAFE4B647A492890C4883AB59F95
+#. SourceLocation:	/Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Slider.SFXVolume.SettingsPicker.PrimaryData.Tooltip
+#: /Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.Slider.SFXVolume.SettingsPicker.PrimaryData.Tooltip
+msgctxt ",CE6CBAFE4B647A492890C4883AB59F95"
+msgid "Set the sound volume for the effects like bomb explosions"
+msgstr "Ajustez le volume des effets comme les explosions"
+
+#. Key:	EE8937004D3303A4D1637DBFFE1B4ED6
+#. SourceLocation:	/Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.TextLine.AudioTab.SettingsPicker.PrimaryData.Caption
+#: /Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.TextLine.AudioTab.SettingsPicker.PrimaryData.Caption
+msgctxt ",EE8937004D3303A4D1637DBFFE1B4ED6"
+msgid "AUDIO"
+msgstr "AUDIO"
+
+#. Key:	158FFB6F4FEB9FFC58E5E9AB7D6D1E93
+#. SourceLocation:	/Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.TextLine.GameplayTab.SettingsPicker.PrimaryData.Caption
+#: /Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.TextLine.GameplayTab.SettingsPicker.PrimaryData.Caption
+msgctxt ",158FFB6F4FEB9FFC58E5E9AB7D6D1E93"
+msgid "GAMEPLAY"
+msgstr "JOUABILITÉ"
+
+#. Key:	904134154319169B16FC20B12B24F27C
+#. SourceLocation:	/Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.TextLine.GraphicsTab.SettingsPicker.PrimaryData.Caption
+#: /Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.TextLine.GraphicsTab.SettingsPicker.PrimaryData.Caption
+msgctxt ",904134154319169B16FC20B12B24F27C"
+msgid "GRAPHICS"
+msgstr "GRAPHISMES"
+
+#. Key:	B1FD8AB64A187ECF1AF534A23B1EB4B9
+#. SourceLocation:	/Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.TextLine.Title.SettingsPicker.PrimaryData.Caption
+#: /Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.TextLine.Title.SettingsPicker.PrimaryData.Caption
+msgctxt ",B1FD8AB64A187ECF1AF534A23B1EB4B9"
+msgid "SETTINGS"
+msgstr "PARAMÈTRES"
+
+#. Key:	None
+#. SourceLocation:	/Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.TextLine.Title.SettingsPicker.PrimaryData.Tooltip
+#: /Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.TextLine.Title.SettingsPicker.PrimaryData.Tooltip
+msgctxt "Core,None"
+msgid "None"
+msgstr ""
+
+#. Key:	0606A8B34E9342299BF21DB4EE719FE7
+#. SourceLocation:	/Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.TextLine.VideoTab.SettingsPicker.PrimaryData.Caption
+#: /Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.TextLine.VideoTab.SettingsPicker.PrimaryData.Caption
+msgctxt ",0606A8B34E9342299BF21DB4EE719FE7"
+msgid "VIDEO"
+msgstr "VIDÉO"
+
+#. Key:	0A4D44494F98A414FFD6F399B8C3DAFE
+#. SourceLocation:	/Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.UserInput.PlayerName.SettingsPicker.PrimaryData.Caption
+#: /Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.UserInput.PlayerName.SettingsPicker.PrimaryData.Caption
+msgctxt ",0A4D44494F98A414FFD6F399B8C3DAFE"
+msgid "Player Name"
+msgstr "Nom du joueur"
+
+#. Key:	91BCE84A4CF9B58F61A9C8BB16663DB5
+#. SourceLocation:	/Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.UserInput.PlayerName.SettingsPicker.PrimaryData.Tooltip
+#: /Game/Bomber/DataAssets/DT_Settings.DT_Settings.Settings.UserInput.PlayerName.SettingsPicker.PrimaryData.Tooltip
+msgctxt ",91BCE84A4CF9B58F61A9C8BB16663DB5"
+msgid "Enter your nickname"
+msgstr "Entrez votre pseudo"
+
+#. Key:	E94B5B984AC0C39529AD68996273774F
+#. SourceLocation:	/Game/Bomber/EnhancedInput/InputMappingContexts/IMC_Gameplay_P1.Default__IMC_Gameplay_P1_C:PlayerMappableKeySettings_0.DisplayName
+#: /Game/Bomber/EnhancedInput/InputMappingContexts/IMC_Gameplay_P1.Default__IMC_Gameplay_P1_C:PlayerMappableKeySettings_0.DisplayName
+msgctxt ",E94B5B984AC0C39529AD68996273774F"
+msgid "Put Bomb P1"
+msgstr "Poser bombe P1"
+
+#. Key:	160FEA814CB10F63ABC61288E76130C5
+#. SourceLocation:	/Game/Bomber/EnhancedInput/InputMappingContexts/IMC_Gameplay_P2.Default__IMC_Gameplay_P2_C:PlayerMappableKeySettings_0.DisplayName
+#: /Game/Bomber/EnhancedInput/InputMappingContexts/IMC_Gameplay_P2.Default__IMC_Gameplay_P2_C:PlayerMappableKeySettings_0.DisplayName
+msgctxt ",160FEA814CB10F63ABC61288E76130C5"
+msgid "Put Bomb P2"
+msgstr "Poser bombe P2"
+
+#. Key:	E76D8412443F242779726C9825623BB0
+#. SourceLocation:	/NewMainMenu/DataAssets/DT_MainMenuSettings.DT_MainMenuSettings.Settings.Checkbox.AutoSkipCinematics.SettingsPicker.PrimaryData.Caption
+#: /NewMainMenu/DataAssets/DT_MainMenuSettings.DT_MainMenuSettings.Settings.Checkbox.AutoSkipCinematics.SettingsPicker.PrimaryData.Caption
+msgctxt ",E76D8412443F242779726C9825623BB0"
+msgid "Auto Skip Cinematics"
+msgstr "Saut auto. cinématiques"
+
+#. Key:	1835102C4C50DBD336D89F9D389D006F
+#. SourceLocation:	/NewMainMenu/DataAssets/DT_MainMenuSettings.DT_MainMenuSettings.Settings.Checkbox.AutoSkipCinematics.SettingsPicker.PrimaryData.Tooltip
+#: /NewMainMenu/DataAssets/DT_MainMenuSettings.DT_MainMenuSettings.Settings.Checkbox.AutoSkipCinematics.SettingsPicker.PrimaryData.Tooltip
+msgctxt ",1835102C4C50DBD336D89F9D389D006F"
+msgid "Skips previously seen cinematics automatically. With other players, cinematics are always skipped."
+msgstr "Passe automatiquement les cinématiques déjà vues. En multijoueur, elles sont toujours passées."
+
+#. Key:	75E882964F91F5D25CA02FAC4882FE61
+#. SourceLocation:	/NewMainMenu/DataAssets/DT_MainMenuSettings.DT_MainMenuSettings.Settings.Checkbox.InstantCharacterSwitch.SettingsPicker.PrimaryData.Caption
+#: /NewMainMenu/DataAssets/DT_MainMenuSettings.DT_MainMenuSettings.Settings.Checkbox.InstantCharacterSwitch.SettingsPicker.PrimaryData.Caption
+msgctxt ",75E882964F91F5D25CA02FAC4882FE61"
+msgid "Instant Character Switch"
+msgstr "Changement instantané"
+
+#. Key:	08829C344942CA83BEF10B81181542D3
+#. SourceLocation:	/NewMainMenu/DataAssets/DT_MainMenuSettings.DT_MainMenuSettings.Settings.Checkbox.InstantCharacterSwitch.SettingsPicker.PrimaryData.Tooltip
+#: /NewMainMenu/DataAssets/DT_MainMenuSettings.DT_MainMenuSettings.Settings.Checkbox.InstantCharacterSwitch.SettingsPicker.PrimaryData.Tooltip
+msgctxt ",08829C344942CA83BEF10B81181542D3"
+msgid "Enable/disable smooth transitions when switching characters in the Main Menu"
+msgstr "Activer/désactiver les transitions fluides lors du changement de personnage dans le menu"
+
+#. Key:	0C3773CA49BBEE805EAFB1B57ED9A4A4
+#. SourceLocation:	/NewMainMenu/DataAssets/DT_MainMenuSettings.DT_MainMenuSettings.Settings.Slider.CinematicsVolume.SettingsPicker.PrimaryData.Caption
+#: /NewMainMenu/DataAssets/DT_MainMenuSettings.DT_MainMenuSettings.Settings.Slider.CinematicsVolume.SettingsPicker.PrimaryData.Caption
+msgctxt ",0C3773CA49BBEE805EAFB1B57ED9A4A4"
+msgid "Cinematics Volume"
+msgstr "Volume des cinématiques"
+
+#. Key:	810E4989403C675727246A9BBB97549C
+#. SourceLocation:	/NewMainMenu/DataAssets/DT_MainMenuSettings.DT_MainMenuSettings.Settings.Slider.CinematicsVolume.SettingsPicker.PrimaryData.Tooltip
+#: /NewMainMenu/DataAssets/DT_MainMenuSettings.DT_MainMenuSettings.Settings.Slider.CinematicsVolume.SettingsPicker.PrimaryData.Tooltip
+msgctxt ",810E4989403C675727246A9BBB97549C"
+msgid "Set the sound volume for music in cinematics"
+msgstr "Ajustez le volume de la musique des cinématiques"
+

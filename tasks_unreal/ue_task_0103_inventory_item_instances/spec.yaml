@@ -1,0 +1,95 @@
+task_id: ue_task_0103
+title: Implement replicated inventory item instances and stat fragments
+tier: hard
+
+instruction: |
+  Implement the inventory item instance system so runtime item ownership,
+  replicated entries, and item stats behave correctly.
+  
+  Expected behavior:
+  - The server can add inventory item definitions and create item instances from them.
+  - Item instances initialize their definition-derived fragments and stat tags.
+  - Inventory entries replicate to clients and remain usable by UI, quickbar, and equipment systems.
+  - Removing an item cleans up the replicated entry without invalidating unrelated items.
+  - Stack counts or entry counts are updated consistently when the same item is granted multiple times.
+  - Item stats are queryable by gameplay tag and return safe defaults for missing tags.
+  - Client-side attempts to mutate inventory are ignored or routed through the existing server-authoritative path.
+  - Pickup actors, quickbar assignment, and equipment activation continue to use the same item instances.
+  - The implementation must compile and fit the existing replicated inventory and item-definition architecture.
+  
+  Constraints:
+  - Use the repository to infer how item definitions, fragments, gameplay tags, pickup actors, and equipment references are expected to interact.
+  - Do not implement a separate local inventory model.
+  - Do not require new assets or hidden manual setup.
+  
+  Quality bar:
+  The implementation must preserve stable runtime item identity, multiplayer
+  replication, and compatibility with pickup, quickbar, equipment, and UI code.
+
+files_to_edit:
+  - Source/ECR/Private/Gameplay/Inventory/ECRInventoryItemDefinition.cpp
+  - Source/ECR/Private/Gameplay/Inventory/ECRInventoryItemInstance.cpp
+  - Source/ECR/Private/Gameplay/Inventory/ECRInventoryManagerComponent.cpp
+  - Source/ECR/Private/Gameplay/Inventory/IPickupable.cpp
+  - Source/ECR/Private/Gameplay/Inventory/InventoryFragment_EquippableItem.cpp
+  - Source/ECR/Private/Gameplay/Inventory/InventoryFragment_PickupIcon.cpp
+  - Source/ECR/Private/Gameplay/Inventory/InventoryFragment_QuickBarIcon.cpp
+  - Source/ECR/Private/Gameplay/Inventory/InventoryFragment_SetStats.cpp
+  - Source/ECR/Public/Gameplay/Inventory/ECRInventoryItemDefinition.h
+  - Source/ECR/Public/Gameplay/Inventory/ECRInventoryItemInstance.h
+  - Source/ECR/Public/Gameplay/Inventory/ECRInventoryManagerComponent.h
+  - Source/ECR/Public/Gameplay/Inventory/IPickupable.h
+  - Source/ECR/Public/Gameplay/Inventory/InventoryFragment_SetStats.h
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "ECR.InventoryItems"
+
+hidden_requirements:
+  R1:
+    text: The server can add inventory item definitions and create item instances from them.
+    category: replication
+  R2:
+    text: Item instances initialize their definition-derived fragments and stat tags.
+    category: lifecycle
+  R3:
+    text: Inventory entries replicate to clients (an added entry must mark the fast array dirty via MarkItemDirty so the add replicates) and remain usable by UI, quickbar, and equipment systems.
+    category: replication
+  R4:
+    text: Removing an item cleans up the replicated entry (the removal must mark the array dirty via MarkArrayDirty so it replicates) without invalidating unrelated items.
+    category: replication
+  R5:
+    text: Stack counts or entry counts are updated consistently when the same item is granted multiple times.
+    category: core_logic
+  R6:
+    text: Item stats are queryable by gameplay tag and return safe defaults for missing tags.
+    category: core_logic
+  R7:
+    text: Client-side attempts to mutate inventory are ignored or routed through the existing server-authoritative path.
+    category: replication
+  R8:
+    text: Pickup actors, quickbar assignment, and equipment activation continue to use the same item instances.
+    category: ui
+  R9:
+    text: The implementation must compile and fit the existing replicated inventory and item-definition architecture.
+    category: replication
+  R10:
+    text: "Item counting and consumption must be mutually consistent: ConsumeItemsByDefinition(GetTotalItemCountByDefinition(Def)) must succeed. Whatever total the count query reports for a definition must be exactly consumable -- a stack-aware count paired with an entry-based consume (or vice versa) that cannot consume the reported total is a failure."
+    category: core_logic
+
+test_requirements:
+  ECR.InventoryItems.source_contract_tokens_present:
+    - R1
+    - R2
+    - R3
+    - R4
+    - R5
+    - R6
+    - R7
+    - R8
+    - R9
+  ECR.InventoryItems.consume_matches_reported_count:
+    - R5
+    - R10

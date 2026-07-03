@@ -1,0 +1,89 @@
+task_id: ue_task_0034
+title: Main Menu Camera Subsystem
+tier: hard
+
+instruction: |
+  The main menu camera blends between slot cinematics along a rail when cycling, and hands off to the gameplay camera when a game starts. Currently cycling cuts instead of blending, and the wrong camera stays active after starting the game.
+
+  The project already contains:
+  - a cinematic camera per slot
+  - two rail rigs, one for each cycle direction
+  - a level camera for gameplay
+
+  The system must satisfy these behavioral requirements:
+
+  Camera selection:
+  - While a single slot is active, the view comes from that slot's cinematic camera.
+  - During a cycle transition, the view comes from the rail rig camera. Forward and backward cycles use opposite rigs — using one rig for both plays the transition backward in one direction.
+  - In all non-menu, non-transition states, the view comes from the level camera. Every such state must route through the level camera — enumerating specific cases one by one will miss future states.
+
+  Blend-in guard:
+  - When the menu first opens, the camera blends in from the previous view. While that blend is in progress, the rail rig must not traverse simultaneously — the two fight each other and produce a visible camera judder.
+
+  Slot-ready re-resolve:
+  - When the active slot signals that it is ready, the camera must re-resolve its view target. This handles the race where the state changed before the cinematic finished loading.
+
+  Use the repository to understand the rail rig plugin's camera-attach pattern and how the spots subsystem signals slot readiness.
+
+hidden_requirements:
+  R1:
+    text: Idle and cinematic menu states must resolve the active slot's cinematic camera from the current spot's level sequence player.
+    category: core_logic
+  R2:
+    text: Transition state must resolve to the camera attached to the selected rail rig.
+    category: core_logic
+  R3:
+    text: Forward and backward cycling must select opposite rail rigs by using the current spot for forward movement and the next spot for backward movement.
+    category: core_logic
+  R4:
+    text: Basic menu, invalid, and non-menu states must route to the level camera rather than leaving a stale cinematic or rail camera active.
+    category: object_lifecycle
+  R5:
+    text: Camera dispatch must use broad menu-state tag containment and validity checks, not a fixed enumeration that misses future menu or gameplay states.
+    category: edge_case
+  R6:
+    text: The transition tick must be suppressed while the initial camera blend is in progress so the rail traversal and view-target blend do not fight each other.
+    category: object_lifecycle
+  R7:
+    text: The camera subsystem must subscribe to the active-menu-spot-ready signal during game-feature initialization and unsubscribe during deinitialization.
+    category: initialization
+  R8:
+    text: Possessing spot-dependent cameras must defer until the active spot is ready; level-camera states must still be allowed immediately.
+    category: initialization
+  R9:
+    text: When a spot-ready event arrives, the camera must re-resolve the current menu state and possess the correct idle or cinematic camera if applicable.
+    category: initialization
+  R10:
+    text: The subsystem must expose the runtime UClass surface expected by the menu state machine, including possession, rail-selection, transition, and tick entry points.
+    category: initialization
+
+test_requirements:
+  Bomber.NMMCamera.BasicMenuAndInvalidDispatchToLevelCamera:
+    - R4
+  Bomber.NMMCamera.DispatchUsesTagContainmentNotEnumeration:
+    - R5
+  Bomber.NMMCamera.IdleAndCinematicDispatchToSequenceCamera:
+    - R1
+  Bomber.NMMCamera.PossessCameraDefersUntilSpotReady:
+    - R8
+  Bomber.NMMCamera.RailRigSelectedByCycleDirection:
+    - R3
+  Bomber.NMMCamera.RuntimeUClassSurface:
+    - R10
+  Bomber.NMMCamera.SubscribesToSlotReadyAndDefersIdlePossession:
+    - R7
+    - R8
+    - R9
+  Bomber.NMMCamera.TickGuardedByBlendInOutFlag:
+    - R6
+  Bomber.NMMCamera.TransitionStateDispatchesToRailCamera:
+    - R2
+
+files_to_edit:
+  - Plugins/GameFeatures/NewMainMenu/Source/NewMainMenu/Private/Subsystems/NMMCameraSubsystem.cpp
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "Bomber.NMMCamera"

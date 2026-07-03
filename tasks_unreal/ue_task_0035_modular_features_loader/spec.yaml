@@ -1,0 +1,104 @@
+task_id: ue_task_0035
+title: Modular Game Features Loader Subsystem
+tier: hard
+
+instruction: |
+  The game uses optional content plugins that activate and deactivate based on the current gameplay state. The engine subsystem responsible for this exists but does nothing — no features ever activate or deactivate.
+
+  The project already contains:
+  - a settings asset listing which gameplay conditions each feature requires
+  - gameplay tag infrastructure tracking game state on each world
+  - the modular game feature plugin system
+
+  The system must satisfy these behavioral requirements:
+
+  Feature activation:
+  - When the conditions required by a feature are present, that feature must be active.
+  - When those conditions are no longer present, that feature must become inactive.
+  - A burst of simultaneous condition changes must not trigger redundant activation passes — one logical state change should produce one activation pass.
+  - Activation changes must not happen synchronously inside the call that triggered the condition change.
+
+  Stability:
+  - While no game world is running, boot-time feature state must be preserved — without this, features the engine activated at startup get torn down before any world registers.
+  - Entering and exiting Play-In-Editor must not permanently alter which features are active.
+  - A forced or emergency PIE shutdown must leave all features in a clean baseline state, including features that were deactivated mid-session.
+  - Map transitions must not incorrectly deactivate features that should remain active.
+
+  Use the repository to understand the modular feature settings, global message subsystem, and gameplay-tag event registration to find the integration points.
+
+hidden_requirements:
+  R1:
+    text: The subsystem must expose a runtime recompute surface that can be called after tag or world lifecycle changes.
+    category: initialization
+  R2:
+    text: A feature must be activated when any configured required gameplay condition tag is present on an authoritative world ASC.
+    category: core_logic
+  R3:
+    text: A feature must be deactivated when none of its configured required gameplay condition tags remain present on authoritative ASCs.
+    category: core_logic
+  R4:
+    text: Gameplay tag events must update a stored per-ASC tag snapshot from the event delta before recomputing feature state.
+    category: core_logic
+  R5:
+    text: Tag-change callbacks must queue a deferred recompute instead of activating or deactivating plugins synchronously inside the callback.
+    category: object_lifecycle
+  R6:
+    text: Multiple tag changes in the same burst must coalesce into one pending recompute.
+    category: object_lifecycle
+  R7:
+    text: The loader must not short-circuit on network authority; it must decide authority from the ASC world type and editor/PIE state.
+    category: authority
+  R8:
+    text: During an active PIE session only PIE-world ASCs are authoritative; outside PIE, Editor and Game worlds may be authoritative.
+    category: authority
+  R9:
+    text: If no authoritative ASC exists yet, the subsystem must preserve boot-time feature state instead of deactivating features preemptively.
+    category: object_lifecycle
+  R10:
+    text: PreBeginPIE and EndPIE must hold recomputation while authority transitions between editor and PIE worlds.
+    category: object_lifecycle
+  R11:
+    text: The subsystem must bind the editor ShutdownPIE delegate so emergency shutdown can restore feature state.
+    category: initialization
+  R12:
+    text: Forced or emergency PIE shutdown must restore tag-driven features to their configured baseline state, clear tracked active state, and queue recomputation from remaining authority.
+    category: object_lifecycle
+  R13:
+    text: Editor map switches must restore tag-driven features to their baseline state instead of treating the editor-world teardown as a gameplay deactivation.
+    category: object_lifecycle
+  R14:
+    text: Map or world transitions must remove only dead ASC snapshots and must preserve features that remain valid under the remaining authoritative tag aggregate.
+    category: object_lifecycle
+
+test_requirements:
+  Bomber.ModularFeaturesLoader.EditorMapSwitchUsesRestore:
+    - R13
+  Bomber.ModularFeaturesLoader.IsAuthoritativeAscWorldTypeRule:
+    - R8
+  Bomber.ModularFeaturesLoader.NoAuthorityShortCircuit:
+    - R7
+    - R9
+  Bomber.ModularFeaturesLoader.PreBeginAndEndPIESetAuthorityFlag:
+    - R10
+  Bomber.ModularFeaturesLoader.QueueDeferredRecomputeCoalesces:
+    - R6
+  Bomber.ModularFeaturesLoader.RuntimeRecomputeSurfaceCallable:
+    - R1
+    - R2
+    - R3
+  Bomber.ModularFeaturesLoader.ShutdownPIEDelegateBound:
+    - R11
+  Bomber.ModularFeaturesLoader.ShutdownPIEEmergencyRestore:
+    - R12
+  Bomber.ModularFeaturesLoader.TagEventDefersToRecompute:
+    - R4
+    - R5
+
+files_to_edit:
+  - Source/Bomber/Private/Subsystems/BmrModularGameFeaturesLoaderSubsystem.cpp
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "Bomber.ModularFeaturesLoader"

@@ -1,0 +1,80 @@
+task_id: ue_task_0108
+title: Implement startup asset loading and game instance boot flow
+tier: hard
+
+instruction: |
+  Implement the startup asset loading and game instance boot flow so the game
+  initializes runtime configuration and required assets in the correct order.
+  
+  Expected behavior:
+  - Startup jobs run in the intended order and report progress without blocking the game indefinitely.
+  - Primary assets needed for maps, pawn data, gameplay systems, and startup configuration are discovered and loaded through the existing asset manager path.
+  - Game instance startup initializes online, local player, and gameplay systems at the correct lifecycle points.
+  - Default pawn data and startup configuration are available before player pawn setup depends on them.
+  - Missing or invalid assets fail with useful errors while preserving a safe boot path where possible.
+  - Async loading handles cancellation, teardown, and map changes without stale callbacks.
+  - Client, listen server, and server startup paths initialize only the systems appropriate for their mode.
+  - The implementation must compile and fit the existing asset manager, startup job, game instance, local player, and pawn data architecture.
+  
+  Constraints:
+  - Use the repository to infer primary asset types, startup job sequencing, game instance lifecycle, and pawn data usage.
+  - Do not replace the startup flow with hardcoded asset loads or BeginPlay-only initialization.
+  - Do not require new assets or hidden manual setup.
+  
+  Quality bar:
+  The implementation must boot reliably and preserve ordering-sensitive
+  initialization. Compile success is not sufficient if pawn data, startup asset
+  loading, local-player setup, or boot progress behavior is wrong at runtime.
+
+files_to_edit:
+  - Source/ECR/Private/System/ECRAssetManager.cpp
+  - Source/ECR/Private/System/ECRAssetManagerStartupJob.cpp
+  - Source/ECR/Private/System/ECRGameInstance.cpp
+  - Source/ECR/Private/System/ECRLocalPlayer.cpp
+  - Source/ECR/Public/System/ECRAssetManager.h
+  - Source/ECR/Public/System/ECRAssetManagerStartupJob.h
+  - Source/ECR/Public/System/ECRGameInstance.h
+  - Source/ECR/Public/System/ECRLocalPlayer.h
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "ECR.StartupAssets"
+
+hidden_requirements:
+  R1:
+    text: Startup jobs run in the intended order and report progress without blocking the game indefinitely.
+    category: lifecycle
+  R2:
+    text: Primary assets needed for maps, pawn data, gameplay systems, and startup configuration are discovered and loaded through the existing asset manager path.
+    category: lifecycle
+  R3:
+    text: Game instance startup initializes online, local player, and gameplay systems at the correct lifecycle points.
+    category: replication
+  R4:
+    text: Default pawn data and startup configuration are available before player pawn setup depends on them.
+    category: lifecycle
+  R5:
+    text: Missing or invalid assets fail with useful errors while preserving a safe boot path where possible.
+    category: lifecycle
+  R6:
+    text: Async loading handles cancellation, teardown, and map changes without stale callbacks.
+    category: lifecycle
+  R7:
+    text: Client, listen server, and server startup paths initialize only the systems appropriate for their mode.
+    category: replication
+  R8:
+    text: The implementation must compile and fit the existing asset manager, startup job, game instance, local player, and pawn data architecture.
+    category: lifecycle
+
+test_requirements:
+  ECR.StartupAssets.source_contract_tokens_present:
+    - R1
+    - R2
+    - R3
+    - R4
+    - R5
+    - R6
+    - R7
+    - R8

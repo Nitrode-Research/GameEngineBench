@@ -1,0 +1,30 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "Chronos",
+	"Description": "Customizable, Replicated DateTime Game State Component",
+	"Category": "Gameplay",
+	"CreatedBy": "Uriel Ballinas, VOIDWARE Prohibited",
+	"CreatedByURL": "https://github.com/Voidware-Prohibited",
+	"DocsURL": "https://github.com/Voidware-Prohibited/Chronos",
+	"MarketplaceURL": "",
+	"SupportURL": "https://github.com/Voidware-Prohibited/Chronos/discussions",
+	"CanContainContent": true,
+	"IsBetaVersion": true,
+	"IsExperimentalVersion": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "Chronos",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}
+	],
+	"Plugins": [
+		{
+			"Name": "DaySequence",
+			"Enabled": true
+		}
+	]
+}

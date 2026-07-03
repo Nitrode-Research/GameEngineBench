@@ -1,0 +1,72 @@
+task_id: ue_task_0049
+title: ALSXT Camera Effects
+tier: hard
+
+instruction: |
+  You are working in an Unreal Engine 5 third-person character project that uses the ALSXT plugin.
+  Implement the camera effects system across ALSXTCharacterCameraEffectsComponent.cpp and
+  AlsxtPlayerViewportEffectsComponent.cpp.
+
+  The system handles camera-shake selection and update logic, first-person camera-effects trace
+  behavior, suppression/blindness/damage/concussion/drunk/high effect add/reset/fade lifecycles,
+  post-process blendable weight manipulation, timer-based fade-out logic, and coordination between
+  the character-side and player-controller viewport effect flows.
+
+  The project already contains:
+  - Component public methods and effect-specific API surface
+  - Settings assets, blendable references, and camera-shake assets
+  - Post-process component references and delegates
+
+  Implement the following behavior:
+
+  - Character movement and state changes drive the correct camera-shake behavior through the existing settings.
+  - Suppression and other viewport effects can be added, accumulated within expected limits, and faded out over time.
+  - Reset methods clear the corresponding effect completely.
+  - Fade-out behavior is timer-driven and incremental rather than instant unless explicitly reset.
+  - Effects visible to the player appear through the character's post-process volume — they cannot be achieved by spawning separate screen-space actors or overlays.
+  - The value reported by the character-side component and the value displayed through the player controller's viewport component remain consistent with each other.
+
+files_to_edit:
+  - Plugins/ALSXT/Source/ALSXT/Private/Components/Character/ALSXTCharacterCameraEffectsComponent.cpp
+  - Plugins/ALSXT/Source/ALSXT/Private/Components/PlayerController/AlsxtPlayerViewportEffectsComponent.cpp
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "ALSXT.CameraEffects"
+
+hidden_requirements:
+  R1:
+    text: Movement and character state changes drive camera-shake selection and updates through existing settings.
+    category: runtime_integration
+  R2:
+    text: Character-side suppression adds to the configured post-process weighted blendable and clamps to the configured maximum.
+    category: core_logic
+  R3:
+    text: Viewport-side suppression adds to the configured post-process weighted blendable and clamps to the configured maximum.
+    category: core_logic
+  R4:
+    text: Reset methods clear the matching effect weight completely.
+    category: object_lifecycle
+  R5:
+    text: Fade-out behavior uses timers and incremental weight changes instead of instant removal unless reset is explicitly requested.
+    category: object_lifecycle
+  R6:
+    text: Player-visible effects use the character or viewport post-process component rather than separate screen-space actors or overlays.
+    category: runtime_integration
+  R7:
+    text: Character-side reported effect amounts and viewport-visible post-process weights remain consistent.
+    category: runtime_integration
+  R8:
+    text: Effect add paths work through configured blendable indices and do not depend on material-object identity matching at runtime.
+    category: core_logic
+
+test_requirements:
+  ALSXT.CameraEffects.character_add_suppression_drives_post_process:
+    - R2
+    - R7
+    - R8
+  ALSXT.CameraEffects.viewport_add_suppression_drives_post_process:
+    - R3
+    - R8

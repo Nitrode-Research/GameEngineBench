@@ -1,0 +1,72 @@
+task_id: ue_task_0044
+title: ALSXT Combat Lock-On and Melee
+tier: hard
+
+instruction: |
+  You are working in an Unreal Engine 5 third-person character project that uses the ALSXT plugin.
+  Implement the combat lock-on and melee system in ALSXTCombatComponent.cpp.
+
+  The component manages target acquisition, lock-on cycling, obstruction-based unlocking,
+  target highlighting, attack startup, attack collision tracing, and melee hit routing.
+
+  The project already contains:
+  - The full public class API, UPROPERTY/UFUNCTION surface, settings assets, and tag definitions
+  - State structs, delegates, and montage/material content references
+  - The existing combat and collision interfaces that melee hits must route through
+
+  Implement the following behavior:
+
+  - While in a valid combat or overlay state, the component can find and lock onto suitable nearby targets.
+  - Locked targets can be cycled left and right by relative angle, not just nearest distance.
+  - Targets are dropped when they become invalid or blocked by obstruction rules from settings.
+  - Locking applies the existing highlight visuals; clearing the target removes them.
+  - Starting an attack chooses the correct montage and state path and replicates cosmetic startup correctly.
+  - Attack traces only damage a target once per swing window.
+  - Melee hits register damage through the same combat interface as other hit sources — they cannot bypass hit registration or validation by writing to health directly.
+
+files_to_edit:
+  - Plugins/ALSXT/Source/ALSXT/Private/Components/Character/ALSXTCombatComponent.cpp
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "ALSXT.CombatLockOnMelee"
+
+hidden_requirements:
+  R1:
+    text: Target acquisition runs only from valid combat or overlay states and searches for nearby suitable actors.
+    category: core_logic
+  R2:
+    text: Target acquisition respects the combat settings for maximum lock distance.
+    category: core_logic
+  R3:
+    text: Lock-on trace results expose valid target data including actor, hit result, distance, and relative direction.
+    category: core_logic
+  R4:
+    text: Cycling lock-on targets selects by left or right relative angle rather than nearest distance alone.
+    category: core_logic
+  R5:
+    text: Invalid or obstructed targets are dropped according to obstruction settings.
+    category: core_logic
+  R6:
+    text: Locking applies the existing highlight visuals and clearing the current target removes them.
+    category: runtime_integration
+  R7:
+    text: Attack startup chooses the correct montage or state path and replicates cosmetic startup.
+    category: replication
+  R8:
+    text: Attack collision tracing can damage a target only once during a swing window.
+    category: core_logic
+  R9:
+    text: Melee hits route through the existing combat and collision interfaces without direct health writes.
+    category: runtime_integration
+
+test_requirements:
+  ALSXT.CombatLockOnMelee.trace_for_targets_finds_placed_character:
+    - R1
+    - R3
+  ALSXT.CombatLockOnMelee.trace_respects_max_lock_distance:
+    - R2
+  ALSXT.CombatLockOnMelee.trace_produces_valid_lockon_data:
+    - R3

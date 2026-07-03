@@ -1,0 +1,237 @@
+task_id: ue_task_0008
+title: Action System
+tier: hard
+
+instruction: |
+  # Action System
+
+  This repository is a third-person action roguelike built in Unreal Engine. It supports singleplayer and multiplayer co-op. The Action System is the backbone of all character abilities: every attack, buff, and status effect the player or an AI enemy can perform is expressed as an action. Implement the Action System so the game plays correctly.
+
+  ## Expected Behaviors
+
+  ### Core Action Lifecycle
+  - An action can only start if it is not already running and its cooldown has fully expired.
+  - An action that is already running must be explicitly stopped before it can start again.
+  - When an action starts it grants a set of gameplay tags to the owning character; those tags are removed when the action stops.
+  - Some gameplay tags block certain actions from starting — if the owner currently has a blocking tag, the action must be refused.
+  - After an action stops it may enter a cooldown period, during which it cannot start again; the remaining cooldown must be trackable so UI can display it.
+  - An action can be marked as "auto-start" — it should begin immediately when added to the character, provided it is eligible to start.
+
+  ### Action Component (the container that owns all actions)
+  - Each character has exactly one action component that manages all of their actions.
+  - Actions are added only by the server; clients that attempt to add actions must be silently ignored with a logged warning.
+  - When an action is added it becomes part of the character's active action list and is immediately usable by name (via a gameplay tag).
+  - Actions can be started or stopped by a gameplay tag identifier, not by object reference.
+  - When a client requests to start or stop an action, that request is forwarded to the server; the server is authoritative.
+  - If starting an action fails (e.g. on cooldown, already running, blocked), a brief on-screen message must appear naming the action and owner so designers can diagnose it during playtesting.
+  - When the character is destroyed, all currently running actions must be stopped cleanly.
+  - The action component owns a set of numeric attributes (health, damage, speed, etc.) that other systems read and write.
+
+  ### Attributes & Attribute Changes
+  - Attributes have a base value and a modifier (delta); their effective value is the combination of both.
+  - Only the server may apply attribute changes; client-side attempts must be silently ignored.
+  - Attribute changes come in three forms: add to the base, add to the modifier, or override the base entirely.
+  - After any attribute change, interested systems (UI health bars, death checks, thorns effects, etc.) must be notified with the new value and a description of what caused the change.
+  - If an attribute has clamping built in (e.g. health cannot go below 0) and the change produces no real movement in the effective value, no notification should be fired.
+  - Blueprint-created listeners for attribute changes must be cleaned up automatically if the Blueprint object is garbage collected, without requiring manual unsubscription.
+  - An attribute listener can optionally be called immediately upon registration so UI widgets can set their initial state without waiting for the first change event.
+
+  ### Status Effects (timed or periodic buffs/debuffs)
+  - A status effect is a special kind of action that starts automatically when applied to a character.
+  - If a duration is set, the effect removes itself after that time elapses.
+  - If a period is set, the effect fires a recurring event on that interval (e.g. poison damage every second).
+  - When a periodic effect stops, if a partial period was in progress, the periodic event fires one final time before cleanup.
+  - When a status effect finishes it removes itself from the character's action list.
+
+  ### Thorns (Reflect) Effect
+  - While the thorns effect is active, any incoming damage dealt to the owner by another actor triggers a fixed-coefficient damage hit back on the attacker.
+  - Reflected damage must be tagged so that thorns effects on the attacker do not reflect the reflection, preventing infinite ping-pong loops.
+  - Self-damage does not trigger the reflect.
+
+  ### Player Projectile Attack
+  - When the player fires a ranged attack, a casting particle effect attaches to the player's hand and a casting sound plays.
+  - An attack animation plays on the character.
+  - Projectile launch is delayed to sync with the animation; the spawn happens partway through the swing.
+  - The projectile does not simply fire straight from the hand — a sphere sweep is performed from the camera along the player's look direction, and the projectile's aim is adjusted toward whatever is under the crosshair (enemy or environment surface).
+  - If the sweep hits nothing, the projectile aims toward a fallback distance along the look vector.
+  - The action stops (and becomes eligible for cooldown) after the projectile is spawned.
+  - On listen servers and clients, only the locally controlled player triggers the projectile spawn; authority-based spawn path is used in non-predicted configurations.
+
+  ### AI Melee Attack
+  - When an AI minion performs a melee attack, a melee animation plays on the character.
+  - During the animation a collision window is active; any damageable actor that overlaps that window receives damage.
+  - Damage is only applied once per swing, even if multiple overlapping actors are detected across multiple animation frames.
+  - The action stops automatically when the animation finishes.
+  - Only the best candidate overlap (the first damageable actor found) is damaged per swing.
+
+  ### AI Ranged Attack
+  - Before an AI minion can start a ranged attack, it must have a valid living target; the action is refused if the target is dead or missing.
+  - At action start, a cosmetic attack effect (sound, muzzle flash, etc.) is pushed to all connected clients so every player sees it.
+  - The projectile launch point is the character's hand socket in world space.
+  - The AI leads the target's movement to compute a launch direction, accounting for projectile speed and approximate flight time.
+  - A small random spread is applied to pitch and yaw so AI fire is not perfectly accurate.
+  - If the projectile has no gravity, a tiny surrogate gravity value must be used so the trajectory suggestion function does not fall back to world default gravity.
+  - The action stops immediately after the projectile is spawned.
+
+  ### Multiplayer & Replication
+  - The running state, instigator, start time, and cooldown expiry of every action must replicate to all clients.
+  - When an action's replicated running state changes on a client, the client-side start or stop logic must execute locally (e.g. to play cosmetic effects).
+  - The action list on the action component must replicate; when it arrives on a client the client rebuilds its local lookup table so actions can be found by gameplay tag.
+  - The attribute set object itself replicates; when it arrives on a client the client initializes the attribute system so attribute-driven UI is immediately usable.
+  - Health replicates to clients and fires the same attribute-changed notification path on the client so health bars update without server round-trips.
+  - The server registers each action and the attribute set as sub-objects for granular replication.
+
+  ### AI Character Attributes
+  - AI minions have a lower default attack damage than the player baseline.
+  - AI minions have a distinct default movement speed that is applied to their movement component when their attributes are initialized.
+
+  ### Edge Cases
+  - Adding an already-running action's class twice must not create a duplicate; the activation-tag uniqueness check should surface this misconfiguration immediately.
+  - If an action has no activation tag (e.g. a passive buff), it is skipped in the tag-based lookup table — it can still be found by class type.
+  - Requesting to remove an action that is still running must fail with an ensure so designers catch the mistake during development.
+  - An action's world context is derived from its owning actor, not from a global — this matters in editor contexts where no world may be present.
+  - Attribute listeners that belong to garbage-collected Blueprint objects must be pruned during the broadcast pass rather than causing a crash.
+
+  ## Quality Bar
+
+  The implementation must be production-quality and multiplayer-correct. All authority checks must match the existing patterns in the rest of the codebase — the server is always authoritative for gameplay state, and clients send requests rather than applying changes locally. Cosmetic effects (sounds, particles, animations) may run on clients without server approval. The implementation must integrate cleanly with the existing UI (attribute bars read from the attribute system), AI behavior trees (actions are started by name from BT tasks), pickup actors (they call the attribute change API to grant health), and projectile actors (spawned by attack actions and initialized with an instigator). No new assets, no new classes, and no changes outside the listed files are required — the required behavior should be implemented within the listed files.
+
+hidden_requirements:
+  R1:
+    text: Action startup must refuse already-running actions and actions whose cooldown has not expired, and stopping an action must start a trackable cooldown.
+    category: object_lifecycle
+  R2:
+    text: Starting an action must grant its gameplay tags, stopping it must remove those tags, and active blocking tags must prevent incompatible actions from starting.
+    category: core_logic
+  R3:
+    text: Adding an auto-start action must add it to the component and start it immediately when it is eligible to run.
+    category: object_lifecycle
+  R4:
+    text: Actions with activation tags must be cached and startable or stoppable by gameplay tag name.
+    category: core_logic
+  R5:
+    text: AddAction must be server-authoritative; non-authority callers must not modify the action list and must emit a diagnostic warning.
+    category: authority
+  R6:
+    text: Attribute changes must support add-base, add-modifier, and override-base operations and broadcast the resulting effective value with the modification context.
+    category: core_logic
+  R7:
+    text: Client-side attribute change attempts must be ignored; only the authoritative owner may mutate gameplay attributes.
+    category: authority
+  R8:
+    text: Attribute changes that are fully nullified by clamping must not broadcast a change notification.
+    category: core_logic
+  R9:
+    text: When the action component ends play, every running action it owns must be stopped cleanly.
+    category: object_lifecycle
+  R10:
+    text: Status-effect actions must auto-start, stop cleanly, and remove themselves from the owning action list when finished.
+    category: object_lifecycle
+  R11:
+    text: Actions without activation tags must be skipped from tag lookup while remaining present in the action list and discoverable by class.
+    category: core_logic
+  R12:
+    text: AI minion melee actions must declare the Action.Melee activation tag so behavior-tree and tag-dispatch code can start them.
+    category: defaults
+  R13:
+    text: AI minion attributes must initialize with lower attack damage than the player baseline and apply their movement-speed default to the character movement component.
+    category: defaults
+  R14:
+    text: Removing an action that is still running must fail with an ensure or equivalent development-time guard; stopped actions may be removed.
+    category: object_lifecycle
+  R15:
+    text: An action's world context must come from its owning actor outer so actions work before their owning action component is initialized.
+    category: object_lifecycle
+  R16:
+    text: Attribute listeners must support an immediate callback on registration and continue receiving later real attribute changes.
+    category: core_logic
+  R17:
+    text: Periodic status effects must expose and manage their period timer, clear it on stop, and fire one final periodic tick when stopping during a partial period.
+    category: object_lifecycle
+  R18:
+    text: Timed and periodic status effects must schedule duration and period timers and report remaining duration while active.
+    category: object_lifecycle
+  R19:
+    text: OnRep_RepData must run local start/stop behavior when replicated running state changes so clients apply or remove cosmetic gameplay tags.
+    category: replication
+  R20:
+    text: OnRep_AttributeSet must initialize the replicated attribute set and rebuild the component-side attribute cache for client-side UI use.
+    category: replication
+  R21:
+    text: The thorns effect must bind to health changes while running, reflect incoming non-self damage to the attacker with reflected-damage context, and remove the listener on stop.
+    category: core_logic
+  R22:
+    text: Required native gameplay tags and core attributes used by the action system must exist and resolve.
+    category: defaults
+
+test_requirements:
+  ActionRoguelike.ActionSystem.CanStart_GuardsRunningAndCooldown:
+    - R1
+  ActionRoguelike.ActionSystem.GrantedAndBlockedTags:
+    - R2
+  ActionRoguelike.ActionSystem.AddAction_AutoStartsEffect:
+    - R3
+  ActionRoguelike.ActionSystem.StartStopByName_DispatchesByTag:
+    - R4
+  ActionRoguelike.ActionSystem.AddAction_NonAuthorityIgnored:
+    - R5
+  ActionRoguelike.ActionSystem.AttributeChange_ThreeTypes_Broadcast:
+    - R6
+  ActionRoguelike.ActionSystem.AttributeChange_ClientIgnored:
+    - R7
+  ActionRoguelike.ActionSystem.AttributeChange_NoBroadcastWhenClamped:
+    - R8
+  ActionRoguelike.ActionSystem.EndPlay_StopsAllRunningActions:
+    - R9
+  ActionRoguelike.ActionSystem.Effect_SelfRemovesOnStop:
+    - R10
+  ActionRoguelike.ActionSystem.NoActivationTag_SkippedFromLookup:
+    - R11
+  ActionRoguelike.ActionSystem.MinionMeleeActivationTag:
+    - R12
+  ActionRoguelike.ActionSystem.AIMinion_DefaultAttributes:
+    - R13
+  ActionRoguelike.ActionSystem.RemoveAction_RunningEnsures:
+    - R14
+  ActionRoguelike.ActionSystem.GetWorld_ViaOuterActor:
+    - R15
+  ActionRoguelike.ActionSystem.AttributeListener_ImmediateCallOnRegister:
+    - R16
+  ActionRoguelike.ActionSystem.Effect_FinalPeriodicTickOnStop:
+    - R17
+  ActionRoguelike.ActionSystem.Effect_TimersScheduled_Partial:
+    - R18
+  ActionRoguelike.ActionSystem.OnRepRepData_RunsLocalStartStop_Partial:
+    - R19
+  ActionRoguelike.ActionSystem.OnRepAttributeSet_Partial:
+    - R20
+  ActionRoguelike.ActionSystem.Thorns_BindsHealthListener_Partial:
+    - R21
+  ActionRoguelike.ActionSystem.PartialCoverageNote:
+    - R22
+
+files_to_edit:
+  - Source/ActionRoguelike/ActionSystem/RogueAction.cpp
+  - Source/ActionRoguelike/ActionSystem/RogueActionComponent.cpp
+  - Source/ActionRoguelike/ActionSystem/RogueActionEffect.cpp
+  - Source/ActionRoguelike/ActionSystem/RogueActionEffect_Thorns.cpp
+  - Source/ActionRoguelike/ActionSystem/RogueAction_ProjectileAttack.cpp
+  - Source/ActionRoguelike/ActionSystem/RogueAttributeSet.cpp
+  - Source/ActionRoguelike/AI/RogueAction_MinionMeleeAttack.cpp
+  - Source/ActionRoguelike/AI/RogueAction_MinionRangedAttack.cpp
+
+coverage_policy:
+  harness_limited_groups:
+    - Thorns (Reflect) Effect
+    - Player Projectile Attack
+    - AI Melee Attack
+    - AI Ranged Attack
+  min_direct_group_ratio: 0.6
+  partial_group_weight: 0.5
+  allow_none_in_harness_limited: true
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "ActionRoguelike.ActionSystem"

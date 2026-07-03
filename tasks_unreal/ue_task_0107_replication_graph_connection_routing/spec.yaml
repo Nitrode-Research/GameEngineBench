@@ -1,0 +1,77 @@
+task_id: ue_task_0107
+title: Implement replication graph connection routing and relevancy
+tier: hard
+
+instruction: |
+  Implement the project replication graph routing so multiplayer actor relevancy
+  behaves correctly under real gameplay conditions.
+  
+  Expected behavior:
+  - Connection-specific always-relevant actors are routed to the correct clients.
+  - Player controllers, player states, pawns, and gameplay-critical actors remain visible to the clients that require them.
+  - Spatialized actors are routed through the existing grid or frequency buckets as appropriate.
+  - Streaming-level or map-specific actor lists update when client visibility changes.
+  - Team, faction, or owner-only relevancy rules are respected where the existing project architecture requires them.
+  - Actor add/remove, dormancy, teardown, and connection cleanup do not leave stale replication graph entries.
+  - The implementation handles listen server and dedicated server modes.
+  - The implementation must compile and fit Unreal's ReplicationGraph lifecycle and the project's networking settings.
+  
+  Constraints:
+  - Use the repository to infer actor class policies, connection managers, replication graph nodes, config settings, and multiplayer lifecycle rules.
+  - Do not replace the graph with a trivial always-relevant-for-everyone solution.
+  - Do not require new assets or hidden manual setup.
+  
+  Quality bar:
+  The implementation must be multiplayer-correct under real connection,
+  streaming, teardown, and relevancy changes. Compile success alone is not
+  sufficient.
+
+files_to_edit:
+  - Source/ECR/Public/System/ECRReplicationGraph.cpp
+  - Source/ECR/Public/System/ECRReplicationGraphSettings.cpp
+  - Source/ECR/Public/System/ECRReplicationGraph.h
+  - Source/ECR/Public/System/ECRReplicationGraphSettings.h
+  - Source/ECR/Public/System/ECRReplicationGraphTypes.h
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "ECR.ReplicationGraph"
+
+hidden_requirements:
+  R1:
+    text: Connection-specific always-relevant actors are routed to the correct clients.
+    category: replication
+  R2:
+    text: Player controllers, player states, pawns, and gameplay-critical actors remain visible to the clients that require them.
+    category: replication
+  R3:
+    text: Spatialized actors are routed through the existing grid or frequency buckets as appropriate.
+    category: core_logic
+  R4:
+    text: Streaming-level or map-specific actor lists update when client visibility changes.
+    category: replication
+  R5:
+    text: Team, faction, or owner-only relevancy rules are respected where the existing project architecture requires them.
+    category: ui
+  R6:
+    text: Actor add/remove, dormancy, teardown, and connection cleanup do not leave stale replication graph entries.
+    category: replication
+  R7:
+    text: The implementation handles listen server and dedicated server modes.
+    category: replication
+  R8:
+    text: The implementation must compile and fit Unreal's ReplicationGraph lifecycle and the project's networking settings.
+    category: core_logic
+
+test_requirements:
+  ECR.ReplicationGraph.source_contract_tokens_present:
+    - R1
+    - R2
+    - R3
+    - R4
+    - R5
+    - R6
+    - R7
+    - R8

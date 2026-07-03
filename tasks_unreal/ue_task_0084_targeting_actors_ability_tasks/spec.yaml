@@ -1,0 +1,149 @@
+task_id: ue_task_0084
+title: Targeting Actors And Ability Task Flow
+tier: hard
+
+instruction: |
+  # Implement Targeting Actors And Ability Task Flow
+  
+  This repository uses custom Gameplay Ability System target actors and ability tasks for weapon aiming, hit detection, interaction targeting, montage-driven abilities, client target-data synchronization, camera field-of-view changes, and small scene-component animations. Implement the targeting and ability-task subsystem so abilities can acquire targets, synchronize target data, play montages, and complete latent behavior correctly.
+  
+  Use the repository to infer the relevant Gameplay Ability System task lifecycle, targeting flow, collision profiles, gameplay tags, animation assets, Blueprint abilities, prediction rules, and networking expectations. Do not replace the reusable targeting and task architecture with hard-coded weapon or interaction logic.
+  
+  ## Expected Targeting Behavior
+  
+  - Repeated ability targeting works without accumulating stale actors, leaked delegates, invalid reticles, or lost targeting state.
+  - Target actors can start targeting, confirm targeting, cancel targeting, stop targeting, and clean up reticles and persistent state.
+  - Target data produced by traces includes the correct hit results, trace start/end data, and source context.
+  - Line trace and sphere trace targeting both work with the existing collision profiles and filtering rules.
+  - Traces can originate from either the ability start location or the player's viewpoint, depending on configuration.
+  - Camera-based aiming adjusts the trace direction toward what the player is looking at while respecting maximum range.
+  - Aim clipping prevents camera traces from targeting points outside the ability's usable range.
+  - Trace spread, aiming spread modifiers, targeting-spread accumulation, and reset behavior work for single-shot and continuous-fire weapons.
+  - Persistent hit results and debug trace behavior work without changing normal confirmation behavior.
+  - Reticles spawn, move, and clean up according to current target results.
+  
+  ## Ability Task Behavior
+  
+  - Abilities can wait for target data using existing target actors and receive valid data on the correct authority/prediction path.
+  - Client-produced target data can be sent to the server and consumed by the ability without duplicate callbacks or leaked delegates.
+  - Targeting cancellation propagates through the expected Gameplay Ability System cancellation path.
+  - Interaction-targeting tasks find valid interactable actors and components according to the current player's view and collision context.
+  - Input-with-tags tasks wait for valid input and expose the relevant gameplay tags to the ability.
+  - Delay-one-frame tasks complete predictably and clean up after themselves.
+  - Camera FOV tasks interpolate and finish cleanly.
+  - Scene-component movement tasks animate relative movement and restore or finish state as configured.
+  
+  ## Montage Ability Task Behavior
+  
+  - Abilities can play a montage and wait for blend out, completion, interruption, cancellation, and gameplay events.
+  - Abilities can play montages on a specific mesh and wait for the same lifecycle events.
+  - Delegates should fire exactly once for the relevant terminal state.
+  - Ability cancellation should stop active montage playback when configured to do so.
+  - Montage tasks should integrate with the custom ability system component's multi-mesh montage support.
+  - Gameplay events received during montage playback should be forwarded with the correct tags and payloads.
+  
+  ## Multiplayer And Prediction Constraints
+  
+  - Target data must follow Gameplay Ability System authority and prediction rules.
+  - Server-side and client-side target confirmation must not produce duplicate damage or duplicate ability effects.
+  - Cancellation, target-data replication, and montage task cleanup must work under latency and ability cancellation.
+  - The subsystem must work for local players, listen-server players, simulated proxies, and AI where applicable.
+  
+  ## Integration Expectations
+  
+  - Existing rifle, shotgun, rocket launcher, sprint, interaction, revive, reload, and weapon-fire abilities should continue using this subsystem.
+  - Existing collision channels, gameplay tags, reticles, animation montages, and Blueprint abilities should not need asset changes.
+  - Do not replace targeting with hard-coded weapon logic; preserve the reusable target actor and ability task architecture.
+  - Avoid broad rewrites outside the requested subsystem unless they are required to maintain integration with existing abilities, targeting assets, animation, or networking.
+  
+  ## Validation Expectations
+  
+  - Build the project successfully.
+  - Verify rifle, shotgun, and rocket launcher targeting use the crosshair/camera direction and return correct hit data.
+  - Verify spread changes across repeated or continuous fire and resets when expected.
+  - Verify interaction targeting finds valid interactable actors and rejects invalid ones.
+  - Verify montage-based abilities fire completion, cancellation, interruption, blend-out, and gameplay-event callbacks correctly.
+  - Verify client-produced target data reaches the server without duplicate damage, duplicate effects, or leaked delegates.
+  
+  ## Quality Bar
+  
+  The implementation must compile cleanly and deliver production-quality targeting and ability-task behavior. It should handle trace filtering, camera aim, spread, reticles, target-data synchronization, montage lifecycle, cancellation, cleanup, and prediction-sensitive multiplayer behavior.
+
+files_to_edit:
+  - Source/GASShooter/Private/Characters/Abilities/AbilityTasks/GSAT_MoveSceneCompRelLocation.cpp
+  - Source/GASShooter/Private/Characters/Abilities/AbilityTasks/GSAT_PlayMontageAndWaitForEvent.cpp
+  - Source/GASShooter/Private/Characters/Abilities/AbilityTasks/GSAT_PlayMontageForMeshAndWaitForEvent.cpp
+  - Source/GASShooter/Private/Characters/Abilities/AbilityTasks/GSAT_ServerWaitForClientTargetData.cpp
+  - Source/GASShooter/Private/Characters/Abilities/AbilityTasks/GSAT_WaitChangeFOV.cpp
+  - Source/GASShooter/Private/Characters/Abilities/AbilityTasks/GSAT_WaitDelayOneFrame.cpp
+  - Source/GASShooter/Private/Characters/Abilities/AbilityTasks/GSAT_WaitInputPressWithTags.cpp
+  - Source/GASShooter/Private/Characters/Abilities/AbilityTasks/GSAT_WaitInteractableTarget.cpp
+  - Source/GASShooter/Private/Characters/Abilities/AbilityTasks/GSAT_WaitTargetDataUsingActor.cpp
+  - Source/GASShooter/Private/Characters/Abilities/GSGATA_LineTrace.cpp
+  - Source/GASShooter/Private/Characters/Abilities/GSGATA_SphereTrace.cpp
+  - Source/GASShooter/Private/Characters/Abilities/GSGATA_Trace.cpp
+  - Source/GASShooter/Public/Characters/Abilities/AbilityTasks/GSAT_MoveSceneCompRelLocation.h
+  - Source/GASShooter/Public/Characters/Abilities/AbilityTasks/GSAT_PlayMontageAndWaitForEvent.h
+  - Source/GASShooter/Public/Characters/Abilities/AbilityTasks/GSAT_PlayMontageForMeshAndWaitForEvent.h
+  - Source/GASShooter/Public/Characters/Abilities/AbilityTasks/GSAT_ServerWaitForClientTargetData.h
+  - Source/GASShooter/Public/Characters/Abilities/AbilityTasks/GSAT_WaitChangeFOV.h
+  - Source/GASShooter/Public/Characters/Abilities/AbilityTasks/GSAT_WaitDelayOneFrame.h
+  - Source/GASShooter/Public/Characters/Abilities/AbilityTasks/GSAT_WaitInputPressWithTags.h
+  - Source/GASShooter/Public/Characters/Abilities/AbilityTasks/GSAT_WaitInteractableTarget.h
+  - Source/GASShooter/Public/Characters/Abilities/AbilityTasks/GSAT_WaitTargetDataUsingActor.h
+  - Source/GASShooter/Public/Characters/Abilities/GSGATA_LineTrace.h
+  - Source/GASShooter/Public/Characters/Abilities/GSGATA_SphereTrace.h
+  - Source/GASShooter/Public/Characters/Abilities/GSGATA_Trace.h
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "GASShooter.TargetingTasks"
+
+hidden_requirements:
+  R1:
+    text: Target actors must support repeated targeting without stale actors, leaked delegates, orphaned reticles, or persistent invalid state.
+    category: lifecycle
+  R2:
+    text: Line and sphere traces must produce target data with meaningful hit results, trace start/end values, and source context.
+    category: targeting
+  R3:
+    text: Camera-viewpoint targeting must aim toward the player view while clipping to the ability range.
+    category: targeting
+  R4:
+    text: >-
+      Spread accumulation, aiming modifiers, persistent hit results, and debug traces must work without corrupting normal confirmation.
+      When the aiming-spread modifier inspects the owning actor's gameplay tags, it must obtain the ability system component through
+      the project's typed ASC accessor (the same UGSAbilitySystemComponent helper used elsewhere to resolve an ASC from an actor),
+      not by dereferencing the raw actor-info AbilitySystemComponent pointer.
+    category: targeting
+  R5:
+    text: Interaction target tasks must find valid interactables through the configured collision and interface rules.
+    category: interaction
+  R6:
+    text: Client-produced target data must be sent to the server once and consumed without duplicate callbacks or duplicate gameplay effects.
+    category: replication
+  R7:
+    text: Montage ability tasks must report blend-out, completion, interruption, cancellation, and gameplay events exactly once.
+    category: ability_task
+  R8:
+    text: Mesh-specific montage tasks must integrate with the custom multi-mesh montage support.
+    category: ability_task
+  R9:
+    text: Delay, input-with-tags, FOV interpolation, and scene-component movement tasks must finish and clean up latent work correctly.
+    category: ability_task
+
+test_requirements:
+  GASShooter.TargetingTasks.trace_target_actor_paths_present:
+    - R1
+    - R2
+    - R3
+    - R4
+  GASShooter.TargetingTasks.client_target_data_and_interaction_tasks_present:
+    - R5
+    - R6
+  GASShooter.TargetingTasks.montage_and_latent_task_cleanup_paths_present:
+    - R7
+    - R8
+    - R9

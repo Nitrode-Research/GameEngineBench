@@ -1,0 +1,129 @@
+task_id: ue_task_0083
+title: Hero Lifecycle, Inventory, Perspective, And Revive
+tier: hard
+
+instruction: |
+  # Implement Hero Lifecycle, Inventory, Perspective, And Revive
+  
+  This repository is a multiplayer Unreal Engine shooter with first-person and third-person presentation, weapon inventory, Gameplay Ability System-driven player state, knockdown, revive, and respawn behavior. Implement the hero character lifecycle and inventory behavior so player and AI-controlled heroes function correctly in normal gameplay.
+  
+  Use the repository to infer the relevant Unreal Engine lifecycle rules, Gameplay Ability System ownership model, existing gameplay tags, Blueprint assets, UI expectations, and networking patterns. Do not replace the existing hero, inventory, or interaction architecture with a toy implementation.
+  
+  ## Expected Behavior
+  
+  - Hero characters initialize their ability system, attributes, startup gameplay effects, and startup abilities at the correct point in the possession and replication lifecycle.
+  - Server possession and client-side player-state replication both produce a usable character without requiring hidden manual setup.
+  - Player input binds to movement, camera controls, perspective switching, and ability input exactly once when the required systems are ready.
+  - Respawning or re-possessing a hero restores gameplay-critical attributes and removes stale death state.
+  - Locally controlled players get the correct HUD and first-person presentation, while other players and AI use the appropriate third-person presentation.
+  - Floating status bars initialize from replicated attribute state and are hidden for the locally controlled player when appropriate.
+  
+  ## Inventory And Weapon Behavior
+  
+  - Heroes can receive default inventory at spawn and can add, equip, switch, remove, drop, and clear weapons.
+  - Adding a weapon should avoid duplicate inventory entries and should optionally equip the new weapon.
+  - Equipping a weapon updates current weapon state, weapon tags, ability availability, meshes, HUD-facing ammo values, and replicated state.
+  - Next-weapon and previous-weapon actions select valid inventory entries and skip invalid or missing weapons.
+  - Weapon switching supports the intended client prediction and server correction behavior, including recovery when the server refuses a predicted switch.
+  - Removing or dropping a weapon cleans up granted abilities and ownership state without leaving stale ammo, mesh, or ability references.
+  
+  ## Perspective And Presentation
+  
+  - Players can switch between first-person and third-person perspectives.
+  - Camera, mesh visibility, weapon visibility, shadows, and presentation state must update consistently when perspective changes, including any per-camera view settings the project caches for each perspective.
+  - Knockdown and revive temporarily adjust perspective as needed and restore the expected perspective afterward.
+  - Listen-server players should see correct local presentation while remote clients see correct third-person replicated presentation.
+  
+  ## Knockdown, Revive, Death, And Interaction
+  
+  - Taking lethal damage should enter the intended knocked-down or dead state depending on current gameplay conditions.
+  - Knockdown cancels active abilities, removes relevant temporary effects, applies knockdown effects, and updates health/shield as expected.
+  - Other heroes can interact with a knocked-down hero to revive them.
+  - Revive interaction has the correct duration, prediction/sync behavior, pre-interact and post-interact effects, and cancellation behavior.
+  - Death finishes cleanly by removing inventory, cleaning up delegates, notifying game mode flow, and destroying or respawning the character as appropriate.
+  - Interaction availability must reflect the target hero's state and must not allow invalid revive attempts.
+  
+  ## Multiplayer Constraints
+  
+  - Gameplay state changes remain server-authoritative.
+  - Clients may request actions such as equipping or interacting, but must not directly own authoritative gameplay state.
+  - Replicated inventory and current weapon state must converge correctly for owners and simulated clients.
+  - The behavior must work for standalone, listen-server, and client scenarios.
+  
+  ## Integration Expectations
+  
+  - Existing weapons, HUD widgets, PlayerState attributes, Gameplay Effects, Gameplay Abilities, animation Blueprints, game mode respawn flow, and pickup actors should work without asset changes.
+  - AI-controlled heroes should still initialize enough gameplay state to use weapons and abilities.
+  - Do not replace the project architecture with a simplified pawn, inventory, or interaction system.
+  - Avoid broad rewrites outside the requested subsystem unless they are required to maintain integration with existing character, weapon, UI, or respawn flow.
+  
+  ## Validation Expectations
+  
+  - Build the project successfully.
+  - Verify a player can spawn, possess a hero, receive startup abilities/effects, and see a functioning HUD.
+  - Verify weapon pickup, default inventory, equip, next weapon, previous weapon, drop, and remove flows work.
+  - Verify first-person and third-person perspective switching updates cameras, meshes, weapons, and shadows correctly.
+  - Verify knockdown, revive, death, and respawn work for standalone and multiplayer play without stale HUD, weapon, or ability state.
+  
+  ## Quality Bar
+  
+  The implementation must compile cleanly and deliver production-quality hero behavior across spawn, possession, weapon switching, perspective changes, knockdown, revive, death, and respawn. It must handle lifecycle ordering and multiplayer replication edge cases, not only the initial singleplayer happy path.
+
+files_to_edit:
+  - Source/GASShooter/Private/Characters/Heroes/GSHeroCharacter.cpp
+  - Source/GASShooter/Public/Characters/Abilities/GSInteractable.h
+  - Source/GASShooter/Public/Characters/Heroes/GSHeroCharacter.h
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "GASShooter.HeroLifecycle"
+
+hidden_requirements:
+  R1:
+    text: Server possession and client PlayerState replication must both initialize ability actor info, attributes, startup effects, and abilities.
+    category: lifecycle
+  R2:
+    text: Player input binding must wait for required replicated state and happen exactly once.
+    category: lifecycle
+  R3:
+    text: Default inventory must be granted on spawn without duplicate entries.
+    category: inventory
+  R4:
+    text: Weapon add, equip, switch, remove, drop, and clear flows must update replicated current weapon state, granted abilities, meshes, and HUD-facing data.
+    category: inventory
+  R5:
+    text: Weapon switching must support owner prediction and server correction when a requested switch is rejected.
+    category: replication
+  R6:
+    text: >-
+      First-person and third-person perspective changes must update camera, meshes, weapon visibility, and shadows for
+      owners, remote clients, and AI. Switching perspective must also explicitly re-apply each camera's default field of
+      view from the character's cached Default1PFOV/Default3PFOV members (e.g. FirstPersonCamera->SetFieldOfView(Default1PFOV)
+      and ThirdPersonCamera->SetFieldOfView(Default3PFOV)), so a perspective swap resets any zoom an aiming ability left
+      behind rather than relying on the camera's static construction FOV.
+    category: presentation
+  R7:
+    text: Knockdown must cancel/adjust gameplay state and store/restore perspective rather than behaving as immediate death.
+    category: lifecycle
+  R8:
+    text: Revive must use the interaction flow with sync, cancellation, pre/post effects, and state validation.
+    category: interaction
+  R9:
+    text: Death and respawn must clean inventory, delegates, HUD-facing state, and stale ability-system references.
+    category: lifecycle
+
+test_requirements:
+  GASShooter.HeroLifecycle.ability_lifecycle_and_input_setup_present:
+    - R1
+    - R2
+  GASShooter.HeroLifecycle.inventory_weapon_replication_paths_present:
+    - R3
+    - R4
+    - R5
+  GASShooter.HeroLifecycle.perspective_knockdown_revive_paths_present:
+    - R6
+    - R7
+    - R8
+    - R9

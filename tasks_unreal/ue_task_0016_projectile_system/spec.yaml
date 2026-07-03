@@ -1,0 +1,241 @@
+task_id: ue_task_0016
+title: Projectile System
+tier: hard
+
+instruction: |
+  # Projectile System
+
+  This repository is a third-person action roguelike built in Unreal Engine. The projectile system has two implementation paths: a data-oriented subsystem that moves lightweight projectile instances each tick without spawning an actor per projectile, and a traditional actor-based path for special projectiles (magic, blackhole, dash). Implement the projectile system so projectiles move, collide, deal damage, and play impact effects correctly.
+
+  ## Expected Behaviors
+
+  ### Data-Oriented Projectile Subsystem
+
+  **Creating a projectile:**
+  - Each projectile is assigned a deterministic ID derived from its spawn position and current world time; this allows the server and a predicting client to independently produce the same ID for the same spawn event.
+  - If the subsystem has authority (server or standalone), the projectile is created locally.
+  - If running as a client, the creation request is forwarded to the server while also creating the projectile locally for immediate client-side prediction — so the player never waits for a round-trip before seeing their own shot.
+  - When receiving a creation request that references an ID that already exists locally (from the client's own prediction), the creation is skipped to prevent duplicates.
+
+  **Initializing a projectile:**
+  - A moving instance is created from the given position, initial velocity (direction scaled by configured speed), and ID, and added to the active instance list.
+  - A tracer particle effect is spawned at the launch location and oriented along the flight direction. The effect is given the projectile's velocity so its visual elements track the correct path.
+  - The projectile's full metadata (position, direction, config, instigator, expiration time) is stored in the game state's shared projectile array. If the entry was just created (server path), it is marked dirty for replication so all clients receive it.
+
+  **Removing a projectile:**
+  - The tracer effect is deactivated and released.
+  - If the projectile recorded a hit and has not yet played impact effects, the impact rotation is derived from the flight direction and impact VFX is spawned at the hit location.
+  - The moving instance is removed from the active list.
+
+  **Tick — moving and colliding:**
+  - Each active instance is advanced by its velocity multiplied by delta time.
+  - A collision sweep is performed along the movement path each tick to detect hits.
+  - On a **blocking** hit (solid geometry): the instance is moved to the hit location, the hit is recorded, the projectile's expiration time is extended to allow replication to finish, the data is marked dirty, and the ID is queued for removal.
+  - On **overlapping** hits (damageable actors): the first actor that can receive damage, is not the instigator, and is not on the same team as the instigator is selected. Team affiliation is checked so AI projectiles cannot damage other AI. The hit is recorded, the expiration extended, and the ID queued for removal.
+  - If no hit occurred, the instance position advances to the next position.
+  - After the movement loop, queued hit IDs are processed in reverse to remove them safely.
+  - On authority: projectiles whose expiration time has passed are expired — removed and their entry deleted from the game state array, with the array marked dirty.
+
+  **Impact effects:**
+  - An impact particle plays at the hit location.
+  - On static, decal-receiving surfaces, the impact position and surface normal are written to a shared particle data channel so a separate decal particle system can stamp a mark at the impact point.
+
+  **Unique ID generation:**
+  - The ID is produced by combining a hash of the spawn position with a hash of the world time at spawn.
+
+  **Authority check:**
+  - The subsystem is authoritative if the world is not running as a pure client.
+
+  ### Base Projectile Actor
+
+  **PostInitializeComponents:**
+  - The sphere collision's hit event is bound so any physics impact triggers the explosion.
+  - The projectile and its instigator are configured to ignore each other's collision in both directions, preventing self-hits.
+
+  **Pool reuse — begin:**
+  - The movement component is reset to clear velocity and rotation state left over from the previous use.
+  - The looping trail VFX and flight audio are resumed. The system uses pause and resume rather than deactivate and reactivate — resuming is significantly cheaper because it avoids rebuilding render state, and pooled projectiles must look correct the instant they reappear.
+
+  **Pool reuse — end:**
+  - The trail VFX and flight audio are paused so the actor has no visual or audio presence while sitting in the pool.
+
+  **Lifespan expired:**
+  - When the projectile's lifespan elapses, it is returned to the actor pool instead of being destroyed.
+
+  **On physics hit:**
+  - Any blocking physics hit triggers the explosion.
+
+  **Explosion:**
+  - An impact particle effect plays at the actor's location.
+  - An impact sound plays at the actor's location.
+  - A camera shake plays in the world using the configured inner and outer radii.
+  - The actor is returned to the pool.
+
+  ### Projectile Movement Component
+
+  **BeginPlay / EndPlay:**
+  - On begin-play, the component's tick function is registered with the tickables subsystem so it runs at the correct time in the tick order.
+  - On end-play, the tick function is deregistered.
+
+  **Reset:**
+  - The velocity is cleared to a safe default and the component is fully reinitialized, resetting homing, rotation, and accumulated speed state from its previous use.
+
+  ### Magic Projectile
+
+  **Constructor:**
+  - The collision sphere radius, initial lifespan, and damage coefficient are set to their design defaults.
+
+  **PostInitializeComponents:**
+  - The sphere's overlap event is bound to the hit-handling logic.
+
+  **OnActorOverlap:**
+  - Overlaps with the instigator are ignored.
+  - If the overlapping actor has the parry gameplay tag active, the projectile reverses direction and the parrying actor becomes the new instigator — any subsequent damage from this projectile now originates from the parrying player.
+  - Otherwise, if the target can receive damage, the projectile explodes (playing VFX and returning to the pool). On authority, directional damage is applied to the target using the configured damage coefficient. If the target has an action component and a burning action class is configured, the burning effect is added to the target.
+
+  ### Blackhole Projectile
+
+  **Constructor:**
+  - The radial force component is configured with a strong attractive (inward-pulling) force so nearby objects are sucked toward the blackhole rather than pushed away.
+  - Pawns are excluded from the radial force's object types so it only affects physics props.
+  - The collision is set to only overlap physics-simulating objects so the blackhole does not react to characters.
+  - The lifespan and maximum pull radius are set to match the VFX animation duration.
+
+  **PostInitializeComponents:**
+  - The overlap event is bound to absorb physics objects that enter the field.
+
+  **OnOverlappedPhysicsActor:**
+  - Physics-simulating objects that enter the blackhole's volume are destroyed — absorbed by the singularity.
+
+  **BeginPlay:**
+  - If a radius animation curve is configured, the blackhole's pull radius is animated over its lifetime to grow and shrink in sync with the VFX. The playback rate is computed so the animation finishes exactly when the actor's lifespan expires. A debug sphere visualizes the current radius each frame.
+
+  ### Dash Projectile
+
+  **Constructor:**
+  - The detonate delay, teleport delay, and initial speed are set to their design defaults.
+
+  **BeginPlay:**
+  - A one-shot timer is started for the detonate delay; when it fires, the projectile explodes.
+
+  **Explosion:**
+  - The detonate timer is cancelled in case the explosion was triggered by a physical hit before the timer elapsed.
+  - Impact VFX and sound play at the current location.
+  - The trail VFX is deactivated.
+  - Movement halts and collision is disabled so the projectile marker freezes in space.
+  - A second short timer is started to call the teleport after a brief pause.
+  - The base explosion logic is intentionally skipped — the base class would return the actor to the pool immediately, but the dash projectile must remain alive until the teleport fires.
+
+  **TeleportInstigator:**
+  - The instigator must be valid; if it is not, this is treated as a fatal configuration error.
+  - The instigator is teleported to the projectile's current location, keeping their existing rotation so the transition is not jarring.
+  - If the instigator is locally controlled, a camera shake plays to convey the teleport impact.
+  - The projectile then destroys itself.
+
+  ## Quality Bar
+
+  Projectiles must fly from the spawn point, sweep for collisions each tick, and play VFX and sound on impact. Magic projectiles must deal damage, optionally ignite the target, and correctly reflect off parrying actors. Blackhole projectiles must exert attractive radial force and absorb physics props that enter their field. Dash projectiles must travel briefly, freeze in place, and teleport the instigator to that location after a short delay. Pool-reused projectiles must have their VFX and movement state fully reset so they behave identically to a freshly spawned projectile. Client-predicted projectiles must not be double-spawned when the server's replication arrives. No new classes or assets are required — implement the behavior within the existing file structure.
+
+hidden_requirements:
+  R1:
+    text: The projectile subsystem must generate deterministic projectile IDs from spawn position and world time.
+    category: core_logic
+  R2:
+    text: Projectile creation must branch correctly between authority creation and client-side prediction plus server forwarding.
+    category: authority
+  R3:
+    text: InternalCreateProjectile must skip creation when the projectile ID already exists locally, preventing duplicate predicted projectiles.
+    category: replication
+  R4:
+    text: InternalCreateProjectile must add a moving projectile instance with velocity derived from direction and configured speed.
+    category: core_logic
+  R5:
+    text: InternalCreateProjectile must create or update the game-state projectile metadata entry used for replication and mark new server entries dirty.
+    category: replication
+  R6:
+    text: InternalCreateProjectile must spawn and initialize the tracer effect so the visual path matches projectile velocity.
+    category: core_logic
+  R7:
+    text: RemoveProjectileID must deactivate tracer state, play impact effects at recorded hits once, and remove the moving instance from the active list.
+    category: object_lifecycle
+  R8:
+    text: Tick must advance every active projectile instance by velocity times delta time.
+    category: core_logic
+  R9:
+    text: Tick must sweep along the movement path, record blocking hits, extend expiration for replication, mark data dirty, and queue hit IDs for removal.
+    category: core_logic
+  R10:
+    text: Tick must handle overlap hits by ignoring the instigator, rejecting friendly-fire targets, selecting the first valid damageable target, and marking replicated hit data.
+    category: core_logic
+  R11:
+    text: Authority-side expiration must remove expired projectiles from both the active instance list and replicated game-state array.
+    category: authority
+  R12:
+    text: Impact effects must spawn impact VFX and write decal data-channel entries only for static decal-receiving surfaces.
+    category: core_logic
+  R13:
+    text: The base projectile actor must bind hit events after component initialization and ignore its instigator in both collision directions.
+    category: object_lifecycle
+  R14:
+    text: Pooled projectiles must reset movement state and resume paused trail VFX/audio when reused.
+    category: object_lifecycle
+  R15:
+    text: Pooled projectiles must pause trail VFX/audio and return to the actor pool on pool end, lifespan expiry, or base explosion.
+    category: object_lifecycle
+  R16:
+    text: The projectile movement component must register and deregister its tick function with the tickables subsystem and reset stale velocity and rotation state on reuse.
+    category: object_lifecycle
+  R17:
+    text: Magic projectile defaults must set the intended collision radius, lifespan, and damage coefficient.
+    category: defaults
+  R18:
+    text: Magic projectile overlap handling must ignore the instigator, reflect from parrying actors, apply authority-side directional damage, and optionally add the burning action.
+    category: authority
+  R19:
+    text: Blackhole projectile defaults must configure attractive radial force, pawn exclusion, physics-only overlap collision, lifespan, and pull radius.
+    category: defaults
+  R20:
+    text: Blackhole projectile runtime behavior must absorb physics-simulating actors and animate pull radius over its lifespan when a curve is configured.
+    category: core_logic
+  R21:
+    text: Dash projectile defaults must set detonation delay, teleport delay, and initial speed.
+    category: defaults
+  R22:
+    text: Dash projectile explosion must cancel detonation, play effects, stop movement, disable collision, leave the marker alive, and schedule teleport instead of using base pooling immediately.
+    category: object_lifecycle
+  R23:
+    text: Dash teleport must move the valid instigator to the projectile location, preserve rotation, trigger local camera shake when appropriate, and then destroy the projectile.
+    category: core_logic
+
+test_requirements:
+  ActionRoguelike.ProjectileSystem.CDOChecks:
+    - R17
+    - R19
+    - R21
+  ActionRoguelike.ProjectileSystem.ActorProjectileBehaviors:
+    - R14
+    - R15
+    - R22
+  ActionRoguelike.ProjectileSystem.RuntimeBehaviors:
+    - R1
+    - R2
+    - R3
+    - R4
+    - R5
+    - R7
+    - R8
+    - R11
+
+files_to_edit:
+  - Source/ActionRoguelike/Projectiles/RogueProjectilesSubsystem.cpp
+  - Source/ActionRoguelike/Projectiles/RogueProjectile.cpp
+  - Source/ActionRoguelike/Projectiles/RogueProjectileMovementComponent.cpp
+  - Source/ActionRoguelike/Projectiles/RogueProjectile_Magic.cpp
+  - Source/ActionRoguelike/Projectiles/RogueProjectile_Blackhole.cpp
+  - Source/ActionRoguelike/Projectiles/RogueProjectile_Dash.cpp
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "ActionRoguelike.ProjectileSystem"

@@ -1,0 +1,124 @@
+task_id: ue_task_0043
+title: NMM Base Subsystem (State Prediction and MGF Race Recovery)
+tier: hard
+
+instruction: |
+  The New Main Menu subsystem owns the menu state and coordinates several async prerequisites before the menu is ready to display. Currently state prediction always returns None and the menu is permanently stuck.
+
+  The project already contains:
+  - prerequisites that must all settle before the menu is ready: local pawn possession, cinematic spots loaded, game feature activation complete, and cinematic row data loaded
+  - downstream systems that subscribe to menu-state changes (camera, spots, player-controller component)
+
+  The system must satisfy these behavioral requirements:
+
+  State prediction:
+  - The menu's target state is derived from three prerequisites: whether the active cinematic spot is loaded, whether the game feature is still activating, and whether cinematic row data is registered.
+  - Three values are possible and not interchangeable: ready-with-content (cinematic spot and rows available), ready-without-content (no cinematic rows exist — a stable end-state), or still-waiting (prerequisites haven't settled). Returning a ready state before prerequisites settle causes the menu to enter against half-initialized systems.
+  - The feature-activation check must precede the no-rows check. Without this ordering, a build with no cinematic rows resolves the no-rows branch during feature loading and gets stuck.
+
+  MenuReady broadcast:
+  - Fires once when all hold: not already broadcast, pawn is possessed, and state prediction has resolved to a ready state. Non-authority clients forward the event to the server; the server does not forward to itself.
+
+  State transitions:
+  - Changing the menu state must broadcast a state-changed signal so the camera, spots, and controller component stay in sync.
+
+  Lifecycle:
+  - On feature initialize: subscribe to game-state changes, pawn-ready, and spot-ready events using each source's native mechanism.
+  - On feature deinitialize: unsubscribe all listeners and clear any cached broadcast state — otherwise a fresh menu load replays stale data to late subscribers.
+
+  MGF race recovery:
+  - If the replicated game-state tag arrives while the feature is still activating, the normal event handlers miss it. When activation completes, detect this race and bring the local menu state into sync.
+
+  Event handlers:
+  - Game-state handler: react to menu entry and game-starting exit.
+  - Spot-ready handler: react to spots finishing their async load, including client catch-up when the menu was stuck waiting for spots.
+  - Pawn-ready handler: react to pawn possession as a re-attempt trigger for the MenuReady broadcast.
+
+  Use the repository to understand how each prerequisite signals completion and which event source each one uses.
+
+files_to_edit:
+  - Plugins/GameFeatures/NewMainMenu/Source/NewMainMenu/Private/Subsystems/NMMBaseSubsystem.cpp
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "Bomber.NMMBaseSubsystem"
+
+hidden_requirements:
+  R1:
+    text: State prediction returns Idle when the active cinematic spot is ready and cinematic row data is available.
+    category: initialization
+  R2:
+    text: State prediction checks pending game-feature activation before treating missing cinematic rows as a stable ready state.
+    category: initialization
+  R3:
+    text: State prediction returns BasicMenu when no cinematic rows exist after feature activation has settled.
+    category: initialization
+  R4:
+    text: State prediction returns None while prerequisites are still waiting.
+    category: initialization
+  R5:
+    text: Setting the menu state updates the cached state and broadcasts the state-changed message.
+    category: core_logic
+  R6:
+    text: MenuReady broadcasts only once and only after pawn readiness and a non-None predicted state are both true.
+    category: object_lifecycle
+  R7:
+    text: Non-authority clients forward MenuReady to the server and the server does not forward the event to itself.
+    category: authority
+  R8:
+    text: Initialization subscribes to game-state, pawn-ready, and spot-ready signal sources using the appropriate native mechanisms.
+    category: subsystem_architecture
+  R9:
+    text: Deinitialization unsubscribes listeners and clears cached MenuStateChanged and MenuReady broadcast state.
+    category: object_lifecycle
+  R10:
+    text: Game-feature activation recovers the race where the replicated menu game-state tag arrived before the feature finished activating.
+    category: initialization
+  R11:
+    text: Game-state changes enter the predicted menu state on Menu and reset to None on GameStarting.
+    category: core_logic
+  R12:
+    text: Spot-ready handling retries MenuReady and upgrades waiting or BasicMenu states to Idle when cinematic spots become available.
+    category: object_lifecycle
+  R13:
+    text: Pawn-ready handling retries MenuReady after local pawn possession becomes available.
+    category: object_lifecycle
+  R14:
+    text: The native method and tag surface required by downstream tests remains available and supports set-get round trips.
+    category: reflection
+
+test_requirements:
+  Bomber.NMMBaseSubsystem.SetNewMainMenuStateUpdatesAndBroadcasts:
+    - R5
+  Bomber.NMMBaseSubsystem.GetPredictedMenuStateBranchOrder:
+    - R1
+    - R2
+    - R3
+    - R4
+  Bomber.NMMBaseSubsystem.TryBroadcastMenuReadyGuards:
+    - R6
+  Bomber.NMMBaseSubsystem.TryBroadcastMenuReadyForwardsOnlyFromClient:
+    - R7
+  Bomber.NMMBaseSubsystem.DeinitializeClearsCachedMessagesAndStopsListening:
+    - R9
+  Bomber.NMMBaseSubsystem.OnGameFeatureActivatedRecoversFromMgfRace:
+    - R10
+  Bomber.NMMBaseSubsystem.OnActiveMenuSpotReadyHandlesClientCatchUp:
+    - R12
+  Bomber.NMMBaseSubsystem.OnGameStateChangedTransitionsOnMenuAndGameStarting:
+    - R11
+  Bomber.NMMBaseSubsystem.InitializeSubscribesToAllThreeSignalSources:
+    - R8
+  Bomber.NMMBaseSubsystem.OnFirstPawnReadyReattemptsMenuReady:
+    - R13
+  Bomber.NMMBaseSubsystem.HeaderShape:
+    - R14
+  Bomber.NMMBaseSubsystem.RuntimeSetGetRoundTrip:
+    - R5
+    - R14
+  Bomber.NMMBaseSubsystem.RuntimeOnGameStateChangedResetsOnGameStarting:
+    - R11
+  Bomber.NMMBaseSubsystem.RuntimeOnActiveMenuSpotReadyUpgradesBasicMenuToIdle:
+    - R12

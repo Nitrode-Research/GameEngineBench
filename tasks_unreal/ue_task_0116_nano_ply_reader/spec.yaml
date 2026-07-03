@@ -1,0 +1,47 @@
+task_id: ue_task_0116
+title: PLY File Reader
+tier: hard
+instruction: "Implement the PLY File Reader \u2014 parser for Gaussian Splatting PLY files with\nsupport for spherical harmonics\
+  \ (SH) coefficients. The system must read binary\nPLY files with streamed I/O for large files and detect SH band count from\
+  \ header\nproperties.\n\nExpected behaviors:\n\nFile format parsing:\n- Parse PLY header (ASCII header with key-value pairs)\n\
+  - Extract vertex count from header\n- Detect SH band count from property names\n- Validate file format and size\n\nSH band\
+  \ detection:\n- Detect 0 bands (DC only)\n- Detect 1 band (9 coefficients)\n- Detect 2 bands (24 coefficients)\n- Detect\
+  \ 3 bands (45 coefficients)\n\nVertex data reading:\n- Read position (3 floats)\n- Read normal (3 floats)\n- Read DC color\
+  \ (3 floats)\n- Read SH coefficients (N floats, if present)\n- Convert to internal Gaussian splat data format\n\nEdge cases:\n\
+  - File too small (< 4 bytes) \u2014 error\n- Missing \"ply\" magic \u2014 invalid file\n- Missing \"end_header\" \u2014\
+  \ error\n- File truncated \u2014 error\n- SH band count not detectable \u2014 default to 0 bands\n- Binary big-endian \u2014\
+  \ not supported (little-endian only)\n- Empty file \u2014 error\n\nQuality bar:\n- The implementation must compile as part\
+  \ of the NanoGaussianSplatting UE5 plugin\n- Follow the existing C++ conventions, macro usage, and naming patterns\n- All\
+  \ public-facing methods must use the appropriate UFUNCTION macros\n- No new assets or classes outside the listed files\n\
+  - Must integrate with existing Gaussian splat data structures\n"
+hidden_requirements:
+  R1:
+    text: ReadPLYFile must open file, parse header, detect SH bands, validate size, read vertex data, and convert to FGaussianSplatData.
+    category: core_logic
+  R2:
+    text: ParseHeader must read ASCII header, find end_header marker, extract vertex count, property offsets, and calculate
+      stride.
+    category: core_logic
+  R3:
+    text: ReadVertexData must read position, normal, DC color, and SH coefficients for each vertex.
+    category: core_logic
+  R4:
+    text: SH band detection must detect 0-3 bands from header property names.
+    category: core_logic
+  R5:
+    text: Edge cases must handle file too small, missing magic, missing end_header, truncated file, undetectable SH bands,
+      big-endian, empty file.
+    category: core_logic
+test_requirements:
+  Nano.PLYReader.ValidatesMagicAndRejectsAscii:
+  - R1
+  - R2
+  - R5
+files_to_edit:
+- Plugins\NanoGS\Source\NanoGS\Public\PLYFileReader.h
+- Plugins\NanoGS\Source\NanoGS\Private\PLYFileReader.cpp
+tests:
+  runner: ue_automation
+  mode: editor
+  num_clients: 0
+  filter: Nano.PLYReader

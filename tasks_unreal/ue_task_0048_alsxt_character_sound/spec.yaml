@@ -1,0 +1,65 @@
+task_id: ue_task_0048
+title: ALSXT Character Sound
+tier: hard
+
+instruction: |
+  You are working in an Unreal Engine 5 third-person character project that uses the ALSXT plugin.
+  Implement the character sound system in ALSXTCharacterSoundComponent.cpp.
+
+  The component selects and plays sounds for movement, accent, weapon movement, action, attack,
+  damage, death, and breathing events. It applies cooldown and timer gating for repetitive sounds,
+  previous-asset deduplication, readiness and stamina and sex and voice-variant and overlay-sensitive
+  filtering, and routes damage and death sounds through replicated multicast paths.
+
+  The project already contains:
+  - The component public API, delegates, and replicated network-exposed methods
+  - Settings assets, gameplay tags, sound structs, and content references
+  - Owning character and equipment integration points
+
+  Implement the following behavior:
+
+  - The component selects and plays the correct class of sound for movement, action, attack, damage, death, and breathing events.
+  - Sound selection respects the existing gameplay tags and state inputs such as overlay, sex, voice variant, strength, attack method, and stamina.
+  - Rapid repeated events are gated by the existing timing logic instead of spamming the same sound every frame.
+  - Duplicate recent assets are avoided when the component is configured to vary repeated playback.
+  - Damage and death sounds are audible to all players in the session, not only the locally controlled player.
+  - Breath and holding-breath sounds respond to stamina and state instead of playing unconditionally.
+
+files_to_edit:
+  - Plugins/ALSXT/Source/ALSXT/Private/Components/Character/ALSXTCharacterSoundComponent.cpp
+
+tests:
+  runner: ue_automation
+  mode: listen_server
+  num_clients: 1
+  filter: "ALSXT.CharacterSound"
+
+hidden_requirements:
+  R1:
+    text: Baseline playback predicates for action, damage, death, breath, and holding-breath sounds enable valid playback cases instead of suppressing the sound classes by default.
+    category: core_logic
+  R2:
+    text: Attack sound gating uses the existing elapsed-time fields so playback opens when TimeSinceLastAttackSound reaches TargetAttackSoundDelay and remains closed before that point.
+    category: object_lifecycle
+  R3:
+    text: Sound selection respects gameplay tags and state inputs such as overlay, sex, voice variant, strength, attack method, and stamina.
+    category: runtime_integration
+  R4:
+    text: Recent asset deduplication avoids replaying duplicate sounds when no-repeat settings require variation.
+    category: core_logic
+  R5:
+    text: Damage and death sounds use server and multicast paths so all players can hear them.
+    category: replication
+  R6:
+    text: Breath and holding-breath sounds respond to stamina and character state rather than playing unconditionally.
+    category: core_logic
+  R7:
+    text: Movement, action, attack, damage, death, and breathing events select the correct sound class and spawn path.
+    category: runtime_integration
+
+test_requirements:
+  ALSXT.CharacterSound.gating_predicates_enable_playback:
+    - R1
+    - R6
+  ALSXT.CharacterSound.attack_sound_gate_respects_timing:
+    - R2
